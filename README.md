@@ -1,4 +1,8 @@
-# Pipeline de permanência por status — PPD — 4.0.0
+# PIPELINE-MONDAY — PPD — 4.0.0
+
+Projeto de extração e transformação de dados do Monday para publicação de tabelas de consumo no BigQuery. `sla_orcamento` é o primeiro produto de dados; as próximas tabelas serão definidas e implementadas com contratos próprios.
+
+Repositório: [CBarrosoBRRJ/PIPELINE-MONDAY](https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY). Consulte a [transição de nome](docs/RENOMEACAO_PROJETO.md) para atualizar cópias existentes e a integração de deploy.
 
 Monday → joins, regras e horas úteis em Python → **BigQuery `viu_agenciamento.sla_orcamento`**.
 

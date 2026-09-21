@@ -1,4 +1,6 @@
-# Manutenção deste projeto
+# Manutenção do PIPELINE-MONDAY
+
+O projeto reúne produtos de dados do Monday. O produto implementado atualmente é `sla_orcamento`; novas tabelas dependem de contratos e publicação/recuperação definidos antes da implementação. A renomeação do repositório não altera IDs/SKs, estado nem recursos GCP do produto existente.
 
 Leia PRD.md, docs/ARQUITETURA_E_GOVERNANCA.md, docs/ARQUITETURA_GCP.md e os contratos executáveis antes de alterar regras, modelo ou publicação.
 

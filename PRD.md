@@ -1,4 +1,6 @@
-# PRD — histórico por status pronto para consumo
+# PIPELINE-MONDAY — PRD do produto sla_orcamento
+
+O projeto PIPELINE-MONDAY tem como direção publicar múltiplos produtos de dados a partir do Monday. Este contrato descreve o primeiro produto implementado, `sla_orcamento`. Os demais produtos serão especificados separadamente; a mudança de nome não habilita novos destinos de publicação.
 
 Aplicação **4.0.0**, regras de evidência **2.2.1**, contrato físico GCP **5**. Decisão de 16/09/2026: destino definitivo é **somente `gglobo-viu-dados-hdg-prd.viu_agenciamento.sla_orcamento` no BigQuery**. Nenhuma tabela técnica, de pendências, staging ou por data é criada. As duas tabelas PostgreSQL anteriores são fonte legada de migração e não são excluídas por este código.
 

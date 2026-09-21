@@ -13,7 +13,7 @@ do pacote para `sls_orcamento_ppd` e as horas publicadas com até três casas.
 A base a utilizar daqui em diante é `main`, após a consolidação desse histórico.
 O teste dessa versão no GitHub Actions passou: testes Python, lint, geração
 de contratos/DDL e validação Terraform sem backend.
-Evidência: https://github.com/CBarrosoBRRJ/PIPELINE-LOG-ORCAMENTO/actions/runs/35295621482
+Evidência: https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY/actions/runs/35295621482
 
 Segundo as saídas fornecidas pelo operador, o Job está implantado, o Scheduler
 das 06h em America/Sao_Paulo foi criado e seu disparo manual concluiu a
@@ -57,8 +57,8 @@ commits antes de escolher como integrar; não force a atualização.
 Para uma cópia nova, escolha uma pasta de projetos e execute:
 
 ```powershell
-git clone https://github.com/CBarrosoBRRJ/PIPELINE-LOG-ORCAMENTO.git
-cd PIPELINE-LOG-ORCAMENTO
+git clone https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY.git
+cd PIPELINE-MONDAY
 code .
 git switch -c feature/publicacao-multitabelas
 ```
@@ -145,7 +145,7 @@ Registry -> atualização do Job -> validação da publicação.
 No Cloud Shell, confira a cópia limpa antes de mudar branch:
 
 ```bash
-cd "$HOME/PIPELINE-LOG-ORCAMENTO"
+cd "$HOME/PIPELINE-MONDAY"
 git status -sb
 git fetch origin
 git switch main
