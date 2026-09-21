@@ -2,7 +2,7 @@
 
 Projeto de extração e transformação de dados do Monday para publicação de tabelas de consumo no BigQuery. `sla_orcamento` é o primeiro produto de dados; as próximas tabelas serão definidas e implementadas com contratos próprios.
 
-Repositório: [CBarrosoBRRJ/PIPELINE-MONDAY](https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY). Consulte a [transição de nome](docs/RENOMEACAO_PROJETO.md) para atualizar cópias existentes e a integração de deploy.
+Repositório: [CBarrosoBRRJ/PPD-PIPELINE-MONDAY](https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY). Consulte a [transição de nome](docs/RENOMEACAO_PROJETO.md) para atualizar cópias existentes e a integração de deploy.
 
 Monday → joins, regras e horas úteis em Python → **BigQuery `viu_agenciamento.sla_orcamento`**.
 

@@ -31,7 +31,7 @@ variable "bucket_name" {
 
 variable "github_repository" {
   type    = string
-  default = "CBarrosoBRRJ/PIPELINE-MONDAY"
+  default = "CBarrosoBRRJ/PPD-PIPELINE-MONDAY"
 }
 
 variable "github_repository_id" {

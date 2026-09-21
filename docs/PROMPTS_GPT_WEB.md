@@ -9,7 +9,7 @@ Se o GPT Web não conseguir ler o repositório privado, anexe somente os arquivo
 ```text
 Quero que você seja meu tutor de Google Cloud e me ajude a colocar um pipeline Python no ar, seguindo boas práticas e me ensinando. Sou iniciante: não presuma que conheço terminal, Docker, IAM ou Terraform.
 
-Repositório: https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY
+Repositório: https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY
 Projeto GCP confirmado: gglobo-viu-dados-hdg-prd
 Dataset existente: viu_agenciamento, localização US
 Única tabela de saída: sla_orcamento

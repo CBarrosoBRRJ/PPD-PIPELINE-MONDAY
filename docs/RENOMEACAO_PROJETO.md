@@ -1,24 +1,24 @@
 # PIPELINE-MONDAY — transição do nome do projeto
 
-Decisão de 21/09/2026: o projeto e repositório passam a se chamar `PIPELINE-MONDAY`. `sla_orcamento` é o primeiro produto de dados, com seu contrato vigente preservado. A publicação de outras tabelas ainda depende de especificação e implementação conforme [continuidade](CONTINUAR_NO_VSCODE.md).
+Decisão de 21/09/2026: o projeto passa a se chamar `PIPELINE-MONDAY` e o repositório, identificado pela área, passa a `PPD-PIPELINE-MONDAY`. `sla_orcamento` é o primeiro produto de dados, com seu contrato vigente preservado. A publicação de outras tabelas ainda depende de especificação e implementação conforme [continuidade](CONTINUAR_NO_VSCODE.md).
 
 ## Cópias locais e Cloud Shell
 
 Na pasta do clone existente, atualize o remoto:
 
 ```bash
-git remote set-url origin https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY.git
+git remote set-url origin https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY.git
 git fetch origin
 git status -sb
 ```
 
-O nome da pasta de um clone é independente do nome do repositório. Cópias já abertas podem manter a pasta anterior; os comandos `cd PIPELINE-MONDAY` nos guias correspondem a clones novos. Para renomear uma pasta existente, feche processos que a utilizem, renomeie-a para `PIPELINE-MONDAY` no diretório pai e reabra o projeto pelo novo caminho. Confira atalhos e ambientes virtuais com caminhos absolutos antes de utilizá-los.
+O nome da pasta de um clone é independente do nome do repositório. Cópias já abertas podem manter a pasta anterior; os comandos `cd PPD-PIPELINE-MONDAY` nos guias correspondem a clones novos. Para renomear uma pasta existente, feche processos que a utilizem, renomeie-a para `PPD-PIPELINE-MONDAY` no diretório pai e reabra o projeto pelo novo caminho. Confira atalhos e ambientes virtuais com caminhos absolutos antes de utilizá-los.
 
 O GitHub mantém redirecionamentos do endereço antigo. Não recrie outro repositório com o nome antigo, pois isso remove o redirecionamento. O histórico, branches e identidade numérica do repositório são preservados.
 
 ## Integração GitHub/GCP
 
-`infra/main.tf` usa `CBarrosoBRRJ/PIPELINE-MONDAY` como valor padrão de `github_repository`. O provider Workload Identity Federation também verifica esse nome em `assertion.repository`, além dos IDs numéricos e da branch `main`.
+`infra/main.tf` usa `CBarrosoBRRJ/PPD-PIPELINE-MONDAY` como valor padrão de `github_repository`. O provider Workload Identity Federation também verifica esse nome em `assertion.repository`, além dos IDs numéricos e da branch `main`.
 
 Antes de usar o deploy via GitHub Actions, o operador deve conferir o provider real e eventuais variáveis privadas que sobrescrevam `github_repository`. Se o provider já existir com o nome antigo, atualizar somente essa condição para o novo nome, preservando IDs, restrição de branch e demais condições. A alteração do arquivo Terraform não atualiza o provider implantado.
 

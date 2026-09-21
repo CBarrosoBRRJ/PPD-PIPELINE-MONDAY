@@ -1,6 +1,6 @@
 # PIPELINE-MONDAY — operação de sla_orcamento — 4.0.0 / GCP
 
-O repositório passou a `CBarrosoBRRJ/PIPELINE-MONDAY`. Para atualizar clones e a integração GitHub/GCP, siga [Renomeação do projeto](docs/RENOMEACAO_PROJETO.md). Os recursos e identificadores do produto de orçamento permanecem estáveis.
+O repositório passou a `CBarrosoBRRJ/PPD-PIPELINE-MONDAY`. Para atualizar clones e a integração GitHub/GCP, siga [Renomeação do projeto](docs/RENOMEACAO_PROJETO.md). Os recursos e identificadores do produto de orçamento permanecem estáveis.
 
 Procedimento de implantação: [DEPLOY_GCP.md](docs/DEPLOY_GCP.md). Arquitetura vigente: [ARQUITETURA_GCP.md](docs/ARQUITETURA_GCP.md). BigQuery recebe somente sla_orcamento. Origem anterior: [migração somente leitura](docs/MIGRACAO_HISTORICO.md).
 

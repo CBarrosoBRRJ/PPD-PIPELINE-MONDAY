@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "charliermarsh.ruff",
+    "davidanson.vscode-markdownlint",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github",
+    "googlecloudtools.cloudcode",
+    "google.gemini-cli-vscode-ide-companion",
+    "google.geminicodeassist",
+    "hashicorp.terraform",
+    "ms-azuretools.vscode-containers",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "openai.chatgpt",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml"
+  ]
+}

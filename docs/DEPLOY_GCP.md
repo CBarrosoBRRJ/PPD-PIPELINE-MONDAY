@@ -29,7 +29,7 @@ Não existe senha do BigQuery. Acesso é por IAM e identidade Google.
 | Service account agendador | scheduler-sla-orcamento@gglobo-viu-dados-hdg-prd.iam.gserviceaccount.com | Apenas invocar Job |
 | Service account deploy | deploy-sla-orcamento@gglobo-viu-dados-hdg-prd.iam.gserviceaccount.com | Publicação via GitHub |
 | Segredo | monday-api-token, versão 1 | Token Monday; inserir no Secret Manager, nunca no Git/chat |
-| GitHub | CBarrosoBRRJ/PIPELINE-MONDAY | Repositório; confirmar IDs numéricos de repo/owner |
+| GitHub | CBarrosoBRRJ/PPD-PIPELINE-MONDAY | Repositório; confirmar IDs numéricos de repo/owner |
 
 O runtime recebe BigQuery Job User no projeto, BigQuery Data Editor no dataset, Storage Object Admin somente no bucket e Secret Accessor somente no segredo. O deployer recebe Run Developer, acesso ao Artifact Registry e actAs somente na identidade runtime. O Scheduler recebe Run Invoker somente no Job. Usuários do BI recebem Data Viewer no destino e Job User no projeto de consulta. Permissões corporativas para criar recursos devem ser tratadas com o administrador; ver o BQ na interface não prova acesso a Run/IAM/Storage.
 
@@ -42,14 +42,14 @@ Versione esta alteração numa branch e revise o diff. Não publicar `.env`, `ru
 No Cloud Shell, clone o repositório (autenticação GitHub pelo fluxo corporativo) e abra a pasta:
 
 ```bash
-git clone https://github.com/CBarrosoBRRJ/PIPELINE-MONDAY.git
-cd PIPELINE-MONDAY
+git clone https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY.git
+cd PPD-PIPELINE-MONDAY
 gcloud config set project gglobo-viu-dados-hdg-prd
 ```
 
 Peça à equipe que aplique `infra/main.tf`. Ele cria APIs, bucket protegido, Artifact Registry, três identidades, o contêiner de segredo e Workload Identity Federation. Não altera tabelas existentes nem cria o Cloud Run Job antes da imagem. Não cria versão contendo o token. Instalar Terraform >=1.6 se ele não estiver disponível no Cloud Shell.
 
-Configure variáveis por prompt ou arquivo `infra/terraform.tfvars` (ignorado no Git): `bucket_name`, `github_repository_id` e `github_owner_id`. Obtenha os IDs no endpoint GitHub `GET /repos/CBarrosoBRRJ/PIPELINE-MONDAY`, campos `id` e `owner.id`, com autenticação se privado. Esses IDs vinculam a federação ao repositório correto e à branch main.
+Configure variáveis por prompt ou arquivo `infra/terraform.tfvars` (ignorado no Git): `bucket_name`, `github_repository_id` e `github_owner_id`. Obtenha os IDs no endpoint GitHub `GET /repos/CBarrosoBRRJ/PPD-PIPELINE-MONDAY`, campos `id` e `owner.id`, com autenticação se privado. Esses IDs vinculam a federação ao repositório correto e à branch main.
 
 ```bash
 terraform -chdir=infra init
