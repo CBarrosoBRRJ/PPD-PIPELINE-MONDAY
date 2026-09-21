@@ -4,7 +4,9 @@ Configuração recomendada para trabalhar no `PIPELINE-MONDAY` pelo VS Code no W
 
 ## Extensões
 
-As recomendações compartilhadas estão em `.vscode/extensions.json`. O conjunto cobre Python/Ruff/Pylance, Terraform, GitHub Actions, contêineres, Google Cloud, YAML/TOML/Markdown, Codex, Claude Code, Gemini Code Assist e Gemini CLI Companion.
+As recomendações compartilhadas estão em `.vscode/extensions.json`. O conjunto cobre Python/Ruff/Pylance, Jupyter e Data Wrangler para análise/ML, Terraform, GitHub Actions, contêineres, Google Cloud, YAML/TOML/Markdown, Codex, Claude Code, Gemini Code Assist e Gemini CLI Companion.
+
+O Gemini CLI também usa a extensão `bigquery-data-analytics`, com o skill `bigquery-ai-ml`, configurada para o projeto `gglobo-viu-dados-hdg-prd` e localização `US`. Ela depende de Application Default Credentials locais e respeita as permissões IAM da conta autenticada.
 
 Depois de instalar ou atualizar extensões, execute **Developer: Restart Extension Host** ou reabra o VS Code para carregar as novas versões. O interpretador padrão do workspace é `.venv/Scripts/python.exe`.
 
