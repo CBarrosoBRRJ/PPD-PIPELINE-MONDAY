@@ -1,0 +1,41 @@
+# sla_orcamento — PPD-PIPELINE-MONDAY — 4.0.0
+
+> Transição aprovada em 21/09/2026: `sla_orcamento` será a base unificada para KPIs;
+> o escritor de origem globocorp será migrado para `sla_orcamento_globocorp`.
+> O código/deploy descrito abaixo ainda é o pipeline anterior de uma origem.
+> Não executar deploy para efetivar essa troca apenas mudando o nome da tabela:
+> estado, agenda e escritor precisam de migração validada.
+> Veja [a decisão atual](../../docs/CONTINUIDADE_PROJETOS_MONDAY.md).
+
+Este produto está em `tabelas/monday_sla_orcamento_globocorp/`. Comandos relativos deste documento
+partem dessa pasta; para trabalhar da raiz mantendo .venv, .env e runtime existentes,
+siga o [README do repositório](../../README.md). Ao executar da pasta do produto,
+informe o caminho correto em --env-file e RUNTIME_DIR; arquivos privados não foram movidos.
+
+Projeto de extração e transformação de dados do Monday para publicação de tabelas de consumo no BigQuery. `sla_orcamento` é o primeiro produto de dados; as próximas tabelas serão definidas e implementadas com contratos próprios.
+
+Repositório: [CBarrosoBRRJ/PPD-PIPELINE-MONDAY](https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY). Consulte a [transição de nome](../../docs/RENOMEACAO_PROJETO.md) para atualizar cópias existentes e a integração de deploy.
+
+Monday → joins, regras e horas úteis em Python → **BigQuery `viu_agenciamento.sla_orcamento`**.
+
+O repositório já está organizado por produto. Apenas sla_orcamento está implementada;
+novas pastas não habilitam novos destinos automaticamente.
+
+- Uma única tabela BigQuery, reutilizada em todas as cargas; uma linha por passagem do projeto em um status.
+- `duracao_horas_uteis`: segunda a sexta, 10h–13h e 14h–19h, fuso São Paulo, feriados nacionais automáticos.
+- Horas corridas preservadas em `duracao_horas`; histórico desconhecido continua NULL.
+- Cloud Run Job executa `daily`, Cloud Scheduler dispara 06h São Paulo; fechamento D+1.
+- Evidências, checkpoint, pendências, calendário e controle ficam privados no Cloud Storage.
+- Carga atômica, exclusão/reinclusão, reserva diária, trava distribuída e recuperação por job ID.
+
+Comece pelo [roteiro para iniciantes](docs/APRENDER_GCP.md) e pelos [prompts por etapa para o GPT Web](docs/PROMPTS_GPT_WEB.md). Referência técnica: [deploy GCP/GitHub](docs/DEPLOY_GCP.md), [PRD](PRD.md), [dicionário](docs/OURO_CONSUMO.md), [contrato](docs/CONTRATO_SLA_ORCAMENTO.md) e [operação](OPERATIONS.md).
+
+Instalação local opcional: `python -m pip install -e '.[dev]'`. Prepare `.env.gcp` a partir de `.env.example`, preservando qualquer `.env` antigo, e use ADC. Testes: `python -m pytest -q`. Calendário: `sla-pipeline --env-file .env.gcp calendar --year 2026`. O Cloud Run usa variáveis e Secret Manager, não o `.env` do computador.
+
+**Roteiro escolhido: instalação nova, sem importar o banco/checkpoint anteriores.** Depois de provisionar GCP e publicar o Job pelo GitHub, execute `init-db`, `backfill` e as validações descritas no [guia de deploy](docs/DEPLOY_GCP.md). Só então teste `daily` e ative a agenda das 06h. A primeira carga recupera apenas o histórico ainda disponível no Monday; tempos sem evidência permanecem NULL. Não crie a tabela manualmente e não exclua dados antigos.
+
+Importação legada é alternativa opcional, fora desse roteiro: exige extra `.[migration]` e par consistente PostgreSQL/checkpoint. Consulte [migração do histórico](docs/MIGRACAO_HISTORICO.md) apenas se a decisão mudar antes de inicializar o destino; não combinar importação com uma base nova já populada.
+
+Implementação e testes locais não equivalem a implantação: GCP real depende de provisionar bucket/IAM/segredo e validar o primeiro job. Não há escritor PostgreSQL, cron interno, Compose ou Databricks. O importador de origem é somente leitura, isolado em migration/. Veja [limpeza e evidências](docs/VALIDACAO_GCP.md).
+
+O projeto é da área **PPD**; pacote Python `sls_orcamento_ppd` (distribuição `sls-orcamento-ppd`). Após atualizar uma instalação local existente, execute novamente `python -m pip install -e ".[dev]"`. Os namespaces históricos com `pdd` usados em IDs/SKs, identificação do pipeline e leitura de migração são preservados por compatibilidade dos dados; não representam a área atual.

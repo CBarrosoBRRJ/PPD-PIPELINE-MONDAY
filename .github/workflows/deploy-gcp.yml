@@ -9,9 +9,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
+    # Legacy single-product deployment would recreate the removed destination.
+    # Use the reviewed coordinator release; do not re-enable this old writer.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     environment: production
+    defaults:
+      run:
+        working-directory: tabelas/monday_sla_orcamento_globocorp
     env:
       IMAGE: us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-orcamento:${{ github.sha }}
       GCS_BUCKET: ${{ vars.GCS_BUCKET }}

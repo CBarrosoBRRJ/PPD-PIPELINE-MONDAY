@@ -2,6 +2,12 @@
 
 Configuração recomendada para trabalhar no `PIPELINE-MONDAY` pelo VS Code no Windows.
 
+O código do produto fica em tabelas/monday_sla_orcamento_globocorp/. A .venv continua na raiz.
+Após atualizar esta estrutura, execute na raiz:
+`python -m pip install -e "./tabelas/monday_sla_orcamento_globocorp[dev]"`.
+Testes globais: `python -m pytest -q`. Testes por produto:
+`python -m pytest tabelas/monday_sla_orcamento_globocorp/tests -q`.
+
 ## Extensões
 
 As recomendações compartilhadas estão em `.vscode/extensions.json`. O conjunto cobre Python/Ruff/Pylance, Jupyter e Data Wrangler para análise/ML, Terraform, GitHub Actions, contêineres, Google Cloud, YAML/TOML/Markdown, Codex, Claude Code, Gemini Code Assist e Gemini CLI Companion.

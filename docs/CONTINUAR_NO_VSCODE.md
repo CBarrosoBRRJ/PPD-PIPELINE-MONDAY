@@ -1,5 +1,8 @@
 # Continuar no VS Code e evoluir para múltiplas tabelas
 
+Atualização: código e documentação de produto agora estão em tabelas/monday_sla_orcamento_globocorp/.
+Este roteiro é histórico; os comandos atuais estão no [README](../README.md).
+
 Referência: 18/09/2026. Este arquivo documenta a transição de desenvolvimento;
 não implementa a publicação de novas tabelas.
 
@@ -73,7 +76,7 @@ Exemplo para uma instalação Python 3.11 disponível no Windows:
 
 ```powershell
 py -3.11 -m venv .venv-dev
-.\.venv-dev\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv-dev\Scripts\python.exe -m pip install -e "./tabelas/monday_sla_orcamento_globocorp[dev]"
 .\.venv-dev\Scripts\python.exe -m pytest -q
 ```
 
@@ -165,3 +168,8 @@ e não execute Terraform para publicar uma nova versão do aplicativo.
 
 O Job pode continuar com o mesmo nome e agendamento se a nova versão mantiver
 o modo daily. A decisão final depende do desenho das novas tabelas.
+# Atualização de estrutura
+
+O produto agora está em tabelas/monday_sla_orcamento_globocorp/. Os caminhos antigos de código,
+PRD, operação e documentação de produto neste roteiro histórico devem receber esse prefixo.
+Para os comandos atuais, use o [README](../README.md).

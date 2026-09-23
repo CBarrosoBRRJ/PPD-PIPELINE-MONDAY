@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "deadline_seconds": 3300,
+  "products": [
+    {
+      "id": "sla_orcamento",
+      "runner": "sla_orcamento",
+      "env_file": ".env.gcp",
+      "depends_on": []
+    }
+  ]
+}

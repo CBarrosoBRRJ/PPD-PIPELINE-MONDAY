@@ -1,0 +1,332 @@
+[
+  {
+    "name": "ordem_etapa",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "projeto_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "status_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "entrada_status_local",
+    "type": "DATETIME",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "saida_status_local",
+    "type": "DATETIME",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_horas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "marca_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talento_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "responsavel_orcamento",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "marca_original",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talento_original",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "eh_retorno",
+    "type": "BOOLEAN",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "retorno_observado_origem",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "projeto_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "board_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ambiente_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "conta_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id_viu2",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id_globocorp",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ordem_origem",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "status_index",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "tipo_registro",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "qualidade_historico_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "qualidade_identidade",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "continuidade_validada",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "elegivel_comparacao",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "validacao_negocio",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "entrada_status_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "saida_status_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "corte_globocorp_utc",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "cadastro_referencia_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "versao_contrato",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_calendario_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "pendencias_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "registro_origem_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "status_terminal",
+    "type": "BOOLEAN",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "finalizacao_observada_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "situacao_sla_registro",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ciclo_observado_origem",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "reabertura_comprovada_origem",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "tempo_ciclo_observado_horas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "sla_etapa_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "classificacao_consumo",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "motivos_inelegibilidade_kpi_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra_kpi",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "quantidade_passagens_projeto",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "qualidade_trajetoria",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "limitacoes_trajetoria_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "eh_ultima_etapa_observada",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra_trajetoria",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "saida_estimada_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "saida_estimada_local",
+    "type": "DATETIME",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_estimada_horas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_estimada_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "metodo_estimativa",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id_referencia_estimativa",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "versao_regra_estimativa",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_calendario_estimativa",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_analise_horas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_analise_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "origem_duracao_analise",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra_duracao_analise",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  }
+]

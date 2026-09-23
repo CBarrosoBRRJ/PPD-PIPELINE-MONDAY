@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monday-sla-orcamento"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["sls-orcamento-ppd==4.0.0", "historico-viu2==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

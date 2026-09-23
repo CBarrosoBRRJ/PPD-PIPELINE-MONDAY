@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "historico-viu2"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Preservacao unica do log Monday viu2 e preparacao para analise historica"
+dependencies = ["sls-orcamento-ppd==4.0.0", "monday-log-viu2==0.1.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "../monday_sla_orcamento_globocorp/src"]

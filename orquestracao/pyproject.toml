@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ppd-pipeline-monday"
+version = "0.1.0"
+description = "Coordenação sequencial dos produtos de dados Monday"
+requires-python = ">=3.11"
+
+[project.scripts]
+pipeline-monday = "pipeline_monday.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

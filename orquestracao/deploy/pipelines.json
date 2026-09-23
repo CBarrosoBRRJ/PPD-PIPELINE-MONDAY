@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "deadline_seconds": 3300,
+  "products": [
+    {
+      "id": "sla_orcamento",
+      "runner": "sla_orcamento",
+      "env_file": ".env",
+      "depends_on": []
+    },
+    {
+      "id": "monday_sla_orcamento",
+      "runner": "monday_sla_orcamento",
+      "env_file": "globocorp-runtime",
+      "depends_on": ["sla_orcamento"]
+    }
+  ]
+}

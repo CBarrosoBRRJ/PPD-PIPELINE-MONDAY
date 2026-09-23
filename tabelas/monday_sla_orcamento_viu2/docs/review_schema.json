@@ -1,0 +1,152 @@
+[
+  {
+    "name": "ordem_etapa",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "projeto_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "status_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "entrada_status_local",
+    "type": "DATETIME",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "saida_status_local",
+    "type": "DATETIME",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_horas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "marca_original",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talento_original",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "conta_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ambiente_origem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "board_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "projeto_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "status_index",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "situacao_passagem",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "entrada_status_utc",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "saida_status_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_referencia_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "origem_atributos",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "qualidade_rotulo",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "retorno_observado",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "elegivel_comparacao",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "validacao_negocio",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_contrato",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_calendario",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "eventos_suporte_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "eventos_saida_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "pendencias_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  }
+]

@@ -1,31 +1,75 @@
-# PIPELINE-MONDAY — PPD — 4.0.0
+# PPD-PIPELINE-MONDAY
 
-Projeto de extração e transformação de dados do Monday para publicação de tabelas de consumo no BigQuery. `sla_orcamento` é o primeiro produto de dados; as próximas tabelas serão definidas e implementadas com contratos próprios.
+Pipelines do Monday organizados por tabela de consumo no BigQuery.
 
-Repositório: [CBarrosoBRRJ/PPD-PIPELINE-MONDAY](https://github.com/CBarrosoBRRJ/PPD-PIPELINE-MONDAY). Consulte a [transição de nome](docs/RENOMEACAO_PROJETO.md) para atualizar cópias existentes e a integração de deploy.
+O nível compartilhado é **pipeline-monday**, sem referência a orçamento. Orçamento
+é um produto, não a plataforma inteira. Consulte a
+[separação entre plataforma e produtos](docs/PADRAO_NOMES_TABELAS.md).
+O coordenador v12 está implantado para a origem Globocorp e a consolidação.
+Contrato consolidado sla-consolidado-analise-v7: KPI observado por etapa,
+trajetória qualificada e durações unificadas com origem explícita. Publicação manual conferida;
+agenda ativa às 06h São Paulo, próxima execução automática v12 ainda pendente
+de evidência. Não repetir migrações ou implantar releases anteriores.
+Consulte a [entrega para consumo](docs/ENTREGA_CONSUMO_ATUAL.md) e os
+[recibos de produção](docs/ESTADO_GCP_2026_09_23.md).
+Veja a [organização das iniciativas no GCP compartilhado](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
 
-Monday → joins, regras e horas úteis em Python → **BigQuery `viu_agenciamento.sla_orcamento`**.
+## Organização
 
-**Continuidade (18/09/2026):** para atualizar a cópia do VS Code a partir da `main`
-e preparar a evolução para múltiplas tabelas, siga
-[Continuar no VS Code](docs/CONTINUAR_NO_VSCODE.md). Essa evolução ainda não foi
-implementada; o contrato abaixo descreve a versão atual de uma tabela.
+```text
+tabelas/
+  monday_log_viu2/                # Código do resgate/log já existente
+  monday_sla_orcamento_viu2/      # Reconstrução e contrato do SLA histórico
+  monday_sla_orcamento_globocorp/ # Coleta, regras e publicação da origem atual
+  monday_sla_orcamento/           # Identidade, consolidação e publicação unificada
+orquestracao/                     # Ordem, dependências e adaptadores de execução
+compartilhado/                    # Política de reutilização e futuras regras comuns
+infra/            # Infraestrutura GCP gerenciada em conjunto
+docs/             # Ambiente e organização do repositório
+.github/          # CI e deploy por produto
+.vscode/          # Configuração do editor
+```
 
-- Uma única tabela BigQuery, reutilizada em todas as cargas; uma linha por passagem do projeto em um status.
-- `duracao_horas_uteis`: segunda a sexta, 10h–13h e 14h–19h, fuso São Paulo, feriados nacionais automáticos.
-- Horas corridas preservadas em `duracao_horas`; histórico desconhecido continua NULL.
-- Cloud Run Job executa `daily`, Cloud Scheduler dispara 06h São Paulo; fechamento D+1.
-- Evidências, checkpoint, pendências, calendário e controle ficam privados no Cloud Storage.
-- Carga atômica, exclusão/reinclusão, reserva diária, trava distribuída e recuperação por job ID.
+Cada pasta tem código em `src/`, testes em `tests/`, ferramentas em `scripts/`
+e um README com origem, grão, contrato e limitações. Os nomes dos pacotes Python
+legados são preservados quando necessário; nomes de pasta não alteram IDs GCP.
+Consulte o [mapa de responsabilidades](docs/ESTRUTURA_PROJETO.md).
+Direção analítica: [continuidade por projeto entre viu2 e globocorp](docs/CONTINUIDADE_PROJETOS_MONDAY.md).
+Consolidação depende de correspondências verificadas, sem descarte por data de criação.
+[Guia da equipe para KPIs e ML](docs/GUIA_DADOS_EQUIPE.md): situação atual, qualidade,
+limites temporais e critérios de homologação antes de usar os dados em produção.
+As coleções Bronze/Silver e pendências são internas desse produto; não são novas tabelas públicas.
 
-Comece pelo [roteiro para iniciantes](docs/APRENDER_GCP.md) e pelos [prompts por etapa para o GPT Web](docs/PROMPTS_GPT_WEB.md). Referência técnica: [deploy GCP/GitHub](docs/DEPLOY_GCP.md), [PRD](PRD.md), [dicionário](docs/OURO_CONSUMO.md), [contrato](docs/CONTRATO_SLA_ORCAMENTO.md) e [operação](OPERATIONS.md).
+## Desenvolvimento na raiz
 
-Instalação local opcional: `python -m pip install -e '.[dev]'`. Prepare `.env.gcp` a partir de `.env.example`, preservando qualquer `.env` antigo, e use ADC. Testes: `python -m pytest -q`. Calendário: `sla-pipeline --env-file .env.gcp calendar --year 2026`. O Cloud Run usa variáveis e Secret Manager, não o `.env` do computador.
+```powershell
+python -m pip install -e ./compartilhado -e "./tabelas/monday_sla_orcamento_globocorp[dev]"
+python -m pip install --no-deps -e ./tabelas/monday_log_viu2 -e ./tabelas/monday_sla_orcamento_viu2 -e ./tabelas/monday_sla_orcamento -e ./orquestracao
+python -m pytest -q
+python -m ruff check tabelas orquestracao compartilhado
+python tabelas/monday_sla_orcamento_globocorp/scripts/generate_ddl.py
+python tabelas/monday_sla_orcamento_globocorp/scripts/generate_contract_docs.py
+python -m pipeline_monday.cli plan --manifest orquestracao/deploy/pipelines.json
+```
 
-**Roteiro escolhido: instalação nova, sem importar o banco/checkpoint anteriores.** Depois de provisionar GCP e publicar o Job pelo GitHub, execute `init-db`, `backfill` e as validações descritas no [guia de deploy](docs/DEPLOY_GCP.md). Só então teste `daily` e ative a agenda das 06h. A primeira carga recupera apenas o histórico ainda disponível no Monday; tempos sem evidência permanecem NULL. Não crie a tabela manualmente e não exclua dados antigos.
+A .venv e os arquivos privados existentes (.env, runtime e backups) permanecem em seus locais.
+O comando `sla-pipeline` continua disponível após reinstalar o pacote.
+Execute-o na raiz para manter os caminhos relativos atuais; selecione configurações
+explicitamente com `sla-pipeline --env-file .env.gcp COMANDO`.
+Não execute coleta/publicação apenas para validar esta reorganização.
 
-Importação legada é alternativa opcional, fora desse roteiro: exige extra `.[migration]` e par consistente PostgreSQL/checkpoint. Consulte [migração do histórico](docs/MIGRACAO_HISTORICO.md) apenas se a decisão mudar antes de inicializar o destino; não combinar importação com uma base nova já populada.
+## Próximas tabelas
 
-Implementação e testes locais não equivalem a implantação: GCP real depende de provisionar bucket/IAM/segredo e validar o primeiro job. Não há escritor PostgreSQL, cron interno, Compose ou Databricks. O importador de origem é somente leitura, isolado em migration/. Veja [limpeza e evidências](docs/VALIDACAO_GCP.md).
+Cada nova tabela terá sua pasta `tabelas/<nome_da_tabela>/`, com código, testes,
+contrato, documentação e deploy próprios. Antes de implementar, definir origem,
+grão, chaves, tipos, nulos, regras, consumidores e recuperação em falha.
+Separar tabela de destino, prefixo GCS e identidade de execução.
 
-O projeto é da área **PPD**; pacote Python `sls_orcamento_ppd` (distribuição `sls-orcamento-ppd`). Após atualizar uma instalação local existente, execute novamente `python -m pip install -e ".[dev]"`. Os namespaces históricos com `pdd` usados em IDs/SKs, identificação do pipeline e leitura de migração são preservados por compatibilidade dos dados; não representam a área atual.
+Componentes só serão extraídos para uma biblioteca compartilhada quando houver
+reutilização comprovada. Por enquanto, os clientes Monday e BigQuery continuam
+junto de sla_orcamento: ainda dependem dos contratos desse produto.
+A infraestrutura da raiz atende hoje sla_orcamento e exige revisão ao adicionar produtos.
+
+Veja [ambiente](docs/AMBIENTE_DESENVOLVIMENTO.md),
+[regras do produto](tabelas/monday_sla_orcamento_globocorp/PRD.md) e
+[operação](tabelas/monday_sla_orcamento_globocorp/OPERATIONS.md).
