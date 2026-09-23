@@ -12,6 +12,18 @@ KPI observado preservado em 6.227 passagens. Scheduler retomado pelo operador:
 ENABLED, 0 6 * * *, America/Sao_Paulo. Próxima execução automática ainda não
 observada. Commit/push e correspondência com GitHub ainda não confirmados.
 
+### Fechamento Git e correção de CI posterior
+
+Commit d0f0f56 publicado na main; 84 arquivos locais conferidos contra o pacote
+v12 antes do commit. Suíte final local: 465 aprovados / 3 ignorados.
+CI 35930769915: infraestrutura aprovada; lint rejeitou três blocos de imports.
+Reprodução confirmou interferência do antigo src/ local com caches na detecção
+de imports do Ruff. Configuração src explícita na raiz e ordenação corrigida
+nos três módulos da orquestração, sem mudança de regras ou destinos.
+Esta correção posterior ainda não faz parte da imagem v12: código-fonte desses
+três módulos difere na ordenação dos imports. Não declarar igualdade byte a byte
+entre a imagem implantada e a main após esta correção. Nenhum redeploy GCP feito.
+
 Pacote runtime/pipeline-monday-release-20260923-v12-duracao-unificada.zip,
 84 arquivos de código, manifesto SHA256/compilação conferidos. SHA256:
 971bcb98e8abdc77d73eec50f928b5280d9a106be5bda9075c21396f1fdeeaea.

@@ -15,12 +15,11 @@ def main():
     try:
         # Imports stay in the child so large product dependencies leave with it.
         from sls_orcamento_ppd.config import load_settings
+        from sls_orcamento_ppd.db import get_store
         from sls_orcamento_ppd.pipelines.runner import run
         from sls_orcamento_ppd.rules.cutoff import closed_day_cut
         from sls_orcamento_ppd.services.gold import validate_gold
         from sls_orcamento_ppd.services.state import watermark
-
-        from sls_orcamento_ppd.db import get_store
 
         settings = load_settings(args.env_file)
         scheduled = datetime.fromisoformat(args.scheduled_for)

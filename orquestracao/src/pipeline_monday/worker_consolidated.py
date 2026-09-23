@@ -24,10 +24,9 @@ from monday_sla_orcamento.publication import (
     checked_object,
 )
 from sls_orcamento_ppd.config import load_settings
+from sls_orcamento_ppd.db import get_store
 from sls_orcamento_ppd.db.gcs import ObjectStore
 from sls_orcamento_ppd.rules.cutoff import closed_day_cut
-
-from sls_orcamento_ppd.db import get_store
 
 
 def ensure_current(rows, scheduled, timezone):

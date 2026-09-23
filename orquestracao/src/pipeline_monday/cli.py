@@ -14,9 +14,8 @@ def maintenance(document, args):
                      or args.expected_generation <= 0):
         raise ValueError("Aplicação exige escritores parados e geração esperada")
     from sls_orcamento_ppd.config import load_settings
-    from sls_orcamento_ppd.migration.rename_destination import rebind_destination
-
     from sls_orcamento_ppd.db import get_store
+    from sls_orcamento_ppd.migration.rename_destination import rebind_destination
 
     settings = load_settings(products[0]["env_file"])
     result = rebind_destination(

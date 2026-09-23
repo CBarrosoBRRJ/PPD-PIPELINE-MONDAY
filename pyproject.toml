@@ -4,6 +4,8 @@ testpaths = ["compartilhado/tests", "tabelas/monday_sla_orcamento_globocorp/test
 pythonpath = ["compartilhado/src", "tabelas/monday_sla_orcamento_globocorp/src", "tabelas/monday_sla_orcamento_viu2/src", "tabelas/monday_log_viu2/src", "tabelas/monday_sla_orcamento/src", "orquestracao/src"]
 
 [tool.ruff]
+# Pacotes estão em tabelas/ e orquestracao/; ignorar o antigo src/ local.
+src = ["."]
 line-length = 100
 target-version = "py311"
 
