@@ -1,185 +1,320 @@
-# Plano de consumo: dashboard e pesquisa de ML
+# Gestão do fluxo: entregar mais rápido, com qualidade
 
-Data: 23/09/2026. Proposta, não dashboard/modelo já implantado.
-Fonte: contrato executável v7, código, testes e resultados BQ fornecidos pelo operador.
-Não houve nova leitura ao vivo do BQ nesta revisão: sessão local sem permissão
-para listar execuções Cloud Run. Nenhuma tabela/modelo/serviço novo criado.
+Plano revisado em 23/09/2026. Objetivo: reduzir tempo do primeiro status até a
+conclusão, encontrar gargalos, melhorar processo e equipe. Não apenas exibir médias.
+Este é um projeto analítico, não homologação de novos KPIs. A v12 permanece em
+produção. Protótipo com dados fictícios; nenhuma nova leitura BQ foi realizada.
 
-## 1. Base e limites
+[Protótipo navegável](../powerbi/sla_gestao/prototipo.html) ·
+[Implementação Power BI/HTML Content](../powerbi/sla_gestao/IMPLEMENTACAO.md) ·
+[Diagnóstico SQL](../tabelas/monday_sla_orcamento/sql/diagnostico_ponta_a_ponta.sql)
 
-Tabela: gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento.
-Uma linha por passagem; interval_id é a chave. Projeto: projeto_id; item_id muda
-entre contas. Recibo: 9.648 passagens / 2.209 projetos, 6.227 passagens com KPI
-observado, 191 estimadas, 3.230 sem duração analítica. Ausência de duração inclui
-terminais legítimos: não classificar todas essas linhas como erro.
-Nas passagens elegíveis, 6.202 eram ViU2 e apenas 25 Globocorp no corte conferido.
-Não comparar ambientes como experimento de produtividade nem treinar modelo
-Globocorp robusto com essa amostra. Escopo selecionado/mapeado, não toda a operação.
+## 1. Começar pela decisão, não pelo gráfico
 
-KPI observado: sla_etapa_horas_uteis. Análise com hipóteses:
-duracao_analise_horas e duracao_analise_horas_uteis; mostrar origem_duracao_analise.
-Não somar toda a trajetória como SLA integral entre ambientes. Não substituir
-NULL por zero. Horas úteis são permanência em expediente, não esforço trabalhado.
-Última etapa observada não comprova status atual, abandono ou fila ativa.
-Cadastros atuais de marca/talento/responsável não são necessariamente atributos
-historicamente disponíveis no começo da passagem.
+**Estamos entregando mais rápido, com menos repetição e sem perder qualidade?**
 
-## 2. Dashboard inicial (quinta 24 e sexta 25/09)
+1. Resultado: tempo do ciclo, previsibilidade, quantidade concluída e qualidade.
+2. Diagnóstico: concentração de tempo, filas, aprovações, retornos e variabilidade.
+3. Ação: revisar briefing, rito de feedback, prioridade, handoff ou capacidade.
+4. Controle: o tempo caiu sem aumentar revisões, recusas ou casos antigos esquecidos?
 
-Nome sugerido: Permanência por etapa e qualidade do fluxo de orçamento.
-Cada visual deve mostrar origem, período, denominador e corte da publicação.
-Página padrão somente observadas; página/camada separada para análise estimada.
+Cada KPI tem dono, cadência, gatilho e ação. O responsável pelo processo deve
+escolher semanalmente um problema, revisar casos e conduzir um teste de melhoria.
+Os nomes dos responsáveis e metas devem ser pactuados, não inventados pelo painel.
 
-| Indicador | Como calcular | Decisão/limitação |
+**Etapa demorada é candidata a gargalo.** Gargalo é a restrição que limita a saída
+do sistema; confirmar exige evidência de fila, demanda, capacidade e execução.
+Tempo em status inclui espera externa. Não mede esforço, produtividade individual
+ou culpa do responsável atual. Reduzir uma etapa pode apenas deslocar a fila.
+
+## 2. Primeiro ao último: qual relógio queremos gerir?
+
+| Medida | Início → fim | Interpretação |
 |---|---|---|
-| Tempo típico e cauda | Mediana, P75 e P90 de sla_etapa_horas_uteis por ambiente/status | Onde a permanência é maior; sempre mostrar N |
-| Tempo médio | AVG(sla_etapa_horas_uteis) | Complementa, não substitui mediana/P90 |
-| Passagens medidas | COUNT(sla_etapa_horas_uteis) | Denominador da duração; zero válido conta |
-| Projetos medidos | DISTINCTCOUNT projeto_id nas linhas com KPI não nulo | Não somar os distintos de cada status |
-| Volume de saídas | Contagem de passagens elegíveis por data de saída | Saídas de etapas, não projetos entregues |
-| Evolução semanal | Mediana/P90 por semana de saída, ambiente/status | Comparar períodos completos e mesma população |
-| Composição da evidência | Contagem/% por classificacao_consumo e origem_duracao_analise | Explicita elegíveis, terminais e lacunas |
-| Participação estimada | COUNTIF(origem=estimada)/COUNT(duracao_analise_horas_uteis) | Aproximadamente 3% das durações do recibo; não de todos os projetos |
-| Sensibilidade da estimativa | Métricas observadas versus métricas unificadas no mesmo recorte | Mostra impacto da hipótese, não dois indicadores equivalentes |
-| Distribuição do tempo por etapa | Soma das horas observadas por etapa / soma observada do recorte | Exposição acumulada; não tempo total do processo nem capacidade |
-| Qualidade das trajetórias | Uma linha por projeto com eh_ultima_etapa_observada | qualidade_trajetoria não homologa completude vitalícia |
-| Retornos/reaberturas | Projetos distintos com retorno_observado_origem/reabertura_comprovada_origem | Evento observado na origem; não chamar automaticamente de retrabalho |
-| Linha do tempo | projeto_id, ordem_etapa, datas, duração e origem | Estimativas em estilo distinto, lacunas explícitas |
+| Lead time do processo | Entrada comprovada → primeiro terminal do ciclo | Quanto demorou para fechar o processo |
+| Tempo até entrega | Entrada → evento confirmado de orçamento entregue | Quanto o cliente esperou; exige identificar esse evento |
+| Permanência por etapa | Entrada → saída da etapa | Onde houve tempo dentro do fluxo |
+| Janela observada | Primeira → última observação disponível | Período documentado; não comprova começo/fim do processo |
 
-Não entregar ainda: percentual dentro de SLA (não há metas pactuadas), receita,
-conversão comercial, fila atual, previsão de encerramento global, ranking individual
-de produtividade ou soma vitalícia. Esses usos exigem dados/contratos adicionais.
-Mesmo encerramentos observados não significam venda; separar Encerrado/Declinados.
+Encerrado não comprova entrega comercial. Declinados encerram processos, mas não
+são entregas bem-sucedidas. Separar desfechos; até validar entrega, usar o título
+"tempo até encerramento do processo". Misturar recusas rápidas pode melhorar uma
+média artificialmente. O último status pode estar aberto e o primeiro ser uma
+cópia no meio do fluxo: MIN/MAX sem qualificação não homologa ponta a ponta.
 
-### Páginas e modelo semântico
+Regra proposta: uma Entrada comprovada até o primeiro terminal daquele ciclo.
+Reabertura cria outro ciclo observável, sem estender silenciosamente o anterior.
+Para entrega final após reaberturas, definir outro indicador e sua fronteira.
 
-1. Visão executiva: projetos/passagens medidos, mediana/P90 por etapa, cobertura,
-   corte da fonte e data de atualização do relatório. Sem cartão de SLA total.
-2. Diagnóstico: distribuição de tempos e tendência, ambiente separado,
-   marca/talento apenas quando identidade normalizada e cobertura conferidas.
-3. Projeto: pesquisa por projeto_id ou item_id_globocorp e trajetória completa
-   observada. Filtro de data do painel não deve esconder o restante da trajetória
-   sem um aviso claro.
-4. Qualidade/estimativas: motivo de exclusão do KPI, participação estimada e
-   comparação entre duração observada e unificada.
+### Corridas, úteis e trabalho efetivo
 
-Preferência: Power BI, se já licenciado na organização, conector nativo BigQuery
-em Import para este volume pequeno e atualização diária. DirectQuery não é
-necessário para poucos milhares de linhas. Alternativa: Looker Studio, se for
-a ferramenta já aprovada, sem comprar plataforma antes de avaliar licenças.
+Horas corridas: diferença UTC / 3.600 segundos. Horas úteis: interseção com seg-sex
+10–13/14–19, São Paulo, feriados BR PUBLIC e extras configurados. Reusar calendário
+versionado Python; não dividir corridas por 8 nem calcular apenas dias no DAX.
+Exemplo sem feriado: sexta 18h → segunda 11h = **65h corridas e 2h úteis**.
+Corridas medem espera no relógio; úteis, permanência no expediente. Nenhuma prova
+esforço realmente trabalhado. Carnaval/Corpus Christi não são excluídos automaticamente.
 
-Fato Passagens; dimensões de Projeto, Ambiente/Status e Calendário no modelo BI.
-Status deve ter chave com ambiente e código/rótulo, sem unir códigos entre contas.
-Calendários com papéis distintos de entrada/saída; data de saída como padrão
-das métricas de passagens concluídas. Trajetória usa todo o projeto.
-Relações 1:N, filtro unidirecional, sem joins por nome de projeto.
-Ocultar colunas de linhagem volumosas no modelo destinado ao usuário.
-Não criar novas tabelas BQ só para montar o painel nesta etapa.
-Atualizar o relatório depois da publicação confirmada, não presumir sucesso
-só porque passou das 6h. Permissões de leitura e público autorizados pela área.
+Em cadeia contínua, sem sobreposição, no mesmo calendário, soma das durações =
+duração do ciclo (com tolerância de arredondamento documentada). Lacuna aparece
+como tempo não atribuível, não zero; sobreposição não deve ser contada duas vezes.
+Somar medianas/P90 das etapas NÃO produz a mediana/P90 do ciclo.
 
-Horário útil existente: seg-sex 10–13/14–19 São Paulo, feriados BR PUBLIC + extras.
-Reutilizar cálculo do pipeline; não refazer DAX ignorando almoço/feriados.
-Medidas: média = AVERAGE; mediana = MEDIAN; percentil = PERCENTILEX.INC sobre
-linhas cujo KPI não seja BLANK. Nulos fora da amostra; zero útil dentro.
-Sempre mostrar N; sugerir aviso N<30, sem tratar 30 como garantia estatística.
-Consulta SQL inicial: tabelas/monday_sla_orcamento/sql/dashboard_etapas.sql.
+### O que a tabela permite hoje
 
-### Aceite do dashboard
+| Uso | Campo/evidência | Estado |
+|---|---|---|
+| Tempo de etapa observado | sla_etapa_horas_uteis | Disponível |
+| Etapa com hipótese de fronteira | duracao_analise_horas/horas_uteis + origem_duracao_analise | Disponível, não fato comprovado |
+| Ciclo completo dentro da origem | tempo_ciclo_observado_horas | Disponível quando a cadeia local foi conectada; horas corridas |
+| Ciclo global entre contas | Identidade, endpoints e regra de ciclo homologados | Não aprovado no contrato atual |
+| Entrega ao cliente | Evento de entrega aprovado | Não inferir de terminal |
+| Backlog/idade atual | Estado atual e captura confiáveis | Não inferir de NULL histórico |
 
-Conferir totais com BQ no mesmo corte; validar amostra de projetos incluindo
-ABRALE, retornos, terminal, zero útil e lacuna. Aplicar filtros e conferir distintos.
-Conferir que as 191 estimativas não entram no KPI observado e que o total de
-projetos não é a soma dos cartões de status. Reconciliar os recortes temporais.
-Medianas de grupos não devem ser somadas nem médias agregadas sem pesos.
+O ciclo local aparece apenas no primeiro terminal da cadeia. Conferir cobertura
+no diagnóstico SQL antes de usá-lo; não renomear como ciclo global. Há zero
+continuidade_validada no recibo conferido. "Sem lacunas detectadas" também não
+homologa completude vitalícia. O objetivo ponta a ponta é correto, mas essa parte
+exige evolução de contrato/evidência, não apenas outro gráfico.
 
-## 3. ML: pesquisa prioritária, não aprovação para produção
+Endpoints confiáveis permitem medir uma janela mesmo quando faltam etapas no
+meio. Isso não autoriza atribuir todo o tempo a uma equipe. Qualidade dos endpoints
+e qualidade da decomposição são aprovações distintas. A tabela ainda não possui
+homologação pública desses endpoints globais; não contornar isso por DAX.
 
-Não existe melhor modelo demonstrado antes do teste. A tabela permite estudo
-exploratório; a validade do alvo, atributos no instante certo e cobertura futura
-precisam ser comprovadas. Não usar estimativas v6/v7 como verdade de treinamento.
+### Contrato de ciclo proposto, ainda não implementado
 
-| Caso | Primeira abordagem | Avaliação | Dependência |
-|---|---|---|---|
-| Tempo típico/P90 para uma nova passagem | Baseline mediana/P90 etapa-origem, depois GradientBoostingRegressor com perda quantílica | MAE em horas, pinball loss, cobertura do P90 e erro por etapa | Somente fechadas observadas; viés de seleção das concluídas explícito |
-| Chance de sair da etapa em H horas úteis | Kaplan-Meier por etapa e Cox; comparar Random Survival Forest | C-index IPCW, Brier e calibração nos horizontes | Censura confiável: NULL histórico não é automaticamente caso ativo |
-| Risco de superar referência | Regressão logística regularizada, depois árvores | PR-AUC, precision@K, recall e calibração | Meta pactuada ou limiar histórico calculado só no treino; não chamar atraso contratual sem meta |
-| Casos atípicos para revisão | P90/IQR por etapa antes de Isolation Forest | Proporção de alertas úteis revisados pela equipe | Não é prova de erro/fraude ou avaliação individual |
-| Previsão de volume/capacidade | Baseline sazonal antes de modelo temporal | MAE/MASE e backtest por semana | Histórico contínuo da população atual, não só amostra mapeada |
+Grão: projeto_id + ciclo_id + escopo_ciclo (origem/global). Campos: inicio/fim UTC,
+marco_fim, desfecho, horas corridas/úteis, qualidade_endpoints, qualidade_decomposicao,
+tempo_sem_atribuicao, tem_estimativa, regra_ciclo e versao_calendario.
+Classes: observado_aprovado; janela_com_endpoints_aprovados; analitico_estimado;
+incompleto. Não misturar classes no KPI principal. Contar uma vez por ciclo.
+Validar reabertura, vínculo, calendário e cronologia; nenhuma data inventada.
+Pode ser derivado no modelo BI após revisão; persistência em BQ é decisão separada.
 
-Prioridade sugerida: baseline de permanência + pesquisa de quantis; posteriormente
-modelo de sobrevivência quando o estado atual/censura estiverem confiáveis.
-Não começar por deep learning/LLM: pouca amostra atual, forte mudança de ambiente,
-e informação histórica incompleta. IA generativa pode narrar medidas conferidas,
-mas não deve calcular SLA, inventar causa ou prever prazo sem modelo validado.
+## 3. Aula dos KPIs: significado → decisão → avaliação
 
-### Protocolo obrigatório
+### A. Lead time P50/P90: o resultado principal
 
-1. Fixar pergunta e instante: prever duração total da passagem na entrada não é
-   o mesmo que tempo restante para um caso já em andamento.
-2. Para baseline/regressão, alvo observado sla_etapa_horas_uteis, nunca duração
-   unificada estimada. Casos sem saída exigem estudo de censura/seleção separado.
-3. Features apenas conhecidas na entrada: etapa/origem, calendário de entrada,
-   histórico anterior comprovado. Marca/talento/cadastro só se snapshot temporal
-   provar disponibilidade. Não usar IDs/nomes pessoais como atalhos preditivos.
-4. Excluir features futuras: saída, duração, próxima etapa, terminal futuro,
-   total final de passagens, flag de última etapa e motivos calculados no futuro.
-5. Dividir por tempo e projeto_id, sem projetos nos dois conjuntos; cortar treino
-   em T e incluir apenas rótulos que já estavam disponíveis até T. Separar casos
-   que cruzam fronteiras e fazer backtests em janelas posteriores, com grupo.
-6. Encoders, imputação, seleção e limiares ajustados só no treino. Não embaralhar
-   linhas do mesmo projeto em validação aleatória. Reservar teste final intocado.
-7. Reportar por ambiente/status, cobertura de projetos, MAE, quantis/calibração,
-   incerteza, amostra e desempenho contra baseline; não usar MAPE com zeros.
-8. ViU2 pode servir para pesquisa histórica, mas desempenho ali não prova
-   generalização Globocorp. Amostra Globocorp conferida tem apenas 25 elegíveis.
-9. Teste em modo sombra antes de alertas reais; humanos revisam priorização.
-   Explicações mostram associações, não causas ou culpa de pessoas.
+Fórmula: percentis das durações dos ciclos elegíveis concluídos no período.
+P50 é mediana: metade terminou até ali. P90: 90% até ali, 10% demorou mais.
+Exemplo fictício: P50=48h e P90=96h úteis. Prometer 48h para todos é imprudente.
+P90 histórico não é garantia individual nem meta automaticamente.
+Decisão: calibrar expectativa e investigar a cauda. Se P50 cai e P90 sobe, os
+casos comuns melhoraram mas os difíceis pioraram: não comemorar só a média.
+Avaliação: comparar mesmo mix, origem, complexidade e desfecho; mostrar N e cobertura.
+Período padrão = conclusão do ciclo. Acompanhar abertos separadamente para não
+esconder sobreviventes longos. Hoje: ciclo local parcial; global depende da seção 2.
 
-Um modelo só é promovido se superar o baseline em validação futura e ajudar a
-decisão. Definir com o gestor erro tolerável em horas e capacidade de tratar
-alertas. Não prometer percentual de redução sem piloto/controlar mudanças de mix.
-Monitorar erro, calibração, dados ausentes, deriva e volume por etapa; fallback
-para baseline quando não houver dados suficientes ou categoria conhecida.
+### B. Volume de saída e envelhecimento: contrapesos do tempo
 
-### Ferramentas e implantação futura
+Contar ciclos distintos encerrados por semana e desfecho; saídas de etapa não são
+entregas de projeto. Comparar entradas/saídas e idade dos ativos quando houver
+população atual confiável. Se volume cai enquanto tempo melhora, podem estar
+selecionando só casos fáceis. Se a fila envelhece, o painel de concluídos é insuficiente.
+Decisão: balancear prioridade/capacidade e não abandonar casos antigos.
+Não publicar backlog de toda a operação com a amostra histórica selecionada.
 
-Python + pandas/scikit-learn para protótipo reproduzível, scikit-survival quando
-houver censura válida. Notebooks para exploração; código testado para produção.
-BigQuery ML é alternativa para regressão/árvores usando SQL se simplificar a
-manutenção; não é necessário contratar outra plataforma agora. Cloud Run diário
-para scoring só depois de aprovação e contrato de saída; resultado com versão
-do modelo, instante de previsão, intervalo/probabilidade e motivo/fallback.
-Nenhum serviço online ou nova tabela de predições será criado nesta entrega.
+### C. Cumprimento de prazo: somente com compromisso real
 
-## 4. Como apresentar à gestão
+Taxa = entregues no prazo / entregues com prazo válido pactuado no início.
+Versionar meta por classe e vigência; não definir depois de ver resultado.
+Sem meta, mostrar "não pactuada", não semáforo de atraso. Complementar com ativos
+já vencidos quando houver snapshot confiável. Decisão: escalonar exceção, revisar
+promessa/capacidade. Recusa rápida não entra como entrega no prazo.
 
-Mensagem: "Agora conseguimos localizar etapas com maior permanência, mostrar
-quanto da informação é observado e investigar os casos certos. A próxima fase
-testará previsões para apoiar prioridades, com incerteza explícita."
-Demo: um projeto real com sua trajetória, visão de distribuições por etapa,
-e uma decisão concreta de revisão de processo. Não apresentar 152,345h estimadas
-como permanência comprovada nem atribuir a demora exclusivamente a uma equipe.
-Benefício inicial mensurável: tempo gasto para consolidar o relatório, cobertura
-de indicadores e ações gerenciais acompanhadas. No piloto: utilidade dos alertas,
-erro de previsão e evolução do P90 com composição de casos controlada.
-Não alegar ROI financeiro sem custos/receita/contrafactual. Não ranquear funcionários
-com tempo de status, pois inclui espera externa e diferenças de complexidade.
+### D. Exposição por etapa: onde priorizar a investigação
 
-## 5. Agenda e fechamento
+E_s = soma de horas da etapa s nos mesmos ciclos completos elegíveis.
+Share_s = E_s / soma de E_s. Em histórico parcial, rotular "tempo observado",
+não "percentual de todo o lead time". Mostrar também passagens/ciclos, média e P90.
+Uma etapa rara de 100h pode contribuir menos que 10h repetidas cem vezes.
+Exemplo fictício de 120 ciclos: feedback 3.600h, validação 1.200h, elaboração 900h,
+triagem 300h = 6.000h. Feedback concentra 60%; investigar antes de otimizar triagem.
+Decisão: revisar casos, checar dependências/cliente/briefing e escolher um piloto.
+Participação alta é pista, não prova causal de ineficiência da equipe.
 
-- Quinta 24/09 após 6h: Scheduler + execução Cloud Run + publication_verified +
-  corte BQ do dia esperado. HTTP 200 sozinho não basta. Depois, medidas e página executiva.
-- Sexta 25/09: trajetória, qualidade, filtros, aceite com gestor e publicação BI autorizada.
-- Segunda 28/09: priorizar novas tabelas por pergunta gerencial; definir origem,
-  grão, chave, calendário, histórico, contrato, testes e destino antes de coletar.
-- ML: discovery/baseline após homologação do dashboard, sem prazo prometido de
-  produção enquanto cobertura e validação temporal não forem demonstradas.
+### E. Retornos, primeira passagem e qualidade
 
-## Referências técnicas consultadas
+Retorno observado = revisita uma etapa; não significa erro. Separar mudança de
+escopo, negociação e correção de defeito com motivos aprovados.
+FTR proposto = ciclos entregues e aceitos sem revisão por defeito / ciclos entregues
+com trajetória e motivo confiáveis. Sem aceite/motivo, usar o proxy "sem retorno
+observado" e declarar que lacunas podem esconder retornos. Não chamar de qualidade real.
+Custo temporal de repetição = permanência nas segundas/posteriores visitas,
+por motivo. Decisão: checklist de briefing e validação mais cedo.
+Guardrail: não reduzir revisões necessárias nem incentivar ocultação de defeitos.
 
-- [Conector BigQuery para Power BI](https://learn.microsoft.com/en-us/power-query/connectors/google-bigquery)
-- [Regressão quantílica e intervalos](https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_quantile.html)
-- [Prevenção de vazamento de dados](https://scikit-learn.org/stable/common_pitfalls.html)
+### F. Handoffs, espera e bloqueios
+
+Mapear status por natureza e vigência: execução interna, aprovação interna, espera
+externa, bloqueio, terminal. Aprovar dono e significado; nome do status sozinho
+não prova causa ou responsabilidade. Tempo de handoff precisa envio/aceite real:
+diferença entre eventos não é automaticamente fila.
+Decisão: explicitar dono, rito de resposta, escalonamento e critérios de entrada.
+Não chamar razão "status interno/total" de eficiência de fluxo: touch-time/lead-time
+exige tempo de trabalho ativo que hoje não medimos.
+
+### G. Comportamento de equipe com contexto
+
+Comparar células/equipes com atribuição histórica e mix similares. Responsável
+atual não comprova quem fez o trabalho anterior. Mostrar junto: volume, complexidade,
+P90, retorno, fila e cobertura (os dois últimos operacionais dependem de novos dados).
+Pergunta: sobrecarga, dependência externa ou briefing incompleto? Tempo isolado não responde.
+Não usar esses campos para ranking disciplinar individual nem decisão automatizada.
+
+### H. Cenário de oportunidade e melhoria efetiva
+
+No exemplo, reduzir 20% das 3.600h de feedback = 720h de permanência acumulada,
+ou 6h por ciclo em média (720/120). **Não são horas de trabalho poupadas**, nem
+redução demonstrada do P90. Paralelismo e deslocamento da fila mudam o resultado.
+Escolher experimento com hipótese, dono, início, coorte, métrica e guardrail.
+Avaliar P50/P90, volume, retorno e idade dos abertos com mix comparável. Antes/depois
+é associação; grupo comparável, randomização ou implantação faseada fortalecem
+a avaliação. P90 menor com mais cancelamentos não é sucesso.
+
+## 4. Dashboard: onepage executiva + quatro aprofundamentos
+
+Não colocar tudo em uma tela. A página 1 funciona sozinha na reunião; as demais
+permitem investigar e auditar. Cinco páginas do mesmo relatório:
+
+| Página | Pergunta | Visuais/ação |
+|---|---|---|
+| Decisão | Estamos mais rápidos sem piorar qualidade? | 4 KPIs, tendência, prioridade e ação |
+| Gargalos | Onde o tempo se concentra? | Pareto de exposição, frequência/P90, cenário transparente |
+| Processo e equipe | Por que repetimos/esperamos? | Retornos/motivos, mix, responsabilidades verificadas e piloto |
+| Projeto | O que ocorreu neste caso? | Linha do tempo com datas, lacunas e estimativas distintas |
+| Confiança | Em quais dados posso confiar? | População, exclusões, origem da duração, corte, definição |
+
+Filtros nativos: período com papel claro (conclusão/entrada), origem, desfecho e
+classe de serviço quando disponível. Não unir IDs de status entre contas.
+Drillthrough de projeto conserva projeto e não corta a trajetória pelo filtro
+temporal, com aviso explícito. KPIs sem cobertura mostram "a validar", nunca zero.
+O protótipo mostra o desenho alvo com números fictícios; não é homologação.
+
+Power BI Import + conector BigQuery, modelo estrela. FatoPassagens atual e
+FatoCiclosProposta somente quando contrato revisado; dimensões compartilhadas,
+relações 1:N/unidirecionais, sem join por nome e sem multiplicar ciclos por visitas.
+Atualizar depois da publicação confirmada do pipeline, não só por ter passado das 6h.
+Detalhes de HTML Content, medidas e aceite no guia de implementação.
+
+## 5. Aula de ML: prever não é provar a causa
+
+BI explica o que ocorreu. Previsão estima o que pode ocorrer. Experimento testa
+o que muda se agirmos. Um modelo que associa responsável à duração não prova
+que trocar o responsável reduzirá o prazo. Priorizar utilidade, não sofisticação.
+
+### Modelo 1 — risco de não terminar e tempo restante (prioridade futura)
+
+Decisão: quais casos ativos devem receber revisão humana hoje? Instante: captura
+diária confiável. Alvo: tempo até entrega/terminal definido, separando desfechos.
+Baseline Kaplan–Meier por classe/etapa; Cox regularizado; candidato não linear
+Random Survival Forest. Melhor modelo é o que vence baseline em teste futuro,
+calibra riscos e cabe na capacidade de intervenção, não um algoritmo escolhido a priori.
+
+Sobrevivência trata casos ainda não concluídos quando sabemos até quando foram
+observados. NULL de histórico perdido não é censura administrativa. Para covariáveis
+fixas, S(a+h)/S(a) estima chance de permanecer mais h após idade a, se S(a)>0;
+atributos mutáveis exigem abordagem temporal/landmark e validação própria.
+Métricas: Brier (erro probabilístico, menor melhor), calibração (previsto x observado),
+C-index (ordenação, maior melhor) e precision@K (utilidade no limite de alertas).
+C-index bom com probabilidade mal calibrada não autoriza promessa de prazo.
+Dependências: captura atual, censura, finais e volume Globocorp. Ainda não pronto.
+
+### Modelo 2 — expectativa de duração na entrada
+
+Decisão: oferecer uma faixa de prazo. Baseline mediana/P90 etapa-classe; candidato
+gradient boosting quantílico P50/P90. Alvo é ciclo aprovado OU etapa observada,
+conforme a pergunta; somar percentis de etapas não prevê percentil do ciclo.
+MAE em horas para P50, pinball loss por quantil, cobertura/largura de intervalos.
+P90 deve cobrir aproximadamente 90% dos casos avaliados, não garantir cada caso.
+Treinar só concluídos seleciona rápidos: explicitar viés ou usar sobrevivência.
+Nunca tratar estimativa de fronteira como rótulo de verdade.
+
+### Modelo 3 — risco de retrabalho evitável
+
+Decisão: quais briefings revisar antes de uma devolução cara? Alvo: revisão por
+defeito de briefing/cadastro, não todo retorno. Features: completude e complexidade
+disponíveis no início, alterações já ocorridas e histórico anterior verificável.
+Baseline checklist; regressão logística regularizada; comparar árvores.
+PR-AUC, recall, precision@K e calibração; custo de alerta falso x defeito não detectado.
+Motivos/aceite/completude ainda precisam fonte confiável. Sem isso, modelo aprenderia
+um proxy enganoso. Explicações estatísticas não são culpa de pessoas.
+
+### Modelo 4 — simular melhoria de capacidade e fluxo
+
+Decisão: testar limite de WIP, rito de feedback e balanceamento. Começar pelo
+cenário aritmético explícito; evolução: simulação de eventos discretos com chegadas,
+filas, capacidade, prioridades, rotas e distribuições. Não é necessariamente ML.
+Duração em status não mede serviço ativo/capacidade sem dados adicionais.
+Calibrar para reproduzir throughput, fila e lead time; backtest e sensibilidade;
+confrontar com piloto real. Se a fila muda de lugar, a melhoria local pode não
+melhorar o sistema. Não transformar cenário em previsão garantida.
+
+### Modelo 5 — trajetórias atípicas para investigação
+
+Decisão: pequena lista de casos incomuns. Baseline P90/IQR/regras; depois avaliar
+Isolation Forest. Medir alertas úteis revisados/semana e esforço de revisão.
+Sem feedback humano não afirmar acurácia, fraude ou falha de funcionário.
+
+### Protocolo obrigatório para todos
+
+1. Fixar alvo, instante, população, desfechos e uso permitido.
+2. Separar por tempo e projeto_id, sem projetos cruzando treino/teste.
+3. No corte T, só features e rótulos já conhecidos em T; cadastro atualizado depois,
+   próxima etapa, última etapa, duração e quantidade final de visitas são vazamento.
+4. Ajustar encoder/imputação/limiares só no treino; teste final intocado.
+5. Avaliar por origem/status/mix, com N e incerteza. Não usar MAPE com duração zero.
+6. Superar baseline e definir com gestor erro tolerável/capacidade de alertas antes
+   de ver resultado. Não declarar sucesso apenas com R²/AUC agregada.
+7. Modo sombra antes de intervenção; piloto humano, guardrails e rollback.
+8. Monitorar deriva, calibração, cobertura e utilidade; fallback para baseline.
+
+Base conferida: 6.227 passagens elegíveis, 6.202 ViU2 e só 25 Globocorp. Pesquisa
+histórica não comprova generalização ao fluxo novo. Começar com BI e regras úteis,
+não prometer IA confiável na operação atual. Nenhum modelo homologado nesta entrega.
+
+Ferramentas: Power BI/BigQuery para BI; Python, pandas/scikit-learn para regressão
+e classificação; scikit-survival para sobrevivência; BigQuery ML como opção SQL.
+Scoring diário no Cloud Run é evolução futura após contrato/aprovação, sem novo
+serviço hoje. LLM pode narrar medidas verificadas, não calcular SLA nem inventar causas.
+
+## 6. Como vender, operar e avaliar
+
+Proposta: "reduzir imprevisibilidade e espera, preservando qualidade".
+Rito semanal de 20 minutos: resultado → gargalo → três casos → hipótese → dono →
+prazo → sucesso/guardrails. Ações ficam em ferramenta corporativa aprovada;
+dashboard HTML não é aplicativo de writeback.
+
+Demo fictícia: feedback tem 60% do tempo; revisar 10 casos e distinguir espera
+externa de briefing incompleto; piloto de rodada consolidada/checklist; medir
+P90 do ciclo, retornos por defeito, volume e idade dos abertos. Comparar mesmo mix.
+Não chamar queda de tempo com mais recusas de sucesso. Benefícios: confiabilidade
+de prazo, menos cobrança manual, priorização e melhoria testada. ROI exige custo/
+benefício medidos; horas de permanência não viram horas de salário poupadas.
+
+## 7. Plano quinta/sexta e critérios de entrega
+
+Quinta 24/09: confirmar Scheduler + execução + publicação + corte; rodar diagnóstico
+de ciclos; pactuar entrega/terminal/reabertura; montar modelo e executivo/gargalos.
+Sexta 25/09: processo, projeto, confiança, testes de filtros e aceite com gestor.
+Segunda 28/09: priorizar novas tabelas de briefing, motivo de revisão, entrega,
+atribuição histórica e estado atual. Contrato antes da coleta/persistência.
+
+Pendências de negócio para liberar ponta a ponta de entrega: marco exato de entrega,
+trato de declinados/reaberturas, identidade de ciclo entre contas, metas, natureza
+dos status e responsáveis históricos. Enquanto isso, os KPIs atuais permanecem
+usáveis no seu escopo; novos KPIs ficam identificados como proposta/bloqueados.
+Dashboard pronto = números reconciliados, população clara, ações definidas e
+decisões sustentáveis. Aparência bonita sozinha não atende o objetivo.
+
+## Referências técnicas
+
+- [Modelo estrela Power BI](https://learn.microsoft.com/en-us/power-bi/guidance/star-schema)
+- [HTML Content: interatividade](https://html-content.com/docs/interactivity)
+- [HTML Content: limitações](https://html-content.com/docs/limitations)
+- [HTML Content Lite: sanitização](https://html-content.com/docs/sanitization)
+- [Regressão quantílica](https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_quantile.html)
+- [Vazamento de dados](https://scikit-learn.org/stable/common_pitfalls.html)
 - [Avaliação de sobrevivência](https://scikit-survival.readthedocs.io/en/stable/user_guide/evaluating-survival-models.html)
-- [Árvores no BigQuery ML](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-create-boosted-tree)
+- [BigQuery ML: árvores](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-create-boosted-tree)

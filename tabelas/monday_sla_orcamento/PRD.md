@@ -96,7 +96,7 @@ Métrica oficial sla_etapa_horas_uteis permanece sem estimativas. Não há tabel
 
 ## Duração unificada v7 — decisão posterior do usuário
 
-Release v12 candidata, ainda não implantada. O usuário solicitou um par único de
+Release v12 implantada e conferida pelo operador em 23/09/2026 (ver recibo na documentação de entrega). O usuário solicitou um par único de
 medidas para análise com valores observados e estimados. Acrescentar:
 duracao_analise_horas e duracao_analise_horas_uteis (FLOAT nullable),
 origem_duracao_analise e versao_regra_duracao_analise (STRING required).

@@ -1,0 +1,19 @@
+{
+  "schema": "codex.powerbi.dataContractDraft.v1",
+  "sources": "Passagens",
+  "facts": [
+    "FatoPassagens",
+    "FatoCiclosProposta"
+  ],
+  "dimensions": [
+    "DimProjeto",
+    "DimEtapaOrigem",
+    "DimDataConclusao",
+    "DimDataEntrada"
+  ],
+  "rules": [
+    "Keys must be non-null and unique in dimensions.",
+    "Fact tables must reference dimensions through defined keys.",
+    "Every KPI must declare owner, grain, format, and refresh expectation."
+  ]
+}

@@ -1,0 +1,7 @@
+[
+  {"measureName":"LeadTimeP50Proposto","tableName":"FatoCiclosProposta","expression":null,"status":"Bloqueado: contrato de entrega/ciclo não homologado","description":"Percentil 50 do ciclo, uma linha por ciclo e população explícita","owner":"A pactuar com gestão"},
+  {"measureName":"LeadTimeP90Proposto","tableName":"FatoCiclosProposta","expression":null,"status":"Bloqueado: contrato de entrega/ciclo não homologado","description":"Percentil 90 do ciclo, não soma de percentis de etapas","owner":"A pactuar com gestão"},
+  {"measureName":"TempoEtapaObservado","tableName":"FatoPassagens","expression":"SUM(FatoPassagens[sla_etapa_horas_uteis])","status":"Rascunho DAX; validar no Desktop","description":"Exposição acumulada observada, não esforço de trabalho","owner":"A pactuar com gestão"},
+  {"measureName":"CoberturaPontaAPonta","tableName":"FatoCiclosProposta","expression":null,"status":"Bloqueado: definir universo e endpoints","description":"Ciclos mensuráveis sobre população-alvo, incluindo não mensuráveis no denominador","owner":"A pactuar com gestão"},
+  {"measureName":"RetornoObservado","tableName":"FatoCiclosProposta","expression":null,"status":"Bloqueado: definir ciclo e sequência de etapas","description":"Ciclos com retorno comprovado; não equivale a defeito ou FTR","owner":"A pactuar com gestão"}
+]

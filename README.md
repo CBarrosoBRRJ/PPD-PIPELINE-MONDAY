@@ -58,7 +58,14 @@ Execute-o na raiz para manter os caminhos relativos atuais; selecione configura�
 explicitamente com `sla-pipeline --env-file .env.gcp COMANDO`.
 Não execute coleta/publicação apenas para validar esta reorganização.
 
-## Próximas tabelas
+## Dashboard e melhoria do processo
+
+Leia o [plano gerencial de KPIs e ML](docs/PLANO_DASHBOARD_ML.md), abra o
+[protótipo HTML ilustrativo](powerbi/sla_gestao/prototipo.html) no navegador e siga
+o [guia Power BI](powerbi/sla_gestao/IMPLEMENTACAO.md). São propostas de consumo,
+não um dashboard publicado nem homologação do SLA global ponta a ponta.
+
+## Expansão de produtos
 
 Cada nova tabela terá sua pasta `tabelas/<nome_da_tabela>/`, com código, testes,
 contrato, documentação e deploy próprios. Antes de implementar, definir origem,

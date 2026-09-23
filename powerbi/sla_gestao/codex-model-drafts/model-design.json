@@ -1,0 +1,84 @@
+{
+  "schema": "codex.powerbi.modelWizard.v1",
+  "projectName": "sla_gestao",
+  "businessPurpose": "Reduzir tempo ponta a ponta e recorrencia de revisoes; priorizar gargalos com evidencia e avaliar intervencoes.",
+  "evidenceMaturity": "Draft",
+  "architecture": {
+    "pattern": "StarSchema",
+    "factTables": [
+      "FatoPassagens",
+      "FatoCiclosProposta"
+    ],
+    "dimensionTables": [
+      "DimProjeto",
+      "DimEtapaOrigem",
+      "DimDataConclusao",
+      "DimDataEntrada"
+    ],
+    "sourceNames": "Passagens",
+    "sourceProfiles": [
+      {
+        "name": "Passagens",
+        "path": "gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento",
+        "extension": "DeclaredConnector",
+        "connectorKind": "Google BigQuery",
+        "columns": [
+          "interval_id",
+          "projeto_id",
+          "ambiente_origem",
+          "status_nome",
+          "entrada_status_utc",
+          "saida_status_utc",
+          "sla_etapa_horas_uteis",
+          "duracao_analise_horas_uteis",
+          "origem_duracao_analise",
+          "tempo_ciclo_observado_horas",
+          "ciclo_observado_origem",
+          "corte_globocorp_utc"
+        ],
+        "mode": "Import",
+        "schemaStatus": "DeclaredSchema"
+      }
+    ],
+    "connectorSupport": "Any connector available in the user's installed Power BI Desktop Get Data experience can be declared by connectorKind."
+  },
+  "semanticPlan": {
+    "measures": [
+      "LeadTimeP50Proposto",
+      "LeadTimeP90Proposto",
+      "TempoEtapaObservado",
+      "CoberturaPontaAPonta",
+      "RetornoObservado"
+    ],
+    "requiredPolicies": [
+      "Assign KPI owner",
+      "Add measure descriptions",
+      "Define RLS roles",
+      "Define freshness SLO",
+      "Add semantic tests"
+    ]
+  },
+  "reportPlan": {
+    "pages": [
+      "Decisão",
+      "Gargalos",
+      "Processo e equipe",
+      "Projeto",
+      "Confiança"
+    ],
+    "firstPageKpis": [
+      "LeadTimeP50Proposto",
+      "LeadTimeP90Proposto",
+      "TempoEtapaObservado",
+      "CoberturaPontaAPonta",
+      "RetornoObservado"
+    ]
+  },
+  "safeNextSteps": [
+    "Create a new PBIP project in Power BI Desktop.",
+    "Copy reviewed model and report drafts into the PBIP project.",
+    "Configure credentials only in Power BI Desktop or an approved gateway.",
+    "Run semantic tests and open the project in Power BI Desktop before publishing."
+  ],
+  "binaryBoundary": "The wizard does not create or modify PBIX/PBIT binaries and does not publish to Power BI or Fabric."
+}
