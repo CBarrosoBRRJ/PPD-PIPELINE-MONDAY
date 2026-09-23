@@ -11,7 +11,9 @@ execução pipeline-monday-jdc47 concluída. Contrato sla-consolidado-analise-v7
 9.648 linhas: 6.227 observadas validadas, 191 estimadas, 3.230 indisponíveis.
 Ambas as durações unificadas com zero divergências na consulta sem cache.
 Scheduler ENABLED às 06h America/Sao_Paulo; próxima execução automática pendente.
-Não repetir migração. GitHub ainda não sincronizado/comprovado nesta entrega.
+Não repetir migração. Código publicado em d0f0f56; correção de lint em 3058b55,
+com CI 35931199541 aprovado. Main/local têm três imports reordenados após a
+imagem v12; nenhuma regra de negócio alterada. Não declarar igualdade binária.
 
 ## Recibo v11 — histórico, substituído pela v12
 

@@ -36,8 +36,8 @@ não colar SELECT/WHERE diretamente no Bash.
 
 Recebido do operador: 9.648 passagens, 2.209 projetos, 6.227 valores de KPI e
 191 estimativas no corte 23/09/2026 03h UTC. Publicação e controles SQL confirmados.
-Execução pipeline-monday-f9gbw. Agenda ENABLED às 06h São Paulo, diariamente.
-Ainda falta observar a primeira execução automática v11 com corte do novo dia.
+Execução v12 pipeline-monday-jdc47. Agenda ENABLED às 06h São Paulo, diariamente.
+Ainda falta observar a primeira execução automática v12 com corte do novo dia.
 HTTP 200 do Scheduler isoladamente não comprova publicação: conferir execução
 Cloud Run, orchestration_end e publication_verified, além do corte em BQ.
 
@@ -46,7 +46,7 @@ Globocorp continua coletado. A consolidada é reconstruída e sua seleção pode
 com o escopo/current Gold. Preservar contexto, histórico, mapa, estado e controles GCS.
 Não apagar locks; em falha investigar execução/journal e manter publicação anterior.
 Recuperação: contrato e protocolo em tabelas/monday_sla_orcamento/src/monday_sla_orcamento/publication.py
-e documentação de implantação v11. Não executar Terraform legado nem alterar LIA.
+e documentação de implantação v12. Não executar Terraform legado nem alterar LIA.
 
 ## Limites e fechamento
 
@@ -54,7 +54,8 @@ Não aprovados: SLA total entre contas, histórico integral de todo projeto e ML
 genérico. ML exige definição de alvo, instante de previsão e separação temporal;
 estimativa com informação futura não é feature retrospectiva disponível antes dela.
 
-Documentação local atualizada. Git/GitHub ainda não publicado nesta entrega;
-revisar reorganização ampla, segredos, artefatos privados e arquivos do editor antes
-de commit. Não afirmar igualdade remota até confirmar commit e push.
-Recibo da imagem e SHA do pacote em ENTREGA_V11_ESTIMATIVAS.md.
+Código publicado no GitHub: d0f0f56; correção de lint 3058b55, CI aprovado.
+Main contém ordenação de imports posterior à imagem, sem alteração de regras;
+não declarar igualdade binária com GCP. Arquivos privados/editor ficam fora.
+Recibo da imagem e SHA do pacote em ENTREGA_V12_DURACAO_UNIFICADA.md.
+Plano de dashboard e pesquisa de ML: PLANO_DASHBOARD_ML.md.

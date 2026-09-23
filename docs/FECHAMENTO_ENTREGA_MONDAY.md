@@ -1,10 +1,11 @@
 # Fechamento da primeira entrega Monday
 
-## Atualização v11 — prevalece sobre o histórico abaixo
+## Atualização v12 — prevalece sobre o histórico abaixo
 
 Publicação confirmada e consumo por etapa disponível. Ver
 [entrega atual](ENTREGA_CONSUMO_ATUAL.md) e [recibos](ESTADO_GCP_2026_09_23.md).
-Pendentes: observar próxima agenda v11 e revisar/versionar mudanças locais no Git.
+Código versionado; CI aprovado em 3058b55. Pendente: observar próxima agenda v12.
+Roteiro futuro de dashboard/ML em PLANO_DASHBOARD_ML.md; não é modelo homologado.
 SLA total entre contas/ML não pertencem ao escopo aprovado. Não repetir exclusões,
 migrações ou ações de infraestrutura descritas como planos nas seções históricas.
 

@@ -1,13 +1,15 @@
 # Dados Monday para KPIs e machine learning
 
-## Situação atual — v11, 23/09/2026
+## Situação atual — v12, 23/09/2026
 
-A tabela de consumo é monday_sla_orcamento, contrato sla-consolidado-estimativas-v6.
+A tabela de consumo é monday_sla_orcamento, contrato sla-consolidado-analise-v7.
 KPI oficial por etapa: sla_etapa_horas_uteis, por ambiente/status. Estimativas:
 duracao_estimada_horas_uteis, separadas e identificadas como hipótese. Trajetória:
 projeto_id + ordem_etapa, não filtro por item_id nativo isolado.
 Ver [guia de entrega atual](ENTREGA_CONSUMO_ATUAL.md). Os totais e limitações
 conferidos estão no [recibo operacional](ESTADO_GCP_2026_09_23.md).
+Análise unificada: duracao_analise_horas/horas_uteis com origem_duracao_analise.
+Plano recomendado para quinta/sexta: [dashboard e ML](PLANO_DASHBOARD_ML.md).
 
 ## Contexto histórico — 21/09/2026 (substituído pelo recibo acima)
 

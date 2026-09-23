@@ -1,6 +1,6 @@
-# SLA consolidado — contrato de análise v7 (candidato)
+# SLA consolidado — contrato de análise v7 (publicado)
 
-Status: v11/contrato v6 publicada; execução pipeline-monday-f9gbw e campos no BQ
+Status: v12/contrato v7 publicada; execução pipeline-monday-jdc47 e campos no BQ
 confirmados pelo operador. Agenda reativada; próxima execução automática pendente
 de evidência. Não repetir migrações antigas.
 

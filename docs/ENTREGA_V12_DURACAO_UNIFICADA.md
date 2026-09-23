@@ -10,7 +10,7 @@ Consulta BQ sem cache confirmou contrato v7: 6.227 observadas validadas,
 191 estimadas e 3.230 indisponíveis; zero divergências em ambas as durações.
 KPI observado preservado em 6.227 passagens. Scheduler retomado pelo operador:
 ENABLED, 0 6 * * *, America/Sao_Paulo. Próxima execução automática ainda não
-observada. Commit/push e correspondência com GitHub ainda não confirmados.
+observada. Commit/push posteriores confirmados na seção abaixo.
 
 ### Fechamento Git e correção de CI posterior
 
@@ -23,6 +23,9 @@ nos três módulos da orquestração, sem mudança de regras ou destinos.
 Esta correção posterior ainda não faz parte da imagem v12: código-fonte desses
 três módulos difere na ordenação dos imports. Não declarar igualdade byte a byte
 entre a imagem implantada e a main após esta correção. Nenhum redeploy GCP feito.
+Correção publicada em 3058b55; CI 35931199541 aprovado (test e infrastructure).
+Revalidação final em 23/09: 465 testes aprovados, 3 ignorados; lint completo aprovado.
+Comparação dos 84 arquivos com ZIP v12: somente os três módulos citados diferem.
 
 Pacote runtime/pipeline-monday-release-20260923-v12-duracao-unificada.zip,
 84 arquivos de código, manifesto SHA256/compilação conferidos. SHA256:
