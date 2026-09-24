@@ -1,6 +1,6 @@
 # Gestão do fluxo: entregar mais rápido, com qualidade
 
-Plano revisado em 23/09/2026. Objetivo: reduzir tempo do primeiro status até a
+Plano revisado em 24/09/2026. Objetivo: reduzir tempo do primeiro status até a
 conclusão, encontrar gargalos, melhorar processo e equipe. Não apenas exibir médias.
 Este é um projeto analítico, não homologação de novos KPIs. A v12 permanece em
 produção. Protótipo com dados fictícios; nenhuma nova leitura BQ foi realizada.
@@ -295,7 +295,8 @@ benefício medidos; horas de permanência não viram horas de salário poupadas.
 
 ## 7. Plano quinta/sexta e critérios de entrega
 
-Quinta 24/09: confirmar Scheduler + execução + publicação + corte; rodar diagnóstico
+Quinta 24/09: execução e publicação diária confirmadas, com corte atualizado;
+conferir o log do disparo Scheduler se necessário e rodar diagnóstico
 de ciclos; pactuar entrega/terminal/reabertura; montar modelo e executivo/gargalos.
 Sexta 25/09: processo, projeto, confiança, testes de filtros e aceite com gestor.
 Segunda 28/09: priorizar novas tabelas de briefing, motivo de revisão, entrega,

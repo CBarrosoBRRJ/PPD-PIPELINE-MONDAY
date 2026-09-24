@@ -7,11 +7,11 @@ O nível compartilhado é **pipeline-monday**, sem referência a orçamento. Or�
 [separação entre plataforma e produtos](docs/PADRAO_NOMES_TABELAS.md).
 O coordenador v12 está implantado para a origem Globocorp e a consolidação.
 Contrato consolidado sla-consolidado-analise-v7: KPI observado por etapa,
-trajetória qualificada e durações unificadas com origem explícita. Publicação manual conferida;
-agenda ativa às 06h São Paulo, próxima execução automática v12 ainda pendente
-de evidência. Não repetir migrações ou implantar releases anteriores.
+trajetória qualificada e durações unificadas com origem explícita. A execução diária
+de 24/09/2026 publicou os dois produtos e foi conferida pelo operador; corte da
+consolidada em 24/09 às 03:00 UTC. Não repetir migrações ou implantar releases anteriores.
 Consulte a [entrega para consumo](docs/ENTREGA_CONSUMO_ATUAL.md) e os
-[recibos de produção](docs/ESTADO_GCP_2026_09_23.md).
+[recibos de produção](docs/ESTADO_GCP_2026_09_24.md).
 Veja a [organização das iniciativas no GCP compartilhado](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
 
 ## Organização

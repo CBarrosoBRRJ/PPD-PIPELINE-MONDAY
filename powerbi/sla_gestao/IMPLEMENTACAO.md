@@ -32,6 +32,13 @@ Os ciclos precisam de início/fim comprovados, tipo de desfecho, escopo, qualida
 
 Exemplos DAX assumem a tabela importada renomeada `FatoPassagens`. Criar uma medida por vez. O Desktop pode exigir separadores diferentes conforme localidade. Os filtros de etapa e ambiente permanecem ativos.
 
+Na primeira página **publicável com os dados atuais**, os cartões são: passagens
+observadas, P50 e P90 da etapa selecionada e participação da exposição da etapa.
+Cada cartão mostra ambiente, status, período de saída e N. Sem uma etapa selecionada,
+P50/P90 são a distribuição das passagens filtradas, e o título deve dizê-lo. A
+tendência semanal usa a data da **saída observada**, não a data da publicação.
+Evitar títulos como “prazo total de entrega” nessa primeira versão.
+
 ```dax
 Passagens KPI =
 COUNT(FatoPassagens[sla_etapa_horas_uteis])
@@ -54,9 +61,35 @@ Passagens estimadas =
 CALCULATE(COUNTROWS(FatoPassagens), FatoPassagens[origem_duracao_analise] = "estimada")
 
 Participação estimada = DIVIDE([Passagens estimadas], COUNTROWS(FatoPassagens))
+
+Projetos com KPI de etapa =
+CALCULATE(
+    DISTINCTCOUNT(FatoPassagens[projeto_id]),
+    NOT ISBLANK(FatoPassagens[sla_etapa_horas_uteis])
+)
+
+Participação da etapa na exposição observada =
+DIVIDE(
+    [Exposição observada h úteis],
+    CALCULATE(
+        [Exposição observada h úteis],
+        REMOVEFILTERS(FatoPassagens[status_nome])
+    )
+)
 ```
 
 Zero observado válido participa; NULL não vira zero. A participação estimada acima tem todas as passagens como denominador, incluindo terminais: não chamar esse número de “taxa de erro”. Mostrar N com percentis. Percentil por passagem dá mais peso a projetos que retornam; uma análise por projeto requer outra medida e grão.
+O último percentual preserva os demais filtros, inclusive ambiente e período, e
+retira apenas o filtro de status. Se o modelo passar a filtrar status por dimensão,
+revisar essa medida para remover o filtro da dimensão correspondente. Não chamar
+essa participação de “parcela do lead time total” enquanto faltarem trajetórias.
+
+Para iniciar no Desktop, siga esta ordem: conectar BigQuery em Import; conferir
+tipos e contagens do corte; criar as medidas; montar uma matriz por ambiente/status
+com N, projetos, P50, P90 e exposição; adicionar segmentadores de ambiente e data
+de saída; criar gráfico semanal. A consulta
+[`dashboard_tendencia_etapas.sql`](../../tabelas/monday_sla_orcamento/sql/dashboard_tendencia_etapas.sql)
+serve de conferência independente das medidas, com percentis aproximados.
 
 Para KPI ponta a ponta, calcular percentil **sobre uma linha por ciclo**, não sobre linhas da FatoPassagens nem sobre a soma dos percentis das etapas. A expressão final depende do contrato futuro; nenhum campo novo foi criado no BQ nesta entrega.
 
@@ -84,8 +117,8 @@ Se interpolar nomes/observações, escapar `&`, `<`, `>`, aspas duplas e simples
 
 ## 5. Aceite antes de publicar
 
-- Reconciliar 9.648 passagens / 2.209 projetos do recibo de 23/09 com o mesmo corte; atualizar baseline quando houver nova publicação.
-- Reconciliar 6.227 durações observadas, 191 estimadas, 3.230 indisponíveis. Não congelar esses totais como regra dos próximos dias.
+- Reconciliar 9.672 passagens / 2.209 projetos do recibo de 24/09 com o corte de `03:00 UTC`. Ver [recibo diário](../../docs/ESTADO_GCP_2026_09_24.md).
+- Reconciliar 6.227 durações observadas e 215 estimadas; verificar a categoria indisponível diretamente (3.230 é inferência aritmética). Não congelar esses totais como regra dos próximos dias.
 - Confirmar que estimativas não entram no KPI observado e que terminais não ganham duração zero.
 - Abrir trajetória por projeto_id, preservando os itens de ambas as origens; o filtro de período não deve esconder silenciosamente etapas anteriores do detalhe.
 - Conferir origem, população, datas, calendário, metas e denominadores em cada tooltip.
@@ -97,7 +130,7 @@ Se interpolar nomes/observações, escapar `&`, `<`, `>`, aspas duplas e simples
 
 ## 6. Fechamento operacional
 
-Esta entrega altera documentação, SQL somente leitura e protótipo. Não requer rebuild ou migração GCP. A agenda foi confirmada ativa às 06h Brasília. Em 24/09/2026, conferir execução automática, `orchestration_end`, publicação verificada e novo corte — não basta HTTP 200 do Scheduler. Não inferir execução futura pelo sucesso manual.
+Esta entrega altera documentação, SQL somente leitura e protótipo. Não requer rebuild ou migração GCP. A execução diária `pipeline-monday-p59rf` de 24/09/2026 terminou com sucesso; `orchestration_end` e publicação dos dois produtos foram verificados, com corte de 24/09. O log do disparo do Scheduler não foi incluído no recibo. Conferir o próximo dia de forma independente.
 
 Quinta/sexta: construir e homologar dashboard com gestão. Segunda: priorizar novas tabelas de motivos, aceite, responsabilidade histórica e eventos de entrega, conforme lacunas identificadas. Nenhuma coleta nova foi implementada aqui.
 

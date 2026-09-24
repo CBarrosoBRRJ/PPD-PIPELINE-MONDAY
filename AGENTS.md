@@ -1,9 +1,9 @@
 # Manutenção do PIPELINE-MONDAY
 
-Estado operacional mais recente: docs/ESTADO_GCP_2026_09_23.md prevalece sobre
+Estado operacional mais recente: docs/ESTADO_GCP_2026_09_24.md prevalece sobre
 anotações cronológicas abaixo. V12/contrato v7 implantada; execução
 pipeline-monday-jdc47 e durações unificadas conferidas no BQ pelo operador.
-Agenda ativa confirmada. Próxima execução automática v12 pendente de observação;
+Agenda ativa confirmada. Execução diária de 24/09 concluída e publicação v12 verificada;
 ver docs/ENTREGA_V12_DURACAO_UNIFICADA.md. Durações unificadas têm proveniência;
 não confundir análise com estimativas com o KPI estritamente observado.
 Agenda/job/bucket legados excluídos pelo
