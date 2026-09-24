@@ -20,6 +20,7 @@ from monday_sla_orcamento.analysis_duration import FIELDS as ANALYSIS_FIELDS
 from monday_sla_orcamento.analysis_duration import project as analysis_project
 from monday_sla_orcamento.consumo import FIELDS as CONSUMPTION_FIELDS
 from monday_sla_orcamento.consumo import project as consumption_project
+from monday_sla_orcamento.coverage import audit as audit_coverage
 from monday_sla_orcamento.current_context import FIELDS as CONTEXT_FIELDS
 from monday_sla_orcamento.current_context import project as context_project
 from monday_sla_orcamento.estimates import FIELDS as ESTIMATE_FIELDS
@@ -352,6 +353,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
     trajectory_report = audit_trajectory(result)
     trajectory_report.pop("details")
     return result, {"rows": len(result), "projects": len({r["projeto_id"] for r in result}), "selected_map_pairs": len(project_ids),
+                    "coverage_audit": audit_coverage(old_rows, new_rows, mapping, result, excluded),
                     "trajectory_audit": trajectory_report,
                     "mapped_projects_absent_current_gold": len(project_ids - active),
                     "rows_by_origin": dict(Counter(r["ambiente_origem"] for r in result)),

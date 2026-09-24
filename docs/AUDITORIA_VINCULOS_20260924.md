@@ -38,6 +38,24 @@ com candidatos privados. Exige controle estavel, sem pending e hash esperado.
 
 ## Proximos passos
 
+### Cruzamento posterior com a saída do operador
+
+A auditoria retornou 227 IDs Globocorp sem mapa com Entrada datada. Na captura
+arquivada há 207 desses IDs; 20 exigem contexto atualizado. O matching arquivado
+contém 23 pares candidatos para 16 dos 227 IDs.
+
+Filtrando esses pares por nome igual, marca coincidente e coincidência da coluna
+de talento exclusivo ou interveniência, restam 6 pares/6 IDs Globocorp. Cinco
+têm conflito de links; três apontam para uma ponta ViU2 já ocupada no mapa
+(grupos podem se sobrepor). Não aprovar nenhum desses casos automaticamente.
+
+Resta um candidato sem esses impedimentos: ViU2 12959570080 ↔ Globocorp
+12965547192. Há divergência no campo cadastral Data de Entrada e nenhuma
+evidência de link único. Exige revisão de negócio; não foi incorporado ao mapa.
+Essas contagens são de candidatos da captura histórica, não de vínculos
+comprovados nem de toda a população atual. Conferência contínua documentada em
+`VALIDACOES_CONTINUAS_SLA.md`.
+
 Executar auditoria no Cloud Shell autorizado, cruzar os IDs relevantes com o
 matching e verificar contexto atual quando necessario. Nao substituir projetos
 existentes, ampliar mapa automaticamente por nomes ou alterar filtros de titulo,
