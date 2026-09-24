@@ -5,6 +5,6 @@
     "connectorKind": "Google BigQuery",
     "connection": "gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento",
     "mode": "Import",
-    "columns": ["interval_id", "projeto_id", "ambiente_origem", "status_nome", "entrada_status_utc", "saida_status_utc", "sla_etapa_horas_uteis", "duracao_analise_horas_uteis", "origem_duracao_analise", "tempo_ciclo_observado_horas", "ciclo_observado_origem", "corte_globocorp_utc"]
+    "columns": ["interval_id", "projeto_id", "item_id", "projeto_nome", "ambiente_origem", "status_nome", "ordem_etapa", "entrada_status_utc", "saida_status_utc", "saida_status_local", "sla_etapa_horas_uteis", "duracao_analise_horas_uteis", "origem_duracao_analise", "retorno_observado_origem", "status_terminal", "classificacao_consumo", "tempo_ciclo_observado_horas", "ciclo_observado_origem", "corte_globocorp_utc"]
   }]
 }

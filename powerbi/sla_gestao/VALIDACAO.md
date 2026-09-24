@@ -11,3 +11,14 @@
 Limite: este recibo não homologa o KPI ponta a ponta, uma conexão Power BI, RLS,
 atualização no serviço, modelos ML ou a execução automática do dia seguinte.
 Documentação e protótipo não exigem mudança de imagem/contrato no GCP.
+
+## Adição de 24/09 — primeira página
+
+- Referência `fase1.html` renderizada em Edge headless a 1440 px e 390 px:
+  título correto, sem transbordamento horizontal nem erros JavaScript;
+  inspeção visual desktop e celular concluída.
+- Campos declarados da fonte (19) conferidos contra `consolidated_schema.json`:
+  nenhum campo ausente. Todas as medidas da primeira página constam nos rascunhos.
+- `git diff --check` aprovado para os arquivos alterados.
+- DAX e Power BI Desktop não executados: nenhum PBIP ligado ao BigQuery foi criado.
+  Autenticação local do GCP ficou fora deste trabalho, conforme orientação do usuário.

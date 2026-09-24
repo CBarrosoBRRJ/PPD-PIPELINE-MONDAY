@@ -2,6 +2,10 @@
 
 Estado: projeto de relatório, não PBIP conectado nem publicação Power BI. O protótipo usa dados fictícios; os recibos na página Confiança estão datados. O plano de negócio é [PLANO_DASHBOARD_ML.md](../../docs/PLANO_DASHBOARD_ML.md).
 
+Para construir agora com a tabela disponível, siga a [primeira página por etapa](FASE1_POWER_BI.md)
+e a [referência visual dessa fase](fase1.html). O [protótipo futuro](prototipo.html)
+inclui indicadores de ciclo ainda não homologados.
+
 ## 1. Construção em duas entregas
 
 1. Entregar tempo por etapa, trajetória, estimativas identificadas e cobertura com os campos existentes.

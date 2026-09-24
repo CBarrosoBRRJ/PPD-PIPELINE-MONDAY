@@ -25,13 +25,20 @@
         "columns": [
           "interval_id",
           "projeto_id",
+          "item_id",
+          "projeto_nome",
           "ambiente_origem",
           "status_nome",
+          "ordem_etapa",
           "entrada_status_utc",
           "saida_status_utc",
+          "saida_status_local",
           "sla_etapa_horas_uteis",
           "duracao_analise_horas_uteis",
           "origem_duracao_analise",
+          "retorno_observado_origem",
+          "status_terminal",
+          "classificacao_consumo",
           "tempo_ciclo_observado_horas",
           "ciclo_observado_origem",
           "corte_globocorp_utc"
@@ -44,9 +51,15 @@
   },
   "semanticPlan": {
     "measures": [
+      "PassagensKPIEtapa",
+      "ProjetosKPIEtapa",
+      "P50EtapaHorasUteis",
+      "P90EtapaHorasUteis",
+      "ExposicaoObservadaHorasUteis",
+      "ParticipacaoEtapaExposicao",
+      "CorteDado",
       "LeadTimeP50Proposto",
       "LeadTimeP90Proposto",
-      "TempoEtapaObservado",
       "CoberturaPontaAPonta",
       "RetornoObservado"
     ],
@@ -67,11 +80,11 @@
       "Confiança"
     ],
     "firstPageKpis": [
-      "LeadTimeP50Proposto",
-      "LeadTimeP90Proposto",
-      "TempoEtapaObservado",
-      "CoberturaPontaAPonta",
-      "RetornoObservado"
+      "PassagensKPIEtapa",
+      "P50EtapaHorasUteis",
+      "P90EtapaHorasUteis",
+      "ParticipacaoEtapaExposicao",
+      "CorteDado"
     ]
   },
   "safeNextSteps": [
