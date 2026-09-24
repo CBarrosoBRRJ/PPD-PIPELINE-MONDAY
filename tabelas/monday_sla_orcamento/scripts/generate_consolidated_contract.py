@@ -107,7 +107,14 @@ def main():
               "Não certifica identidade nem vínculo contratual. Não substitui talento_nome histórico.",
               "talentos_atuais_json preserva entradas por origem e texto livre sem dividir por pontuação.",
               "situacao_talento_atual explica ausência, multiplicidade ou ambas as origens.",
-              "Uma passagem continua uma linha. Não explodir a lista antes de somar durações.", ""]
+              "Uma passagem continua uma linha. Não explodir a lista antes de somar durações.", "",
+              "## Escopo de talento — revisão v15", "",
+              "Excluir projeto inteiro nas duas origens se ambas as colunas estiverem preenchidas,",
+              "nenhuma preenchida, múltiplos exclusivos ou palavra Squad em qualquer coluna.",
+              "Cadastro atual verificado; não apagar fontes. Reavaliar a cada captura sem lista permanente.",
+              "Report privado registra política talento-cadastro-unico-v1, IDs/motivos e contagens.",
+              "Ausência técnica/JSON inválido bloqueia carga. Correção pode reincluir se demais filtros permitirem.",
+              "Mapa de identidade e presença na Gold atual continuam obrigatórios; não inclui automaticamente novos itens.", ""]
     (docs / "CONTRATO_CONSOLIDADO.md").write_text("\n".join(lines), encoding="utf-8")
 
 

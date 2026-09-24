@@ -2,6 +2,23 @@
 
 ## Candidato v9 — talento atual unificado (ainda não implantado)
 
+### Revisão v15: escopo obrigatório de talento
+
+Substitui o pacote v14 ainda não implantado. Política `talento-cadastro-unico-v1`
+na consolidada: excluir TODAS as passagens do projeto nas duas origens quando
+o cadastro atual verificado tiver ambas as colunas preenchidas (mesmo se nomes
+iguais), nenhuma preenchida, mais de um exclusivo ou a palavra Squad em qualquer
+uma delas (independente de caixa, incluindo Squad de Talentos).
+Espaços e entradas vazias não contam como preenchimento. Não inferir pessoas
+separando texto livre. Motivos e IDs dos projetos excluídos ficam no report.json
+privado da publicação, com contagens por origem. Não apagar/modificar fontes nem
+filtrar as tabelas completas de backlog/talentos. Correção na origem pode reincluir
+na próxima execução se os demais critérios forem atendidos. Ausência técnica de
+cadastro/schema ou JSON malformado bloqueia a carga; não equivale a cadastro vazio.
+Revalidar a política no lote final para impedir publicação indevida. Leitura de v8
+continua preservada para reconciliação; agenda e migração seguem controladas.
+Redução de contagens é esperada, mas só pode ser quantificada na execução real.
+
 Estado mais recente: release v13/v8 executada conforme docs/ESTADO_GCP_2026_09_24.md
 na raiz; homologação independente e retomada da agenda pendentes. As seções
 cronológicas abaixo não substituem esse recibo.

@@ -2,6 +2,33 @@
 
 import json
 import re
+import unicodedata
+
+SCOPE_RULE = 'talento-cadastro-unico-v1'
+
+
+def exclusion_reasons(source):
+    """Whole-project scope based on verified current registration, not historical claims."""
+    raw = source.get('talentos_exclusivos_json')
+    names = json.loads(raw) if raw is not None else []
+    if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
+        raise ValueError('Talentos: lista de exclusivos invalida')
+    names = [name.strip() for name in names if name.strip()]
+    inter = source.get('interveniencia')
+    if inter is not None and not isinstance(inter, str):
+        raise ValueError('Talentos: interveniencia invalida')
+    inter = (inter or '').strip()
+    reasons = []
+    if names and inter:
+        reasons.append('talento_ambas_colunas')
+    if not names and not inter:
+        reasons.append('talento_nao_informado')
+    if len(names) > 1:
+        reasons.append('talento_multiplo')
+    if any(re.search(r'\bsquad\b', unicodedata.normalize('NFKC', text).casefold())
+           for text in [*names, inter]):
+        reasons.append('talento_squad')
+    return reasons
 
 FIELDS = {
     'talento_nome_atual': ('STRING', False),

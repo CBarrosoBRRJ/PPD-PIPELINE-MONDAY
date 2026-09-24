@@ -1,5 +1,8 @@
 # Release v14 / contrato v9 — candidato, nao implantado
 
+**SUBSTITUIDO pelo pacote v15 antes de implantacao. Nao usar este ZIP.**
+Ver IMPLANTACAO_V15_ESCOPO_TALENTOS.md para exclusao/reinclusao por cadastro atual.
+
 ## Recibo local
 
 - Suite: 531 testes aprovados, 3 ignorados; Ruff e diff-check aprovados.

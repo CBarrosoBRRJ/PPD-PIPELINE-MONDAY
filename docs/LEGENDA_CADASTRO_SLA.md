@@ -42,6 +42,12 @@ Nao usar responsavel atual como autoria historica nem como medida de produtivida
 
 ### Candidato v9: nome unificado e flag (ainda nao publicado)
 
+Revisao v15 substitui o pacote v14: projetos com ambas as colunas, nenhuma,
+Squad ou multiplos exclusivos sao excluidos por inteiro da consolidada, nunca
+das fontes/backlog. A classificacao abaixo continua descritiva e defensiva;
+essas situacoes excluidas nao devem chegar ao lote final publicado. A politica
+usa cadastro atual verificado e nao afirma como era o preenchimento historico.
+
 | Campo fisico novo | Significado |
 | --- | --- |
 | talento_nome_atual | Rotulo unico do cadastro atual quando nao ambiguo; nao altera talento_nome preexistente |
@@ -52,7 +58,7 @@ Nao usar responsavel atual como autoria historica nem como medida de produtivida
 Texto de Interveniencia com separadores nao vira uma pessoa artificial: fica na
 lista como texto livre, com escalares NULL. Ausencia de separadores tambem nao
 certifica identidade de pessoa. Duas origens com nome igual nao sao mescladas.
-Nenhuma dessas regras amplia a populacao selecionada para SLA ou remove filtros.
+Essa revisao restringe a populacao para SLA sem remover filtros anteriores.
 Consulta cadastro_analitico.sql agora requer v9; auditoria_cadastro_atual.sql
 continua compativel com v8. Usar auditoria_talentos.sql depois da migracao v9.
 
