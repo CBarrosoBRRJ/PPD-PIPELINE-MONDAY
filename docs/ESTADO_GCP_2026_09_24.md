@@ -1,5 +1,33 @@
 # Recibo da execução automática — 24/09/2026
 
+## Estado posterior: v16 publicada e reconciliação conferida pelo operador
+
+Esta seção prevalece sobre os recibos anteriores. Build
+`1dd188aa-e9b6-492d-9900-8b85267e28e4` SUCCESS; imagem digest
+`sha256:544579b5a469be5af8c2a85a715ebe0ede28ec102c445ce1a8df2ee03e6ae54e`.
+Execução `pipeline-monday-vl5zr`, scheduled_for 2026-09-24T23:23:32.119156Z,
+orchestration_end 23:28:23.476679Z com sucesso. Contrato permanece v9;
+não repetir migrações anteriores.
+
+- Backlog: 4.872 linhas, captura 23:23:40.977020Z; talentos: 41, captura
+  23:26:12.269892Z. Ambas publicações verificadas.
+- Consolidada: 9.594 passagens / 2.183 projetos, publicação verificada,
+  corte da fonte 2026-09-24 03:00 UTC. Fonte SLA reutilizada e verificada.
+- Controle estável sem pending; report da execução correta:
+  21.222 linhas de origem = 9.594 publicadas + 11.628 excluídas; balanced=true.
+- Zero sobreposições detectadas. Exclusões: Globocorp sem início comprovado
+  2.185, sem mapa 1.284, talento 30; ViU2 sem item na Gold atual 5.178,
+  sem mapa 698, talento 74, título/Input 2.179.
+- 275 itens Globocorp sem mapa, 227 com Entrada datada. 2.083 pares do mapa
+  ausentes da Gold atual. São limitações de cobertura, não ausência comprovada
+  no Monday nem aprovação para unir históricos automaticamente.
+
+Agenda permanece pausada no último recibo. Consulta final de aceite BQ e retomada
+ainda dependem da saída do operador. Alerta externo não homologado. Não declarar
+entrega integral do histórico ou KPI completo da operação atual. A população
+publicada permite análise das passagens/ciclos elegíveis, com origem e cobertura
+explícitas; contagens de projetos por motivo podem se sobrepor.
+
 ## Atualização posterior: v13 executada, homologação pendente
 
 Esta seção prevalece sobre o recibo v12 abaixo. Evidências enviadas pelo operador:
