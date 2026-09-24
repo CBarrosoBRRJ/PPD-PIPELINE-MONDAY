@@ -1,4 +1,4 @@
-# Contrato consolidado — sla-consolidado-precificacao-v8
+# Contrato consolidado — sla-consolidado-talentos-v9
 
 Uma linha: passagem datada de origem preservada, ligada a projeto selecionado.
 A ordem e a entrada são obrigatórias pela validação Python. Ausências não são preenchidas.
@@ -101,6 +101,10 @@ Schema independente do contrato globocorp e histórico; não alterar esses desti
 | cadastro_atual_tipo_output | STRING | não |
 | cadastro_atual_capturado_em | TIMESTAMP | não |
 | cadastro_atual_origem_json | STRING | não |
+| talento_nome_atual | STRING | não |
+| eh_interveniencia | BOOLEAN | não |
+| talentos_atuais_json | STRING | não |
+| situacao_talento_atual | STRING | sim |
 
 ## Semântica de fechamento
 
@@ -117,7 +121,7 @@ Encerrado e os dois Declinados são terminais atuais; Negócio Fechado exige con
 
 ## Limitações de consumo
 
-Contrato candidato v8 preserva a elegibilidade por etapa da v4; produção v7 até migração confirmada;
+Contrato candidato v9 preserva as regras de etapa e precificação; consultar recibo de implantação;
 liberam apenas duração de passagem encerrada por ambiente + status, não total entre contas.
 Demais linhas: nao_elegivel_etapa_origem_v1. Continuidade global permanece false.
 Elegibilidade é recalculada na validação: calendário, evidência, pendências e durações.
@@ -174,7 +178,7 @@ Usar as duas medidas para análise unificada com hipóteses, mostrando participa
 sla_etapa_horas_uteis mantém exclusivamente o KPI observado. Não mudou o calendário.
 Não usar duração histórica reprovada só porque duracao_horas foi preservada na linhagem.
 
-## Precificação v8 — candidato local, não implantado
+## Precificação v8 — regras preservadas na v9
 
 Entrada até primeiro Aguardando Feedback, sem ligar origens distintas.
 Revisão conta; Standby e Retorno Marca/Executivo pausam ambas as medidas.
@@ -191,3 +195,12 @@ Campos cadastro_atual_ vêm do snapshot diário verificado por item_id_globocorp
 Captura e linhagem explícitas; são atributos atuais, não autores/atributos históricos.
 Pessoas e talentos multivalor preservados como JSON STRING; não explodir sem controlar o grão.
 Origem ausente/divergente bloqueia o worker produtivo. Não unir talentos por nome.
+
+## Talento atual v9 — candidato
+
+talento_nome_atual e eh_interveniencia: preenchidos apenas para rótulo único não ambíguo.
+FALSE indica coluna Talentos Exclusivos; TRUE indica Interveniência; NULL é desconhecido/ambíguo.
+Não certifica identidade nem vínculo contratual. Não substitui talento_nome histórico.
+talentos_atuais_json preserva entradas por origem e texto livre sem dividir por pontuação.
+situacao_talento_atual explica ausência, multiplicidade ou ambas as origens.
+Uma passagem continua uma linha. Não explodir a lista antes de somar durações.

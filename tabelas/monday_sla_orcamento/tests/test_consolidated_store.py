@@ -111,6 +111,8 @@ def publication():
     row.update(analysis_project(row))
     from monday_sla_orcamento.pricing import project as pricing_project
     row.update(pricing_project([row], BusinessCalendar("America/Sao_Paulo"))[row["interval_id"]])
+    from monday_sla_orcamento.talent_context import project as talent_project
+    row.update(talent_project(row))
     objects = Objects()
     client = Client([row], objects)
     store = ConsolidatedStore(client, objects)
@@ -210,6 +212,28 @@ def test_v7_active_schema_upgrades_to_pricing_v8(publication):
     store.objects.put_json("control.json", control, generation)
     assert store.publish(candidate, {}, {})["publication_verified"]
     assert set(client.rows[0]) == set(candidate[0])
+
+
+def test_v8_active_schema_upgrades_to_v9(publication):
+    from monday_sla_orcamento.consolidation import PRICING_VERSION, fields_for, validate
+    store, client, previous, candidate = publication
+    old = [{k: v for k, v in previous[0].items() if k in fields_for(PRICING_VERSION)}]
+    old[0]['versao_contrato'] = PRICING_VERSION
+    validate(old)
+    client.rows = old
+    control, generation = store.control()
+    control['active']['fingerprint'] = fingerprint(old)
+    store.objects.put_json('control.json', control, generation)
+    assert store.publish(candidate, {}, {})['publication_verified']
+    assert set(client.rows[0]) == set(candidate[0])
+
+
+def test_talent_corruption_blocks_publication(publication):
+    store, client, _, candidate = publication
+    candidate[0]['eh_interveniencia'] = False
+    with pytest.raises(ValueError, match='talentos atuais'):
+        store.publish(candidate, {}, {})
+    assert not client.jobs
 
 
 def test_v6_active_schema_upgrades_to_v7(publication):

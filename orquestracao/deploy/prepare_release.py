@@ -9,6 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 def release_files(root):
     fixed = {
+        "migrate_talent_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_talent_contract.py",
         "migrate_pricing_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_pricing_contract.py",
         "migrate_analysis_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_analysis_contract.py",
         "migrate_estimates_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_estimates_contract.py",

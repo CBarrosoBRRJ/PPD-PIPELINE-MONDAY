@@ -37,7 +37,7 @@ def main():
               "Se houver lacuna, rótulo desconhecido ou sobreposição, não calcular o total dessa cadeia.",
               "Encerrado e os dois Declinados são terminais atuais; Negócio Fechado exige configuração futura.", "",
               "## Limitações de consumo", "",
-              "Contrato candidato v8 preserva a elegibilidade por etapa da v4; produção v7 até migração confirmada;",
+              "Contrato candidato v9 preserva as regras de etapa e precificação; consultar recibo de implantação;",
               "liberam apenas duração de passagem encerrada por ambiente + status, não total entre contas.",
               "Demais linhas: nao_elegivel_etapa_origem_v1. Continuidade global permanece false.",
               "Elegibilidade é recalculada na validação: calendário, evidência, pendências e durações.",
@@ -87,7 +87,7 @@ def main():
               "Usar as duas medidas para análise unificada com hipóteses, mostrando participação estimada.",
               "sla_etapa_horas_uteis mantém exclusivamente o KPI observado. Não mudou o calendário.",
               "Não usar duração histórica reprovada só porque duracao_horas foi preservada na linhagem.", ""]
-    lines += ["## Precificação v8 — candidato local, não implantado", "",
+    lines += ["## Precificação v8 — regras preservadas na v9", "",
               "Entrada até primeiro Aguardando Feedback, sem ligar origens distintas.",
               "Revisão conta; Standby e Retorno Marca/Executivo pausam ambas as medidas.",
               "Totais somente na linha entrega_precificacao_observada=true; contar ciclos uma vez.",
@@ -100,7 +100,14 @@ def main():
               "Campos cadastro_atual_ vêm do snapshot diário verificado por item_id_globocorp.",
               "Captura e linhagem explícitas; são atributos atuais, não autores/atributos históricos.",
               "Pessoas e talentos multivalor preservados como JSON STRING; não explodir sem controlar o grão.",
-              "Origem ausente/divergente bloqueia o worker produtivo. Não unir talentos por nome.", ""]
+              "Origem ausente/divergente bloqueia o worker produtivo. Não unir talentos por nome.", "",
+              "## Talento atual v9 — candidato", "",
+              "talento_nome_atual e eh_interveniencia: preenchidos apenas para rótulo único não ambíguo.",
+              "FALSE indica coluna Talentos Exclusivos; TRUE indica Interveniência; NULL é desconhecido/ambíguo.",
+              "Não certifica identidade nem vínculo contratual. Não substitui talento_nome histórico.",
+              "talentos_atuais_json preserva entradas por origem e texto livre sem dividir por pontuação.",
+              "situacao_talento_atual explica ausência, multiplicidade ou ambas as origens.",
+              "Uma passagem continua uma linha. Não explodir a lista antes de somar durações.", ""]
     (docs / "CONTRATO_CONSOLIDADO.md").write_text("\n".join(lines), encoding="utf-8")
 
 

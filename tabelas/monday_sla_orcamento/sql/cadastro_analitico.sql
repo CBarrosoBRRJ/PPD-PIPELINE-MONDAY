@@ -1,4 +1,4 @@
--- Consulta somente leitura para DBeaver/BigQuery; contrato v8.
+-- Consulta somente leitura para DBeaver/BigQuery; requer contrato v9 (candidato).
 -- Uma linha por passagem: nao expandir arrays de pessoas/talentos antes de somar SLA.
 -- Cadastro atual NAO comprova quem era responsavel na data de uma passagem antiga.
 -- Classificacao abaixo descreve preenchimento das colunas, nao vinculo contratual.
@@ -18,6 +18,10 @@ SELECT
   cadastro_atual_marca AS marca_atual,
   cadastro_atual_talentos_exclusivos_json AS talentos_exclusivos_atuais_json,
   cadastro_atual_interveniencia AS interveniencia_atual,
+  talento_nome_atual,
+  eh_interveniencia,
+  talentos_atuais_json,
+  situacao_talento_atual,
   CASE
     WHEN tem_exclusivos AND tem_interveniencia THEN 'ambos'
     WHEN tem_exclusivos THEN 'exclusivos'

@@ -473,5 +473,25 @@
     "name": "cadastro_atual_origem_json",
     "type": "STRING",
     "mode": "NULLABLE"
+  },
+  {
+    "name": "talento_nome_atual",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "eh_interveniencia",
+    "type": "BOOLEAN",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talentos_atuais_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "situacao_talento_atual",
+    "type": "STRING",
+    "mode": "REQUIRED"
   }
 ]

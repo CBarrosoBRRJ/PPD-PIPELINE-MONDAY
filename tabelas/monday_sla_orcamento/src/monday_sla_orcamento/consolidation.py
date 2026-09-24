@@ -27,6 +27,8 @@ from monday_sla_orcamento.estimates import project as estimate_project
 from monday_sla_orcamento.kpi_etapa import decision
 from monday_sla_orcamento.pricing import FIELDS as PRICING_FIELDS
 from monday_sla_orcamento.pricing import project as pricing_project
+from monday_sla_orcamento.talent_context import FIELDS as TALENT_FIELDS
+from monday_sla_orcamento.talent_context import project as talent_project
 from monday_sla_orcamento.trajectory import FIELDS as TRAJECTORY_FIELDS
 from monday_sla_orcamento.trajectory import audit as audit_trajectory
 from monday_sla_orcamento.trajectory import project as trajectory_project
@@ -37,7 +39,8 @@ CONSUMPTION_VERSION = "sla-consolidado-consumo-v4"
 TRAJECTORY_VERSION = "sla-consolidado-trajetoria-v5"
 ESTIMATE_VERSION = "sla-consolidado-estimativas-v6"
 ANALYSIS_VERSION = "sla-consolidado-analise-v7"
-VERSION = "sla-consolidado-precificacao-v8"
+PRICING_VERSION = "sla-consolidado-precificacao-v8"
+VERSION = "sla-consolidado-talentos-v9"
 TERMINAL_LABELS = ("Encerrado", "Declinado pelo Mercado", "Declinado Internamente")
 NAMESPACE = UUID("07530d27-26df-4c5f-a2a1-092eb8ef04cf")
 SCOPES = {"viu2": ("5890468", 18393336134), "globocorp": ("21453629", 18429499488)}
@@ -68,7 +71,8 @@ BASE_FIELDS = {
 }
 
 
-FIELDS = {**BASE_FIELDS, **CONSUMPTION_FIELDS, **TRAJECTORY_FIELDS, **ESTIMATE_FIELDS, **ANALYSIS_FIELDS, **PRICING_FIELDS, **CONTEXT_FIELDS}
+PRICING_SCHEMA = {**BASE_FIELDS, **CONSUMPTION_FIELDS, **TRAJECTORY_FIELDS, **ESTIMATE_FIELDS, **ANALYSIS_FIELDS, **PRICING_FIELDS, **CONTEXT_FIELDS}
+FIELDS = {**PRICING_SCHEMA, **TALENT_FIELDS}
 
 
 def fields_for(version):
@@ -82,6 +86,8 @@ def fields_for(version):
         return {**BASE_FIELDS, **CONSUMPTION_FIELDS, **TRAJECTORY_FIELDS, **ESTIMATE_FIELDS}
     if version == ANALYSIS_VERSION:
         return {**BASE_FIELDS, **CONSUMPTION_FIELDS, **TRAJECTORY_FIELDS, **ESTIMATE_FIELDS, **ANALYSIS_FIELDS}
+    if version == PRICING_VERSION:
+        return PRICING_SCHEMA
     if version == VERSION:
         return FIELDS
     raise ValueError("Consolidacao: contrato desconhecido")
@@ -324,6 +330,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
             raise ValueError('Consolidacao: item ausente do cadastro atual verificado')
         row['cadastro_atual_origem_json'] = json.dumps(context, ensure_ascii=False, sort_keys=True) if context else None
         row.update(context_project(row))
+        row.update(talent_project(row))
     validate(result)
     trajectory_report = audit_trajectory(result)
     trajectory_report.pop("details")
@@ -375,12 +382,12 @@ def validate(rows):
             # Read/reconcile the previous active snapshot during controlled upgrade.
             if r["elegivel_comparacao"] or r["validacao_negocio"] != "pendente":
                 raise ValueError("Consolidacao: aprovacao legada indevida")
-        elif r["versao_contrato"] in (STAGE_VERSION, CONSUMPTION_VERSION, TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, VERSION):
+        elif r["versao_contrato"] in (STAGE_VERSION, CONSUMPTION_VERSION, TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, PRICING_VERSION, VERSION):
             eligible = decision(r, calendar)["elegivel_kpi_etapa_candidato"]
             state = "aprovado_etapa_origem_v1" if eligible else "nao_elegivel_etapa_origem_v1"
             if r["elegivel_comparacao"] != eligible or r["validacao_negocio"] != state:
                 raise ValueError("Consolidacao: elegibilidade de etapa divergente")
-            if r["versao_contrato"] in (CONSUMPTION_VERSION, TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, VERSION):
+            if r["versao_contrato"] in (CONSUMPTION_VERSION, TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, PRICING_VERSION, VERSION):
                 if any(r[k] != v for k, v in consumption_project(r, calendar).items()):
                     raise ValueError("Consolidacao: campos de consumo divergentes")
         else:
@@ -400,21 +407,21 @@ def validate(rows):
             if r["duracao_horas_uteis"] is not None and r["duracao_horas_uteis"] > r["duracao_horas"] + 0.001:
                 raise ValueError("Consolidacao: horas uteis excedem corridas")
     audit_trajectory(rows)
-    if rows and rows[0]["versao_contrato"] in (TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, VERSION):
+    if rows and rows[0]["versao_contrato"] in (TRAJECTORY_VERSION, ESTIMATE_VERSION, ANALYSIS_VERSION, PRICING_VERSION, VERSION):
         expected = trajectory_project(rows)
         for row in rows:
             if any(row[k] != v for k, v in expected[row["interval_id"]].items()):
                 raise ValueError("Consolidacao: campos de trajetoria divergentes")
-    if rows and rows[0]["versao_contrato"] in (ESTIMATE_VERSION, ANALYSIS_VERSION, VERSION):
+    if rows and rows[0]["versao_contrato"] in (ESTIMATE_VERSION, ANALYSIS_VERSION, PRICING_VERSION, VERSION):
         expected = estimate_project(rows, calendar)
         for row in rows:
             if any(row[k] != v for k, v in expected[row["interval_id"]].items()):
                 raise ValueError("Consolidacao: campos de estimativa divergentes")
-    if rows and rows[0]["versao_contrato"] in (ANALYSIS_VERSION, VERSION):
+    if rows and rows[0]["versao_contrato"] in (ANALYSIS_VERSION, PRICING_VERSION, VERSION):
         for row in rows:
             if any(row[k] != v for k, v in analysis_project(row).items()):
                 raise ValueError("Consolidacao: duracao de analise divergente")
-    if rows and rows[0]["versao_contrato"] == VERSION:
+    if rows and rows[0]["versao_contrato"] in (PRICING_VERSION, VERSION):
         for row in rows:
             if any(row[k] != v for k, v in context_project(row).items()):
                 raise ValueError('Consolidacao: cadastro atual divergente')
@@ -422,3 +429,7 @@ def validate(rows):
         for row in rows:
             if any(row[k] != v for k, v in expected[row["interval_id"]].items()):
                 raise ValueError("Consolidacao: precificacao divergente")
+    if rows and rows[0]['versao_contrato'] == VERSION:
+        for row in rows:
+            if any(row[k] != value for k, value in talent_project(row).items()):
+                raise ValueError('Consolidacao: talentos atuais divergentes')

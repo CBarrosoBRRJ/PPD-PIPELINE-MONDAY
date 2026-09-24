@@ -40,6 +40,22 @@ Nao usar responsavel atual como autoria historica nem como medida de produtivida
 
 ## Talentos: nao confundir as colunas
 
+### Candidato v9: nome unificado e flag (ainda nao publicado)
+
+| Campo fisico novo | Significado |
+| --- | --- |
+| talento_nome_atual | Rotulo unico do cadastro atual quando nao ambiguo; nao altera talento_nome preexistente |
+| eh_interveniencia | TRUE: origem Interveniencia; FALSE: origem Talentos Exclusivos; NULL: ausencia/ambiguidade |
+| talentos_atuais_json | Lista de entradas com nome, eh_interveniencia, origem e texto_nao_estruturado |
+| situacao_talento_atual | sem_cadastro, nao_informado, rotulo_unico_na_origem, multiplos_exclusivos, ambas_origens ou interveniencia_requer_revisao |
+
+Texto de Interveniencia com separadores nao vira uma pessoa artificial: fica na
+lista como texto livre, com escalares NULL. Ausencia de separadores tambem nao
+certifica identidade de pessoa. Duas origens com nome igual nao sao mescladas.
+Nenhuma dessas regras amplia a populacao selecionada para SLA ou remove filtros.
+Consulta cadastro_analitico.sql agora requer v9; auditoria_cadastro_atual.sql
+continua compativel com v8. Usar auditoria_talentos.sql depois da migracao v9.
+
 `talento_nome` e um campo preexistente derivado do tratamento da origem; nao e
 uma concatenacao geral das duas colunas atuais. O tratamento da origem pode
 excluir casos ambiguos/multiplos segundo o escopo de SLA existente. A v13 nao

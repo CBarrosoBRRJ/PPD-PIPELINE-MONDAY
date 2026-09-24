@@ -7,12 +7,19 @@ import pytest
 SCRIPTS = Path(__file__).parents[1] / 'scripts'
 
 
-@pytest.fixture
-def migration(monkeypatch):
+@pytest.fixture(params=['pricing', 'talent'])
+def migration(monkeypatch, request):
     monkeypatch.syspath_prepend(str(SCRIPTS))
     spec = importlib.util.spec_from_file_location('pricing_migration', SCRIPTS / 'migrate_pricing_contract.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if request.param == 'talent':
+        talent_spec = importlib.util.spec_from_file_location('talent_migration', SCRIPTS / 'migrate_talent_contract.py')
+        talent = importlib.util.module_from_spec(talent_spec)
+        talent_spec.loader.exec_module(talent)
+        module = talent.engine()
+        assert module.OLD['contract'] == 'sla-consolidado-precificacao-v8'
+        assert module.NEW['contract'] == 'sla-consolidado-talentos-v9'
     return module
 
 

@@ -22,6 +22,8 @@ def test_release_allowlist_and_hashes(tmp_path):
         names = archive.namelist()
         assert all((item.external_attr >> 16) & 0o777 == 0o644 for item in archive.infolist())
         assert "Dockerfile" in names
+        assert 'migrate_talent_contract.py' in names
+        assert 'migrate_pricing_contract.py' in names
         assert not any(".env" in n or "runtime/" in n for n in names)
         assert "tabelas/monday_sla_orcamento/src/monday_sla_orcamento/consolidation.py" in names
         inventory = json.loads(archive.read("release-manifest.json"))

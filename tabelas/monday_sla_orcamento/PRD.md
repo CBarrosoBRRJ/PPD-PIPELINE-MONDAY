@@ -1,4 +1,25 @@
-# SLA consolidado — contrato de análise v7 (publicado)
+# SLA consolidado — contrato de consumo
+
+## Candidato v9 — talento atual unificado (ainda não implantado)
+
+Estado mais recente: release v13/v8 executada conforme docs/ESTADO_GCP_2026_09_24.md
+na raiz; homologação independente e retomada da agenda pendentes. As seções
+cronológicas abaixo não substituem esse recibo.
+
+Grão e interval_id preservados. Quatro campos aditivos: talento_nome_atual
+(STRING nullable), eh_interveniencia (BOOL nullable), talentos_atuais_json
+(STRING nullable) e situacao_talento_atual (STRING required). Origem exclusiva:
+cadastro atual verificado do backlog. Não altera talento_nome histórico.
+Um único rótulo exclusivo recebe FALSE; um único texto de Interveniência sem
+marcadores de multiplicidade recebe TRUE. Campo descreve origem, não contrato
+ou identidade individual certificada. Múltiplos exclusivos, ambas as origens
+ou texto com separadores geram nome/flag escalares NULL, com situação explícita.
+Lista preserva nomes, origem e flag por entrada; texto livre não é separado nem
+unido por similaridade. Campos originais permanecem. Grão não é expandido.
+JSON inválido bloqueia lote; projeção é recalculada na construção e validação.
+Ausência de cadastro fica explícita e não significa FALSE. Consumers: análise
+por origem do talento atual; não autoria/vínculo histórico. Migração v8→v9 exige
+imagem por digest, agenda pausada, plano atual e verificação da publicação.
 
 ## Candidato local v8 — precificação (NÃO implantado)
 

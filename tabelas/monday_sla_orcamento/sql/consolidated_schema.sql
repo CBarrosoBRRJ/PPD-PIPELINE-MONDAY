@@ -94,5 +94,9 @@ CREATE TABLE `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento` (
   `cadastro_atual_tipo_input` STRING,
   `cadastro_atual_tipo_output` STRING,
   `cadastro_atual_capturado_em` TIMESTAMP,
-  `cadastro_atual_origem_json` STRING
+  `cadastro_atual_origem_json` STRING,
+  `talento_nome_atual` STRING,
+  `eh_interveniencia` BOOL,
+  `talentos_atuais_json` STRING,
+  `situacao_talento_atual` STRING NOT NULL
 ) CLUSTER BY projeto_id, ambiente_origem, item_id;
