@@ -1,5 +1,38 @@
 # Recibo da execução automática — 24/09/2026
 
+## Atualização posterior: v13 executada, homologação pendente
+
+Esta seção prevalece sobre o recibo v12 abaixo. Evidências enviadas pelo operador:
+
+- Build `2bdee745-33c7-47f7-81b5-870a39c8d3aa` concluído; imagem
+  `us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday@sha256:997bdd841acd4949a620af3d0ea163c199ecf6941356c86e4cd128b9f73cd412`.
+- Ensaio `pipeline-monday-7k69k`: backlog 4.853 registros e talentos 41,
+  ambos validados, sem publicação. Falha ValueError do primeiro ensaio não
+  reproduzida; causa não comprovada.
+- Controle migrado de v7 para `sla-consolidado-precificacao-v8`, geração
+  `1790283201855955` (geração da migração, não necessariamente a atual).
+- Primeira execução diária v13 `pipeline-monday-vpwfp` falhou nos snapshots
+  com Forbidden; consolidada bloqueada. Alerta retornou `not_configured`.
+- Operador adicionou binding `pipeline_snapshots_v13`, objectAdmin para a conta
+  `pipeline-orcamento@gglobo-viu-dados-hdg-prd.iam.gserviceaccount.com`, limitado
+  aos prefixos `snapshots/monday_backlog_agenciamento_2026/` e
+  `snapshots/monday_talentos_exclusivos/` no bucket dedicado. Expressão exata,
+  conta e papel foram conferidos; prefixos sem objetos antes da nova tentativa.
+- Execução `pipeline-monday-2h8lf` concluída: backlog 4.860 linhas, talentos 41,
+  consolidada 9.672 passagens / 2.209 projetos, todos publication_verified=true;
+  SLA Globocorp skipped com publicação verificada no corte 24/09 03:00 UTC.
+- Orquestração 21:07:03.499117Z até 21:11:51.518554Z, aproximadamente 4min48s,
+  sem contabilizar todo o provisionamento. Recibo não explica o custo por operação.
+
+Agenda permanece pausada conforme último estado informado; não há recibo de
+retomada. Validação independente dos novos campos, regras de precificação,
+controles GCS sem pending e alerta externo ainda pendentes. Não declarar entrega
+completa. Consulta de auditoria: `tabelas/monday_sla_orcamento/sql/auditoria_cadastro_atual.sql`.
+Legenda: `docs/LEGENDA_CADASTRO_SLA.md`. Alterações locais posteriores de consulta,
+testes e documentação não modificam a imagem v13 implantada.
+
+## Histórico: execução automática v12
+
 Fonte: saídas de Cloud Shell enviadas pelo operador em 24/09. Este documento
 atualiza o estado operacional descrito em `ESTADO_GCP_2026_09_23.md`; aquele
 arquivo permanece como histórico. Não houve alteração de configuração GCP aqui.
