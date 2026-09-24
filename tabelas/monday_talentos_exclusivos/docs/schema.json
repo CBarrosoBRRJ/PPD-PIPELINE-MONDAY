@@ -1,0 +1,97 @@
+[
+  {
+    "name": "board_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_nome",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "grupo_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "grupo_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "estado_item",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "capturado_em",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "criado_em_origem",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "atualizado_em_origem",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "versao_contrato",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "nome_artistico",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "status_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "vinculo",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talent_manager_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "orcamento_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "producao_artistica_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "performance_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "executivo_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "atendimento_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

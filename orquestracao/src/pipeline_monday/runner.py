@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 RUNNERS = {"sla_orcamento": "pipeline_monday.worker_sla",
+           "monday_backlog_agenciamento_2026": "pipeline_monday.worker_backlog",
+           "monday_talentos_exclusivos": "pipeline_monday.worker_talents",
            "monday_sla_orcamento": "pipeline_monday.worker_consolidated"}
 PRODUCT_FIELDS = {"id", "runner", "env_file", "depends_on"}
 

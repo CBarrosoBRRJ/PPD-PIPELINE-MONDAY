@@ -37,7 +37,7 @@ def main():
               "Se houver lacuna, rótulo desconhecido ou sobreposição, não calcular o total dessa cadeia.",
               "Encerrado e os dois Declinados são terminais atuais; Negócio Fechado exige configuração futura.", "",
               "## Limitações de consumo", "",
-              "Contrato v7 preserva a elegibilidade por etapa da v4;",
+              "Contrato candidato v8 preserva a elegibilidade por etapa da v4; produção v7 até migração confirmada;",
               "liberam apenas duração de passagem encerrada por ambiente + status, não total entre contas.",
               "Demais linhas: nao_elegivel_etapa_origem_v1. Continuidade global permanece false.",
               "Elegibilidade é recalculada na validação: calendário, evidência, pendências e durações.",
@@ -54,7 +54,7 @@ def main():
               "Sem Entrada comprovada, sem mapa, fora da Gold atual ou com ordem ambígua: fora da seleção.",
               "Não usar total global nem treino ML homologado. Indicador cobre apenas população selecionada.",
               "Falha de validação bloqueia carga. Diário usa WRITE_TRUNCATE atômico com schema explícito.",
-              "Leitura de contratos v2/v3/v4/v5/v6 permitida somente para reconciliação; candidato novo exige v7.", "",
+              "Leitura de contratos v2/v3/v4/v5/v6/v7 permitida para reconciliação; candidato novo exige v8.", "",
               "## Trajetória por projeto", "",
               "quantidade_passagens_projeto: contagem das passagens publicadas por projeto_id; repetida nas linhas.",
               "qualidade_trajetoria: historico_com_limitacoes ou sequencia_observada_sem_lacunas_detectadas.",
@@ -87,6 +87,20 @@ def main():
               "Usar as duas medidas para análise unificada com hipóteses, mostrando participação estimada.",
               "sla_etapa_horas_uteis mantém exclusivamente o KPI observado. Não mudou o calendário.",
               "Não usar duração histórica reprovada só porque duracao_horas foi preservada na linhagem.", ""]
+    lines += ["## Precificação v8 — candidato local, não implantado", "",
+              "Entrada até primeiro Aguardando Feedback, sem ligar origens distintas.",
+              "Revisão conta; Standby e Retorno Marca/Executivo pausam ambas as medidas.",
+              "Totais somente na linha entrega_precificacao_observada=true; contar ciclos uma vez.",
+              "Contribuições por passagem apenas em ciclos aprovados; pausas têm campos separados.",
+              "Lacunas, intervalos não elegíveis, calendário ou rótulo sem evidência bloqueiam KPI.",
+              "Sem Entrada ou entrega comprovadas: horas NULL, não zero. Estimativas não entram.",
+              "Nova Entrada reinicia tentativa; terminal anterior à entrega encerra sem entrega.",
+              "Situação, ID e motivos de ciclo repetidos não devem ser somados como ciclos.", "",
+              "## Cadastro atual Globocorp", "",
+              "Campos cadastro_atual_ vêm do snapshot diário verificado por item_id_globocorp.",
+              "Captura e linhagem explícitas; são atributos atuais, não autores/atributos históricos.",
+              "Pessoas e talentos multivalor preservados como JSON STRING; não explodir sem controlar o grão.",
+              "Origem ausente/divergente bloqueia o worker produtivo. Não unir talentos por nome.", ""]
     (docs / "CONTRATO_CONSOLIDADO.md").write_text("\n".join(lines), encoding="utf-8")
 
 

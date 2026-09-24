@@ -1,5 +1,35 @@
 # SLA consolidado — contrato de análise v7 (publicado)
 
+## Candidato local v8 — precificação (NÃO implantado)
+
+O código candidato acrescenta o cálculo Entrada → primeiro Aguardando Feedback
+na mesma origem. Contrato `sla-consolidado-precificacao-v8`; produção permanece
+v7 até migração explícita, imagem validada e reconciliação. Não executar daily
+com candidato v8 sobre controle v7. Enriquecimento cadastro_atual_ agora incluído
+no candidato, dependente do snapshot diário de backlog verificado. Origem/data
+explícitas: não substitui campos históricos nem comprova autoria passada.
+
+Grão e chave permanecem passagem/interval_id. `ciclo_precificacao_id` identifica
+a Entrada da tentativa; totais `precificacao_horas_corridas/horas_uteis`, pausas
+e janela aparecem somente na linha da entrega aprovada. Filtrar
+`entrega_precificacao_observada` para percentis e contagem de entregas.
+Contribuições por etapa aparecem apenas nas etapas contáveis de ciclos aprovados.
+Revisões contam; Standby e Retorno Marca/Executivo não contam em nenhum relógio.
+Calendário segue o existente. Fechamento antes do feedback não é entrega.
+
+Situação e motivos repetem-se nas passagens do ciclo: não somar como número de
+ciclos. Nova Entrada reinicia tentativa; revisão posterior ao primeiro feedback
+não é incluída sem nova Entrada. Origem, rótulo, calendário ou cadeia sem evidência
+bloqueiam KPI; estimativas não alimentam estes campos. Essa regra não homologa
+continuidade entre contas. Campos são recalculados na construção e validação;
+divergência bloqueia publicação. Schema aditivo com strings/bool obrigatórios
+para regra/papel/situação/motivos/flag; IDs, datas e durações são nullable.
+
+Consumidores: painel de precificação e diagnóstico de etapas, não produtividade
+individual. Ver `docs/RECORTE_PRECIFICACAO_ATUAL.md` na raiz. Migração/deploy e
+reconciliação de dados reais ainda pendentes; não confundir teste sintético com
+homologação da população.
+
 Status: v12/contrato v7 publicada; execução pipeline-monday-jdc47 e campos no BQ
 confirmados pelo operador. Agenda reativada; próxima execução automática pendente
 de evidência. Não repetir migrações antigas.

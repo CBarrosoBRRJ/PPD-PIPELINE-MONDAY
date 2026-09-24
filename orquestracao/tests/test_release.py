@@ -40,5 +40,5 @@ def test_image_defaults_to_plan_and_only_daily_product():
     assert "USER pipeline" in docker
     assert "RUN chmod 0644 /app/pipelines.json" in docker
     document = json.loads((ROOT / "orquestracao/deploy/pipelines.json").read_text())
-    assert [p["id"] for p in plan(document)] == ["sla_orcamento", "monday_sla_orcamento"]
-    assert document["products"][0]["env_file"] == ".env"
+    assert [p["id"] for p in plan(document)] == ["monday_backlog_agenciamento_2026", "monday_talentos_exclusivos", "sla_orcamento", "monday_sla_orcamento"]
+    assert next(p for p in document['products'] if p['id'] == 'sla_orcamento')['env_file'] == '.env'

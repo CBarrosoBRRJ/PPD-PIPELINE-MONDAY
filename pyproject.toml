@@ -1,7 +1,7 @@
 # Configuração do workspace. Cada produto possui seu próprio pacote.
 [tool.pytest.ini_options]
 testpaths = ["compartilhado/tests", "tabelas/monday_sla_orcamento_globocorp/tests", "tabelas/monday_sla_orcamento_viu2/tests", "tabelas/monday_log_viu2/tests", "tabelas/monday_sla_orcamento/tests", "orquestracao/tests"]
-pythonpath = ["compartilhado/src", "tabelas/monday_sla_orcamento_globocorp/src", "tabelas/monday_sla_orcamento_viu2/src", "tabelas/monday_log_viu2/src", "tabelas/monday_sla_orcamento/src", "orquestracao/src"]
+pythonpath = ["compartilhado/src", "tabelas/monday_sla_orcamento_globocorp/src", "tabelas/monday_sla_orcamento_viu2/src", "tabelas/monday_log_viu2/src", "tabelas/monday_sla_orcamento/src", "orquestracao/src", "tabelas/monday_backlog_agenciamento_2026/src", "tabelas/monday_talentos_exclusivos/src"]
 
 [tool.ruff]
 # Pacotes estão em tabelas/ e orquestracao/; ignorar o antigo src/ local.

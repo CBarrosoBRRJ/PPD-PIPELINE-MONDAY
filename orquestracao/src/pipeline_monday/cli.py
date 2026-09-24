@@ -27,7 +27,7 @@ def maintenance(document, args):
 
 def main():
     parser = argparse.ArgumentParser(description="Pipeline Monday — execução sequencial por produto")
-    parser.add_argument("command", choices=["plan", "daily", "rename-sla-plan", "rename-sla-apply"])
+    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "rename-sla-plan", "rename-sla-apply"])
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--expected-generation", type=int)
     parser.add_argument("--writers-stopped", action="store_true")
@@ -47,8 +47,21 @@ def main():
         if args.command == "plan":
             print(json.dumps({"mode": "plan_only", "order": [p["id"] for p in plan(document)]}))
             return
+        if args.command == 'snapshot-check':
+            plan(document)
+            from .preflight import run as preflight
+            result = preflight()
+            print(json.dumps(result), flush=True)
+            if result['status'] != 'success':
+                raise SystemExit(1)
+            return
         result = run(document)
         print(json.dumps(result), flush=True)
+        from .alerts import notify
+        notification = notify(result)
+        if notification != 'not_needed':
+            print(json.dumps({'event': 'pipeline_alert', 'delivery': notification,
+                              'severity': 'ERROR' if notification != 'sent' else 'INFO'}), flush=True)
         if result["status"] in {"failed", "partial"}:
             raise SystemExit(1)
     except (OSError, ValueError, TypeError, KeyError):

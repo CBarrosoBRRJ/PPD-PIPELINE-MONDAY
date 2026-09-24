@@ -1,4 +1,4 @@
-# Contrato consolidado — sla-consolidado-analise-v7
+# Contrato consolidado — sla-consolidado-precificacao-v8
 
 Uma linha: passagem datada de origem preservada, ligada a projeto selecionado.
 A ordem e a entrada são obrigatórias pela validação Python. Ausências não são preenchidas.
@@ -72,6 +72,35 @@ Schema independente do contrato globocorp e histórico; não alterar esses desti
 | duracao_analise_horas_uteis | FLOAT | não |
 | origem_duracao_analise | STRING | sim |
 | versao_regra_duracao_analise | STRING | sim |
+| versao_regra_precificacao | STRING | sim |
+| papel_precificacao | STRING | sim |
+| ciclo_precificacao_id | STRING | não |
+| situacao_ciclo_precificacao | STRING | sim |
+| motivos_ciclo_precificacao_json | STRING | sim |
+| entrega_precificacao_observada | BOOLEAN | sim |
+| inicio_precificacao_utc | TIMESTAMP | não |
+| fim_precificacao_utc | TIMESTAMP | não |
+| precificacao_horas_corridas | FLOAT | não |
+| precificacao_horas_uteis | FLOAT | não |
+| pausas_precificacao_horas_corridas | FLOAT | não |
+| pausas_precificacao_horas_uteis | FLOAT | não |
+| janela_precificacao_horas_corridas | FLOAT | não |
+| contribuicao_precificacao_horas_corridas | FLOAT | não |
+| contribuicao_precificacao_horas_uteis | FLOAT | não |
+| cadastro_atual_marca | STRING | não |
+| cadastro_atual_talentos_exclusivos_json | STRING | não |
+| cadastro_atual_interveniencia | STRING | não |
+| cadastro_atual_orcamento_json | STRING | não |
+| cadastro_atual_talent_manager_json | STRING | não |
+| cadastro_atual_gp_json | STRING | não |
+| cadastro_atual_conteudo_json | STRING | não |
+| cadastro_atual_producao_json | STRING | não |
+| cadastro_atual_audiencia_json | STRING | não |
+| cadastro_atual_tipo_projeto | STRING | não |
+| cadastro_atual_tipo_input | STRING | não |
+| cadastro_atual_tipo_output | STRING | não |
+| cadastro_atual_capturado_em | TIMESTAMP | não |
+| cadastro_atual_origem_json | STRING | não |
 
 ## Semântica de fechamento
 
@@ -88,7 +117,7 @@ Encerrado e os dois Declinados são terminais atuais; Negócio Fechado exige con
 
 ## Limitações de consumo
 
-Contrato v7 preserva a elegibilidade por etapa da v4;
+Contrato candidato v8 preserva a elegibilidade por etapa da v4; produção v7 até migração confirmada;
 liberam apenas duração de passagem encerrada por ambiente + status, não total entre contas.
 Demais linhas: nao_elegivel_etapa_origem_v1. Continuidade global permanece false.
 Elegibilidade é recalculada na validação: calendário, evidência, pendências e durações.
@@ -105,7 +134,7 @@ A ausência de saída em não terminal não comprova abandono. Não envelhecer v
 Sem Entrada comprovada, sem mapa, fora da Gold atual ou com ordem ambígua: fora da seleção.
 Não usar total global nem treino ML homologado. Indicador cobre apenas população selecionada.
 Falha de validação bloqueia carga. Diário usa WRITE_TRUNCATE atômico com schema explícito.
-Leitura de contratos v2/v3/v4/v5/v6 permitida somente para reconciliação; candidato novo exige v7.
+Leitura de contratos v2/v3/v4/v5/v6/v7 permitida para reconciliação; candidato novo exige v8.
 
 ## Trajetória por projeto
 
@@ -144,3 +173,21 @@ versao_regra_duracao_analise: duracao-analise-v1. Projeção revalidada em cada 
 Usar as duas medidas para análise unificada com hipóteses, mostrando participação estimada.
 sla_etapa_horas_uteis mantém exclusivamente o KPI observado. Não mudou o calendário.
 Não usar duração histórica reprovada só porque duracao_horas foi preservada na linhagem.
+
+## Precificação v8 — candidato local, não implantado
+
+Entrada até primeiro Aguardando Feedback, sem ligar origens distintas.
+Revisão conta; Standby e Retorno Marca/Executivo pausam ambas as medidas.
+Totais somente na linha entrega_precificacao_observada=true; contar ciclos uma vez.
+Contribuições por passagem apenas em ciclos aprovados; pausas têm campos separados.
+Lacunas, intervalos não elegíveis, calendário ou rótulo sem evidência bloqueiam KPI.
+Sem Entrada ou entrega comprovadas: horas NULL, não zero. Estimativas não entram.
+Nova Entrada reinicia tentativa; terminal anterior à entrega encerra sem entrega.
+Situação, ID e motivos de ciclo repetidos não devem ser somados como ciclos.
+
+## Cadastro atual Globocorp
+
+Campos cadastro_atual_ vêm do snapshot diário verificado por item_id_globocorp.
+Captura e linhagem explícitas; são atributos atuais, não autores/atributos históricos.
+Pessoas e talentos multivalor preservados como JSON STRING; não explodir sem controlar o grão.
+Origem ausente/divergente bloqueia o worker produtivo. Não unir talentos por nome.

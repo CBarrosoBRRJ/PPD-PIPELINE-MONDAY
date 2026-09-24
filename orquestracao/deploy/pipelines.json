@@ -3,6 +3,18 @@
   "deadline_seconds": 3300,
   "products": [
     {
+      "id": "monday_backlog_agenciamento_2026",
+      "runner": "monday_backlog_agenciamento_2026",
+      "env_file": "monday_backlog_agenciamento_2026-runtime",
+      "depends_on": []
+    },
+    {
+      "id": "monday_talentos_exclusivos",
+      "runner": "monday_talentos_exclusivos",
+      "env_file": "monday_talentos_exclusivos-runtime",
+      "depends_on": []
+    },
+    {
       "id": "sla_orcamento",
       "runner": "sla_orcamento",
       "env_file": ".env",
@@ -12,7 +24,7 @@
       "id": "monday_sla_orcamento",
       "runner": "monday_sla_orcamento",
       "env_file": "globocorp-runtime",
-      "depends_on": ["sla_orcamento"]
+      "depends_on": ["sla_orcamento", "monday_backlog_agenciamento_2026"]
     }
   ]
 }

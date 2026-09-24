@@ -1,7 +1,12 @@
 # Gestão do fluxo: entregar mais rápido, com qualidade
 
-Plano revisado em 24/09/2026. Objetivo: reduzir tempo do primeiro status até a
-conclusão, encontrar gargalos, melhorar processo e equipe. Não apenas exibir médias.
+Plano revisado em 24/09/2026. Prioridade confirmada: reduzir o tempo de
+precificação, da Entrada até o primeiro Aguardando Feedback, encontrar gargalos
+e melhorar o processo. Não apenas exibir médias.
+O [recorte com status atuais](RECORTE_PRECIFICACAO_ATUAL.md) prevalece sobre as
+propostas de ciclo até terminal abaixo: revisão conta; Standby e Retorno
+Marca/Executivo pausam ambas as medidas; corridas e úteis usam as mesmas etapas.
+Não aguardar o redesenho dos status para construir a primeira análise disponível.
 Este é um projeto analítico, não homologação de novos KPIs. A v12 permanece em
 produção. Protótipo com dados fictícios; nenhuma nova leitura BQ foi realizada.
 
@@ -42,7 +47,8 @@ são entregas bem-sucedidas. Separar desfechos; até validar entrega, usar o tí
 média artificialmente. O último status pode estar aberto e o primeiro ser uma
 cópia no meio do fluxo: MIN/MAX sem qualificação não homologa ponta a ponta.
 
-Regra proposta: uma Entrada comprovada até o primeiro terminal daquele ciclo.
+Regra secundária para estudar encerramento, não o SLA prioritário de precificação:
+uma Entrada comprovada até o primeiro terminal daquele ciclo.
 Reabertura cria outro ciclo observável, sem estender silenciosamente o anterior.
 Para entrega final após reaberturas, definir outro indicador e sua fronteira.
 

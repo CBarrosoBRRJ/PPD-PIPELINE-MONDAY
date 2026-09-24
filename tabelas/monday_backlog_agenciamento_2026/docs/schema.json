@@ -1,0 +1,117 @@
+[
+  {
+    "name": "board_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_nome",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "grupo_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "grupo_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "estado_item",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "capturado_em",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "criado_em_origem",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "atualizado_em_origem",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "versao_contrato",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "status_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "marca",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talentos_exclusivos_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "interveniencia",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "orcamento_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talent_manager_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "gp_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "conteudo_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "producao_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "audiencia_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "tipo_projeto",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "tipo_input",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "tipo_output",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

@@ -328,5 +328,150 @@
     "name": "versao_regra_duracao_analise",
     "type": "STRING",
     "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra_precificacao",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "papel_precificacao",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ciclo_precificacao_id",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "situacao_ciclo_precificacao",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "motivos_ciclo_precificacao_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "entrega_precificacao_observada",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "inicio_precificacao_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "fim_precificacao_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "precificacao_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "precificacao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "pausas_precificacao_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "pausas_precificacao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "janela_precificacao_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "contribuicao_precificacao_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "contribuicao_precificacao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_marca",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_talentos_exclusivos_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_interveniencia",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_orcamento_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_talent_manager_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_gp_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_conteudo_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_producao_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_audiencia_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_tipo_projeto",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_tipo_input",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_tipo_output",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_capturado_em",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_origem_json",
+    "type": "STRING",
+    "mode": "NULLABLE"
   }
 ]

@@ -13,7 +13,9 @@ COPY tabelas/monday_sla_orcamento/pyproject.toml /build/consolidado/pyproject.to
 COPY tabelas/monday_sla_orcamento/src /build/consolidado/src
 COPY compartilhado/pyproject.toml /build/comum/pyproject.toml
 COPY compartilhado/src /build/comum/src
-RUN pip install --no-cache-dir /build/comum /build/sla /build/log /build/historico /build/consolidado /build/orquestracao && pip check \
+COPY tabelas/monday_backlog_agenciamento_2026 /build/backlog
+COPY tabelas/monday_talentos_exclusivos /build/talentos
+RUN pip install --no-cache-dir /build/comum /build/sla /build/log /build/historico /build/consolidado /build/orquestracao /build/backlog /build/talentos && pip check \
     && useradd --uid 10001 --create-home pipeline
 COPY orquestracao/deploy/pipelines.json /app/pipelines.json
 RUN chmod 0644 /app/pipelines.json

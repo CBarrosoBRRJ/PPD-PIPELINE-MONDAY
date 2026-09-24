@@ -109,6 +109,8 @@ def publication():
     row.update(estimate_project([row], BusinessCalendar("America/Sao_Paulo"))[row["interval_id"]])
     from monday_sla_orcamento.analysis_duration import project as analysis_project
     row.update(analysis_project(row))
+    from monday_sla_orcamento.pricing import project as pricing_project
+    row.update(pricing_project([row], BusinessCalendar("America/Sao_Paulo"))[row["interval_id"]])
     objects = Objects()
     client = Client([row], objects)
     store = ConsolidatedStore(client, objects)
@@ -189,6 +191,19 @@ def test_v5_active_schema_upgrades_to_v6(publication):
     old[0]["versao_contrato"] = "sla-consolidado-trajetoria-v5"
     from monday_sla_orcamento.consolidation import fields_for
     old = [{k: v for k, v in r.items() if k in fields_for(r["versao_contrato"])} for r in old]
+    client.rows = old
+    control, generation = store.control()
+    control["active"]["fingerprint"] = fingerprint(old)
+    store.objects.put_json("control.json", control, generation)
+    assert store.publish(candidate, {}, {})["publication_verified"]
+    assert set(client.rows[0]) == set(candidate[0])
+
+
+def test_v7_active_schema_upgrades_to_pricing_v8(publication):
+    from monday_sla_orcamento.consolidation import ANALYSIS_VERSION, fields_for
+    store, client, previous, candidate = publication
+    old = [{k: v for k, v in previous[0].items() if k in fields_for(ANALYSIS_VERSION)}]
+    old[0]["versao_contrato"] = ANALYSIS_VERSION
     client.rows = old
     control, generation = store.control()
     control["active"]["fingerprint"] = fingerprint(old)

@@ -1,6 +1,7 @@
 """Frozen viu2 + verified current globocorp; only consolidated destination is written."""
 
 import argparse
+import hashlib
 import json
 import os
 from datetime import datetime
@@ -9,7 +10,9 @@ from types import SimpleNamespace
 
 from google.cloud import bigquery
 from historico_viu2.eligibility import frozen_inputs
+from monday_backlog_agenciamento_2026 import SPEC as BACKLOG_SPEC
 from monday_comum.escopo_sla import VERSION as SCOPE_VERSION
+from monday_comum.snapshot_publication import SnapshotStore
 from monday_sla_orcamento.consolidation import build, timestamp
 from monday_sla_orcamento.publication import (
     BUCKET,
@@ -50,8 +53,11 @@ def execute(settings, scheduled, *, recover_only=False):
                                           gcs_prefix="consolidado/diario"))
     publisher = ConsolidatedStore(source.client, objects,
                                  timeout=settings.bq_job_timeout_seconds)
+    context_objects = ObjectStore(SimpleNamespace(bq_project=PROJECT, gcs_bucket=BUCKET,
+                                                  gcs_prefix='snapshots/' + BACKLOG_SPEC['table']))
+    context_store = SnapshotStore(source.client, context_objects, BACKLOG_SPEC)
     # Always acquire source first. Keeps globocorp writer out through publication.
-    with source.lock(), objects.lock():
+    with source.lock(), objects.lock(), context_objects.lock():
         publisher.bootstrap([json.loads(line) for line in checked_object(
             objects.bucket, INITIAL_PREFIX + "consolidated.ndjson.gz", INITIAL_SHA).splitlines()])
         publisher.recover()  # Resolve an older uncertain load before admitting a candidate.
@@ -87,7 +93,21 @@ def execute(settings, scheduled, *, recover_only=False):
             if blob is None:
                 raise ValueError("Consolidado: contexto viu2 ausente")
             return blob.download_as_bytes(if_generation_match=int(blob.generation))
-        rows, report = build(old, new, mapping, old_inputs=frozen_inputs(read_context))
+        context_control, _ = context_store.control()
+        descriptor = context_control['active']
+        if context_control['pending'] is not None or not descriptor:
+            raise ValueError('Consolidado: cadastro atual nao publicado')
+        from zoneinfo import ZoneInfo
+        if timestamp(descriptor['cut']).astimezone(ZoneInfo(settings.preferred_timezone)).date() != scheduled.astimezone(ZoneInfo(settings.preferred_timezone)).date():
+            raise ValueError('Consolidado: cadastro atual desatualizado')
+        context_store.verify(descriptor)
+        context_raw, _ = context_objects.get(descriptor['artifact'])
+        if context_raw is None or hashlib.sha256(context_raw).hexdigest() != descriptor['sha256']:
+            raise ValueError('Consolidado: artefato de cadastro divergente')
+        context = [json.loads(line) for line in context_raw.splitlines()]
+        if context_store.fingerprint(context) != descriptor['fingerprint']:
+            raise ValueError('Consolidado: fingerprint de cadastro divergente')
+        rows, report = build(old, new, mapping, old_inputs=frozen_inputs(read_context), current_context=context)
         # Detect external edits as well as conflicting cooperative pipeline writes.
         source.check_connection()
         if source.client.get_table(SOURCE).etag != before.etag:

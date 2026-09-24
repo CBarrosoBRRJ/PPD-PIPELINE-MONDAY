@@ -9,6 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 def release_files(root):
     fixed = {
+        "migrate_pricing_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_pricing_contract.py",
         "migrate_analysis_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_analysis_contract.py",
         "migrate_estimates_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_estimates_contract.py",
         "migrate_trajectory_contract.py": "tabelas/monday_sla_orcamento/scripts/migrate_trajectory_contract.py",
@@ -24,8 +25,11 @@ def release_files(root):
         "tabelas/monday_sla_orcamento/pyproject.toml": "tabelas/monday_sla_orcamento/pyproject.toml",
     }
     root = root.resolve()
+    for product in ('monday_backlog_agenciamento_2026', 'monday_talentos_exclusivos'):
+        path = f'tabelas/{product}/pyproject.toml'
+        fixed[path] = path
     selected = dict(fixed)
-    for directory in ("compartilhado/src", "orquestracao/src", "tabelas/monday_sla_orcamento_globocorp/src", "tabelas/monday_sla_orcamento_viu2/src", "tabelas/monday_log_viu2/src", "tabelas/monday_sla_orcamento/src"):
+    for directory in ("compartilhado/src", "orquestracao/src", "tabelas/monday_sla_orcamento_globocorp/src", "tabelas/monday_sla_orcamento_viu2/src", "tabelas/monday_log_viu2/src", "tabelas/monday_sla_orcamento/src", "tabelas/monday_backlog_agenciamento_2026/src", "tabelas/monday_talentos_exclusivos/src"):
         paths = list((root / directory).rglob("*.py"))
         if not paths:
             raise ValueError("Source package missing")

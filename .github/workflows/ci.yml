@@ -41,6 +41,7 @@ jobs:
       - run: python -m pip install --no-deps -e ../monday_log_viu2
       - run: python -m pip install --no-deps -e ../monday_sla_orcamento_viu2
       - run: python -m pip install --no-deps -e ../monday_sla_orcamento
+      - run: python -m pip install --no-deps -e ../monday_backlog_agenciamento_2026 -e ../monday_talentos_exclusivos
       - run: python -m pip install --no-deps -e ../../orquestracao
       - run: python -m pytest ../../orquestracao/tests -q
       - run: python -m ruff check ../../orquestracao

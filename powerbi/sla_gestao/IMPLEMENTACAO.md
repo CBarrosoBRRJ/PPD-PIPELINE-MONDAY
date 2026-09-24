@@ -8,8 +8,15 @@ inclui indicadores de ciclo ainda não homologados.
 
 ## 1. Construção em duas entregas
 
+Prioridade atual: [precificação com os status existentes](../../docs/RECORTE_PRECIFICACAO_ATUAL.md).
+O marco de negócio foi definido como primeiro Aguardando Feedback após Entrada;
+falta implementar e validar o cálculo de ciclo. Revisões contam; Standby e
+Retorno Marca/Executivo pausam horas corridas e úteis. Não esperar a reunião de
+redesenho dos status. Os gráficos existentes por passagem continuam diagnósticos,
+não comprovam sozinhos o novo prazo de precificação.
+
 1. Entregar tempo por etapa, trajetória, estimativas identificadas e cobertura com os campos existentes.
-2. Homologar o marco de entrega e construir o contrato de ciclos antes de liberar o KPI global ponta a ponta. “Encerrado” pode incluir resultados diferentes de orçamento entregue. Não preencher esse cartão com soma indiscriminada de etapas.
+2. Construir e validar o contrato de ciclos Entrada → primeiro Aguardando Feedback antes de liberar o KPI de precificação. “Encerrado” não substitui esse marco. Não preencher esse cartão com soma indiscriminada de etapas.
 
 Recomendação: cinco páginas, com a primeira sendo uma onepage executiva. Não colocar detalhe, auditoria e modelos na mesma tela. Páginas: Decisão, Gargalos, Processo e equipe, Projeto, Confiança. Na primeira versão, esconder métricas futuras ou mostrar “não disponível”; jamais usar valores fictícios no relatório produtivo.
 
