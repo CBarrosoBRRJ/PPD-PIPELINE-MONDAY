@@ -71,8 +71,17 @@ passagens operacionais em ambos ambientes e 193 tem no Globocorp apenas trecho
 terminal, sem passagem operacional. A consulta contou 32 passagens operacionais
 e 189 de Feedback estimadas no ViU2 na fronteira de migracao. Esses grupos de
 passagens nao sao automaticamente projetos distintos nem ciclos completos.
-Ainda e preciso conferir quantos dos 16 compartilham o mesmo `ciclo_id` entre
-ViU2 e Globocorp; nao chamar os 221 de ciclos operacionais interambiente.
+Nao chamar os 221 de ciclos operacionais interambiente.
+
+Consulta por `ciclo_id` confirmou 14 projetos e 14 ciclos com passagens
+operacionais em ambos ambientes. Dois dos 16 projetos com operacao nos dois
+ambientes nao compartilharam `ciclo_id` operacional; isso nao prova erro, pois
+pode haver entrega e reabertura na fronteira, mas exige inspecao especifica.
+Tres exemplos de ciclos compartilhados mostraram Entrada/etapas ViU2 e
+elaboracao/revisao Globocorp. As passagens estimadas permanecem marcadas;
+um exemplo termina com Feedback `indisponivel` e outro tem elaboracao Globocorp
+`indisponivel`. Validar os indicadores efetivos desses ciclos na tabela de
+ciclos antes de usar qualquer um como KPI observado.
 
 ## O que muda
 
