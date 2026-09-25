@@ -3,6 +3,7 @@
 > Documento de planejamento anterior ao contrato v18. Para nomes de campos,
 > regras de ciclo, consultas copiáveis e propostas de ML no estado atual, use
 > [Consultas de gestão v18](CONSULTAS_GESTAO_SLA_E_ML_V18.md) e
+> [Plano de execução de ML v18](PLANO_EXECUCAO_ML_V18.md). Estado operacional:
 > [Entrega v18](ENTREGA_V18_CICLOS.md). As afirmações de produção v12 abaixo
 > registram o contexto de 24/09/2026, não o estado atual.
 

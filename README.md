@@ -63,6 +63,10 @@ Não execute coleta/publicação apenas para validar esta reorganização.
 
 Para consultar as tabelas atuais, use o
 [guia SQL de gestão, indicadores e ML v18](docs/CONSULTAS_GESTAO_SLA_E_ML_V18.md).
+Cada visão inclui interpretação e ação; o guia define os contratos dos KPIs,
+metas propostas e marcos de homologação. O
+[plano de execução de ML](docs/PLANO_EXECUCAO_ML_V18.md) detalha preparação de
+dados, modelos, avaliação temporal e pilotos para prazo, demanda e capacidade.
 Leia também o [plano gerencial histórico de KPIs e ML](docs/PLANO_DASHBOARD_ML.md), abra o
 [protótipo HTML ilustrativo](powerbi/sla_gestao/prototipo.html) no navegador e siga
 o [guia Power BI](powerbi/sla_gestao/IMPLEMENTACAO.md). São propostas de consumo,
