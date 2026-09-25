@@ -80,8 +80,15 @@ pode haver entrega e reabertura na fronteira, mas exige inspecao especifica.
 Tres exemplos de ciclos compartilhados mostraram Entrada/etapas ViU2 e
 elaboracao/revisao Globocorp. As passagens estimadas permanecem marcadas;
 um exemplo termina com Feedback `indisponivel` e outro tem elaboracao Globocorp
-`indisponivel`. Validar os indicadores efetivos desses ciclos na tabela de
-ciclos antes de usar qualquer um como KPI observado.
+`indisponivel`. Os indicadores efetivos foram verificados na tabela de ciclos.
+
+Validacao dos indicadores publicados: entre os 14 ciclos operacionais
+interambiente, 7 estao `entregue`, 9 tem `duracao_completa`, todos os 14 tem
+`contem_estimativa=true` e nenhum tem `kpi_entrega_observada=true`. Portanto,
+entrega de processo e duracao estritamente observada sao medidas distintas;
+esses 14 ciclos nao entram no KPI observado. Os dois projetos com atividade
+operacional nos dois ambientes mas sem ciclo compartilhado requerem leitura da
+sequencia individual para confirmar se houve entrega e reabertura na fronteira.
 
 ## O que muda
 
