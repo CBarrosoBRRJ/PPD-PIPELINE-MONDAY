@@ -35,26 +35,30 @@ comparar rodadas, mas não esconda o começo da trajetória no drill-through.
 ## 1. Quantas vezes cada status foi usado?
 
 Para decidir se um status do Monday ainda é necessário, comece pelas **duas
-fontes completas**. Separe ambientes: o mesmo rótulo pode ter significado
-operacional diferente e a consolidação exclui parte dos projetos. Uma linha de
-origem é uma passagem registrada; ausência de uso não prova que um status pode
-ser removido do quadro sem consultar a equipe.
+fontes completas**. A consulta abaixo agrupa o mesmo nome de status nos dois
+ambientes; antes de excluir um status do quadro, confira se o rótulo tem o mesmo
+significado em ambos. Uma linha de origem é uma passagem registrada. A
+`quantidade` inclui passagens abertas ou sem duração; a média, em **horas
+corridas**, usa somente passagens encerradas com duração medida. Portanto, seu
+denominador pode ser menor que `quantidade`. Na ViU2, a duração é candidata
+histórica, não KPI homologado. Para uma comparação de tempos no recorte final
+validado, use a consulta 2. Ausência de uso não prova que um status pode ser
+removido sem consultar a equipe.
 
 ```sql
 WITH historico AS (
-  SELECT 'viu2' AS ambiente, status_nome, item_id, interval_id
+  SELECT status_nome, duracao_horas AS horas_observadas
   FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento_viu2`
   UNION ALL
-  SELECT 'globocorp', status_nome, item_id, interval_id
+  SELECT status_nome, horas_observadas_encerradas AS horas_observadas
   FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento_globocorp`
 )
-SELECT ambiente, COALESCE(NULLIF(TRIM(status_nome), ''), '(sem status)') AS status,
-  COUNT(*) AS passagens_registradas,
-  COUNT(DISTINCT item_id) AS itens_distintos,
-  COUNT(DISTINCT interval_id) AS intervalos_distintos
+SELECT COALESCE(NULLIF(TRIM(status_nome), ''), '(sem status)') AS status,
+  COUNT(*) AS quantidade,
+  ROUND(AVG(horas_observadas), 2) AS tempo_medio_horas_corridas
 FROM historico
-GROUP BY 1, 2
-ORDER BY ambiente, passagens_registradas DESC, status;
+GROUP BY 1
+ORDER BY quantidade DESC, status;
 ```
 
 Na população final, `passagens` conta cada registro; `permanencias` evita
