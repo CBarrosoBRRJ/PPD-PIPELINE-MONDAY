@@ -10,7 +10,8 @@ from urllib.request import Request, urlopen
 
 PROJECT = "gglobo-viu-dados-hdg-prd"
 BASE = f"https://monitoring.googleapis.com/v3/projects/{PROJECT}"
-RECIPIENTS = ("caio.barroso@viu.com.br", "cristina.andrade@viu.com.br")
+RECIPIENTS = ("caio.barroso@viu.com.br", "cristina.andrade@viu.com.br",
+              "gustavo.siano@viu.com.br")
 LABELS = {"pipeline": "monday", "managed_by": "monday-alerts-v1"}
 FILTER = f'''resource.labels.project_id="{PROJECT}" AND (
  (resource.type="cloud_run_job" AND resource.labels.job_name="pipeline-monday"
@@ -115,14 +116,20 @@ def configure(api, mode):
     names = [item["name"] if item else "MISSING" for item in found]
     proposed = policy(names)
     prior = [p for p in policies if p.get("displayName") == proposed["displayName"]]
+    update_channels = False
     if prior:
-        existing(policies, proposed)
+        if len(prior) == 1 and matches(prior[0], policy(names[:2])):
+            # Unica migracao autorizada: Caio+Cristina -> adicionar Gustavo.
+            update_channels = True
+        else:
+            existing(policies, proposed)
     if mode == "plan":
         return {"status": "plan_no_writes", "recipients": RECIPIENTS,
                 "channels_to_create": sum(item is None for item in found),
-                "policy_to_create": not prior, "filter": FILTER}
+                "policy_to_create": not prior,
+                "policy_channels_to_update": update_channels, "filter": FILTER}
     if mode == "test":
-        if not prior or any(item is None for item in found):
+        if not prior or update_channels or any(item is None for item in found):
             raise RuntimeError("Aplicar e verificar configuracao antes do teste.")
         test_id = str(uuid.uuid4())
         api.request("POST", "https://logging.googleapis.com/v2/entries:write", {"entries": [{
@@ -133,12 +140,20 @@ def configure(api, mode):
                             "message": "TESTE DE HOMOLOGACAO - sem falha real", "test_id": test_id}
         }]})
         return {"status": "test_log_written", "test_id": test_id,
-                "email_delivery": "aguardando_confirmacao_dos_dois_destinatarios"}
+                "email_delivery": "aguardando_confirmacao_dos_tres_destinatarios"}
     for index, desired in enumerate(desired_channels):
         if found[index] is None:
             found[index] = api.request("POST", BASE + "/notificationChannels", desired)
     proposed = policy([item["name"] for item in found])
-    configured = existing(policies, proposed)
+    if update_channels:
+        url = "https://monitoring.googleapis.com/v3/" + prior[0]["name"]
+        current = api.request("GET", url)
+        if current != prior[0]:
+            raise RuntimeError("Politica mudou durante a operacao; repetir plan.")
+        configured = api.request("PATCH", url + "?updateMask=notificationChannels", {
+            "name": prior[0]["name"], "notificationChannels": proposed["notificationChannels"]})
+    else:
+        configured = existing(policies, proposed)
     if configured is None:
         configured = api.request("POST", BASE + "/alertPolicies", proposed)
     # Recibo somente depois de GET conferir recursos persistidos.

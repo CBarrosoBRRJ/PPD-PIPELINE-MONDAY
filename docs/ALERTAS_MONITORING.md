@@ -1,23 +1,32 @@
 # Alertas externos do pipeline Monday
 
-Estado: dois canais criados pelo operador; politica nao criada (HTTP403).
-Consulta de permissoes nao retornou logging.notificationRules.create, ja
-solicitada pelo usuario ao administrador. Aplicacao e teste de entrega pendentes.
-Ver docs/RETOMADA_2026_09_25.md. Nao precisa de imagem nova nem SMTP.
+Estado posterior em 25/09: politica criada e verificada pelo operador apos
+liberacao de acesso: alertPolicies/14344268581677879515 no projeto PRD.
+Canais originais: 13521791824308717423 e 13521791824308717798.
+Teste escrito e2cc0722-4759-4e31-ba58-39d01528a41d; confirmar entrega individual.
+Usuario solicitou adicionar gustavo.siano@viu.com.br, mantendo Caio e Cristina.
+Script atualizado/testado localmente; inclusao do terceiro canal no GCP pendente.
+Nao precisa de imagem nova nem SMTP.
 
 ## Aplicacao serial no Cloud Shell
 
 Enviar scripts/configure_monitoring_cloudshell.py para /home/caio_barroso/.
 Executar primeiro `python3 /home/caio_barroso/configure_monitoring_cloudshell.py plan`.
-Conferir dois destinatarios: caio.barroso@viu.com.br e cristina.andrade@viu.com.br.
+Conferir tres destinatarios: caio.barroso@viu.com.br, cristina.andrade@viu.com.br
+e gustavo.siano@viu.com.br. Para politica original, plan deve indicar um canal
+a criar, policy_to_create=false e policy_channels_to_update=true.
+apply altera apenas notificationChannels por PATCH, apos conferir a politica
+original inteira; nao sobrescreve filtros, condicoes, documentacao ou estrategia.
+Requer monitoring.alertPolicies.update. Se falhar, nao ampliar IAM automaticamente.
 Depois executar o mesmo arquivo com `apply`; exigir configured_verified.
 Aguardar alguns minutos para propagacao e executar com `test`.
-Exigir recebimento pelos DOIS destinatarios (verificar spam/quarentena).
+Exigir recebimento pelos TRES destinatarios (verificar spam/quarentena).
 `test_log_written` confirma somente escrita do teste, nao entrega de e-mail.
 
 Script lista canais/politicas, cria somente recursos dedicados com identificacao
 monday-alerts-v1 e verifica por GET. Reexecucao serial reutiliza configuracao exata;
-colisoes, duplicatas ou divergencias param sem sobrescrever. Nao executar duas
+colisoes, duplicatas ou divergencias param sem sobrescrever, exceto a adicao
+expressamente autorizada do terceiro destinatario. Nao executar duas
 instancias simultaneamente. Falha parcial pode deixar canais criados; consultar
 plan antes de repetir. Nao altera IAM, API habilitada, tabelas, agenda ou LIA.
 Autenticacao usa gcloud com token em memoria; nao grava token, .env ou senha.

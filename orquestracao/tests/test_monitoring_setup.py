@@ -28,23 +28,29 @@ class FakeAPI:
             saved["name"] = f"projects/{m.PROJECT}/{kind}/{len(self.items[kind]) + 1}"
             self.items[kind].append(saved)
             return saved
-        name = url.split("/v3/", 1)[1]
-        return next(item for values in self.items.values() for item in values
+        name = url.split("/v3/", 1)[1].split("?", 1)[0]
+        item = next(item for values in self.items.values() for item in values
                     if item["name"] == name)
+        if method == "PATCH":
+            assert url.endswith("?updateMask=notificationChannels")
+            assert set(body) == {"name", "notificationChannels"}
+            self.writes.append((url, body))
+            item["notificationChannels"] = body["notificationChannels"]
+        return copy.deepcopy(item)
 
 
 def test_plan_has_no_writes():
     api = FakeAPI()
-    assert m.configure(api, "plan")["channels_to_create"] == 2
+    assert m.configure(api, "plan")["channels_to_create"] == 3
     assert not api.writes
 
 
 def test_apply_idempotent_and_test_separate():
     api = FakeAPI()
     assert m.configure(api, "apply")["status"] == "configured_verified"
-    assert len(api.writes) == 3
+    assert len(api.writes) == 4
     m.configure(api, "apply")
-    assert len(api.writes) == 3
+    assert len(api.writes) == 4
     assert m.configure(api, "test")["status"] == "test_log_written"
     entry = api.writes[-1][1]["entries"][0]
     assert entry["resource"]["type"] == "global"
@@ -73,7 +79,7 @@ def test_drift_never_overwrites(mutation):
         api.items["notificationChannels"].append(copy.deepcopy(item))
     with pytest.raises(RuntimeError):
         m.configure(api, "apply")
-    assert len(api.writes) == 3
+    assert len(api.writes) == 4
 
 
 def test_policy_collision_prevents_channel_creation():
@@ -88,7 +94,30 @@ def test_partial_channel_creation_can_resume():
     api = FakeAPI()
     api.request("POST", m.BASE + "/notificationChannels", m.channel(m.RECIPIENTS[0]))
     m.configure(api, "apply")
-    assert len(api.writes) == 3
+    assert len(api.writes) == 4
+
+
+def test_add_gustavo_to_existing_policy(monkeypatch):
+    api = FakeAPI()
+    recipients = m.RECIPIENTS
+    monkeypatch.setattr(m, "RECIPIENTS", recipients[:2])
+    m.configure(api, "apply")
+    before = copy.deepcopy(api.items["alertPolicies"][0])
+    monkeypatch.setattr(m, "RECIPIENTS", recipients)
+    plan = m.configure(api, "plan")
+    assert plan["channels_to_create"] == 1
+    assert plan["policy_channels_to_update"] is True
+    assert plan["policy_to_create"] is False
+    with pytest.raises(RuntimeError):
+        m.configure(api, "test")
+    m.configure(api, "apply")
+    after = api.items["alertPolicies"][0]
+    assert len(after["notificationChannels"]) == 3
+    assert {k: v for k, v in after.items() if k != "notificationChannels"} == {
+        k: v for k, v in before.items() if k != "notificationChannels"}
+    count = len(api.writes)
+    m.configure(api, "apply")
+    assert len(api.writes) == count
 
 
 def test_scoped_policy():
