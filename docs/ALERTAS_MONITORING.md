@@ -1,7 +1,9 @@
 # Alertas externos do pipeline Monday
 
-Estado: script preparado e testado localmente; aplicacao e entrega dos e-mails
-dependem de recibos do operador. Nao precisa de imagem nova nem SMTP.
+Estado: dois canais criados pelo operador; politica nao criada (HTTP403).
+Consulta de permissoes nao retornou logging.notificationRules.create, ja
+solicitada pelo usuario ao administrador. Aplicacao e teste de entrega pendentes.
+Ver docs/RETOMADA_2026_09_25.md. Nao precisa de imagem nova nem SMTP.
 
 ## Aplicacao serial no Cloud Shell
 

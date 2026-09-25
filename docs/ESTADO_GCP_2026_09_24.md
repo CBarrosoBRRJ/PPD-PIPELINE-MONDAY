@@ -18,8 +18,13 @@ Publicacao confirmada em 2026-09-25T00:28:44.762565Z, corte 2026-09-24T03:00:00Z
   Proxima execucao automatica v17 ainda nao observada.
 - Populacao selecionada, nao cobertura integral da operacao. Sem mapa nao entra;
   continuidade nao homologada fica em baixa qualidade. Nao inventar historico.
-- Alertas externos: preparacao em docs/ALERTAS_MONITORING.md; ainda sem recibo
-  de aplicacao/recebimento. Nao declarar entrega de e-mail homologada.
+- Alertas externos: dois canais criados; politica bloqueada por HTTP403.
+  logging.notificationRules.create nao retornou no teste de permissoes;
+  acesso solicitado ao administrador. Aplicacao/teste ainda pendentes.
+- Retomada: docs/RETOMADA_2026_09_25.md. Usuario observou apenas ViU2 no SLA;
+  regra atual envia toda troca de ambiente para baixa qualidade. Revisar os
+  vinculos e evidencias, sem converter estimativas em eventos observados.
+  Queries copiaveis: docs/QUERIES_ANALISE_VALIDACAO_SLA.md.
 
 ## Estado posterior: v16 publicada e reconciliação conferida pelo operador
 
