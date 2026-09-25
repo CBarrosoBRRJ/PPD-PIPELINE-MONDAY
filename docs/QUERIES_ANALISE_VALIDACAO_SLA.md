@@ -1,5 +1,10 @@
 # Queries copiaveis — analise e validacao de SLA
 
+> Consultas do contrato anterior ao v18: algumas colunas e filtros abaixo
+> mudaram. Para análise das tabelas publicadas em 25/09/2026, use
+> [Consultas de gestão e ML v18](CONSULTAS_GESTAO_SLA_E_ML_V18.md) e
+> [Validação de ciclos v18](VALIDACAO_E_ANALISE_CICLOS_V18.md).
+
 GoogleSQL / BigQuery, localizacao US. Executar uma consulta por vez no editor.
 Somente SELECT: nenhuma altera dados. Consultas conferidas com os contratos
 locais, mas nao executadas no GCP nesta revisao. No CLI usar use_legacy_sql=false,

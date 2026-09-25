@@ -5,13 +5,14 @@ Pipelines do Monday organizados por tabela de consumo no BigQuery.
 O nível compartilhado é **pipeline-monday**, sem referência a orçamento. Orçamento
 é um produto, não a plataforma inteira. Consulte a
 [separação entre plataforma e produtos](docs/PADRAO_NOMES_TABELAS.md).
-O coordenador v12 está implantado para a origem Globocorp e a consolidação.
-Contrato consolidado sla-consolidado-analise-v7: KPI observado por etapa,
-trajetória qualificada e durações unificadas com origem explícita. A execução diária
-de 24/09/2026 publicou os dois produtos e foi conferida pelo operador; corte da
-consolidada em 24/09 às 03:00 UTC. Não repetir migrações ou implantar releases anteriores.
-Consulte a [entrega para consumo](docs/ENTREGA_CONSUMO_ATUAL.md) e os
-[recibos de produção](docs/ESTADO_GCP_2026_09_24.md).
+O estado publicado mais recente é o **v18 de ciclos** (25/09/2026), com
+`monday_sla_orcamento` por passagem, `monday_ciclos_orcamento` por tentativa,
+fila de Entrada e diagnóstico de qualidade por projeto. Consulte o
+[recibo e procedimento v18](docs/ENTREGA_V18_CICLOS.md) antes de operar o job.
+O agendamento diário foi reativado; a primeira execução automática após essa
+liberação ainda precisa de conferência. A documentação v12/v17 permanece como
+histórico, não como contrato vigente. Não repetir migrações nem implantar
+releases anteriores.
 Veja a [organização das iniciativas no GCP compartilhado](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
 
 ## Organização
@@ -60,7 +61,9 @@ Não execute coleta/publicação apenas para validar esta reorganização.
 
 ## Dashboard e melhoria do processo
 
-Leia o [plano gerencial de KPIs e ML](docs/PLANO_DASHBOARD_ML.md), abra o
+Para consultar as tabelas atuais, use o
+[guia SQL de gestão, indicadores e ML v18](docs/CONSULTAS_GESTAO_SLA_E_ML_V18.md).
+Leia também o [plano gerencial histórico de KPIs e ML](docs/PLANO_DASHBOARD_ML.md), abra o
 [protótipo HTML ilustrativo](powerbi/sla_gestao/prototipo.html) no navegador e siga
 o [guia Power BI](powerbi/sla_gestao/IMPLEMENTACAO.md). São propostas de consumo,
 não um dashboard publicado nem homologação do SLA global ponta a ponta.

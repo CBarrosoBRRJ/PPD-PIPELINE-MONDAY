@@ -1,5 +1,11 @@
 # Gestão do fluxo: entregar mais rápido, com qualidade
 
+> Documento de planejamento anterior ao contrato v18. Para nomes de campos,
+> regras de ciclo, consultas copiáveis e propostas de ML no estado atual, use
+> [Consultas de gestão v18](CONSULTAS_GESTAO_SLA_E_ML_V18.md) e
+> [Entrega v18](ENTREGA_V18_CICLOS.md). As afirmações de produção v12 abaixo
+> registram o contexto de 24/09/2026, não o estado atual.
+
 Plano revisado em 24/09/2026. Prioridade confirmada: reduzir o tempo de
 precificação, da Entrada até o primeiro Aguardando Feedback, encontrar gargalos
 e melhorar o processo. Não apenas exibir médias.
