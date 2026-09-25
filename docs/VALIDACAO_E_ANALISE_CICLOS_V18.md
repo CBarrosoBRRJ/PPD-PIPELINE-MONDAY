@@ -160,3 +160,33 @@ GROUP BY projeto_id HAVING COUNT(*)>1 ORDER BY ciclos DESC LIMIT 20;
 Estimativa na fronteira e hipotese, nao prova de historico completo. Conferir
 o inicio Entrada, a passagem que encerra cada ciclo e as revisoes posteriores.
 Na qualidade, motivos sao listas sobrepostas: nao somar contagens por motivo.
+
+Contar projetos com duas origens nao demonstra, por si, trabalho operacional
+nas duas: uma origem pode conter apenas Encerrado. Antes de afirmar continuidade
+operacional entre ambientes, verificar o recorte abaixo:
+
+```sql
+WITH s AS (
+  SELECT * FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento`
+), por_projeto AS (
+  SELECT projeto_id, COUNT(DISTINCT ambiente_origem) AS origens,
+    COUNTIF(ambiente_origem='viu2' AND sla_categoria_tempo='operacao') AS operacao_viu2,
+    COUNTIF(ambiente_origem='globocorp' AND sla_categoria_tempo='operacao') AS operacao_globocorp,
+    COUNTIF(ambiente_origem='globocorp' AND sla_categoria_tempo='terminal') AS terminal_globocorp,
+    COUNTIF(ambiente_origem='viu2' AND sla_origem_duracao='estimada_migracao'
+      AND sla_categoria_tempo='operacao') AS estimativas_operacionais,
+    COUNTIF(ambiente_origem='viu2' AND sla_origem_duracao='estimada_migracao'
+      AND sla_categoria_tempo='feedback') AS estimativas_feedback
+  FROM s GROUP BY projeto_id
+)
+SELECT COUNT(*) AS projetos_vinculados,
+  COUNTIF(operacao_viu2>0 AND operacao_globocorp>0) AS operacao_nos_dois_ambientes,
+  COUNTIF(operacao_globocorp=0 AND terminal_globocorp>0) AS globocorp_so_terminal,
+  SUM(estimativas_operacionais) AS passagens_operacionais_estimadas,
+  SUM(estimativas_feedback) AS passagens_feedback_estimadas
+FROM por_projeto WHERE origens=2;
+```
+
+Para inspecionar exemplos operacionais reais, filtrar projetos com
+`operacao_viu2>0 AND operacao_globocorp>0` e listar suas passagens em ordem.
+Se nao houver, reportar o limite da fonte em vez de inferir uma continuidade.
