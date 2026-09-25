@@ -1,7 +1,8 @@
 # Entrega v18 — ciclos continuos
 
 Estado em 25/09/2026: v18 implantada e primeira publicacao manual confirmada;
-validacao analitica complementar e retomada da agenda diaria ainda pendentes.
+validacao agregada de integridade aprovada. Inspecao de amostras e retomada da
+agenda diaria ainda pendentes.
 O ensaio anterior recebido pelo operador teve 2.183 projetos,
 9.617 passagens, 1.583 candidatos, 600 excluidos sem Entrada inicial, 1.685 ciclos
 (1.346 entregues, 92 em andamento, 247 interrompidos), 1.211 entregas observadas,
@@ -42,9 +43,15 @@ O journal `cycles-destinations-control.json` ficou ativo, sem `pending`,
 `initializing=false`, contrato `destinos-ciclos-v2`. Uma consulta BigQuery
 independente confirmou zero chaves repetidas, passagens sem ciclo e inicios de
 ciclo sem passagem; registrou 1.211 entregas observadas e 32 ciclos com
-estimativa. Ainda falta executar todas as consultas de
-`VALIDACAO_E_ANALISE_CICLOS_V18.md`, inspecionar amostras interambiente e
-retomar/verificar o Cloud Scheduler. Nao chamar isso de homologacao final.
+estimativa. Auditoria BigQuery adicional, sem cache e com teto de 1 GiB, retornou
+zero fins orfaos, ciclos com total divergente, ciclos inconsistentes, passagens
+inconsistentes e projetos da fila fora da principal. Encontrou 221 projetos
+aceitos com passagens nos dois ambientes. Da qualidade diagnostica, 1.036
+projetos tambem estao no SLA e 600 estao fora, somando os 1.636 registros
+publicados; nao somar qualidade a SLA como populacoes disjuntas. Ainda falta
+inspecionar exemplos interambiente e de reabertura, retomar/verificar o Cloud
+Scheduler e observar a primeira execucao automatica. Nao chamar isso de
+homologacao final.
 
 ## O que muda
 
@@ -117,7 +124,8 @@ Timeout conserva pending e recupera mesmo job_id; erro definitivo da transacao
 preserva o lote anterior. Nao apagar lock, journal ou tabela para destravar.
 
 Passos 1 a 7 realizados; o primeiro `daily` falhou e a repeticao concluiu.
-Passos 8 a 10 permanecem criterios de fechamento:
+Parte do passo 8 foi verificada; amostras e passos 9 a 10 permanecem criterios
+de fechamento:
 
 1. Upload ZIP v18, conferir SHA256 e fazer build --async (nao pausa agenda).
 2. Conferir SUCCESS e digest da imagem; nao usar tag mutavel no deploy.
