@@ -1,7 +1,10 @@
 # V17 — SLA, fila e baixa qualidade
 
-Estado: implementada e testada localmente, NÃO implantada no GCP.
-Produção continua v16 até comandos explícitos do operador.
+Estado: implantada e publicacao verificada pelo operador. Execucao daily
+pipeline-monday-dtm7d, 1.363 projetos SLA / 4 fila / 816 baixa qualidade;
+2.183 distintos sem duplicidade. Agenda retomada as 06h America/Sao_Paulo.
+Ver recibo vigente em ESTADO_GCP_2026_09_24.md. Proxima rodada automatica pendente.
+Os passos abaixo sao registro da implantacao; nao repetir inicializacao.
 
 - ZIP: runtime/pipeline-monday-release-20260924-v17-destinos.zip
 - SHA256: faa3142cf095e0c4455709f9c83039569c89263aa5657cfe6a757af44560f544

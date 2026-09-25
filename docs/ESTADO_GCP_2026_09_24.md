@@ -1,5 +1,26 @@
 # Recibo da execução automática — 24/09/2026
 
+## Estado posterior vigente: v17 publicada, agenda retomada
+
+Recibos enviados pelo operador, nao consulta direta local. Esta secao prevalece
+sobre as anteriores. Build e938d3f9-ef2d-44f2-8c15-3886c254b953 SUCCESS.
+Imagem sha256:09d884d66f3b228059cd4e5b5dbd1f13b78aa7f55457f4f2cc9b4a2d12dfa256.
+Inicializacao pipeline-monday-5qxws e daily pipeline-monday-dtm7d concluidas.
+Publicacao confirmada em 2026-09-25T00:28:44.762565Z, corte 2026-09-24T03:00:00Z.
+
+- SLA: 1.363 projetos / 6.366 passagens; fila: 4 projetos / 4 linhas;
+  baixa qualidade: 816 projetos / 816 linhas (grao projeto).
+- Consulta BQ: 2.183 projetos somados = 2.183 distintos; zero duplicidades.
+- Backlog: 4.872 linhas; talentos: 41; publicacoes verificadas.
+- destinations-control.json: initializing=false, pending=null,
+  active.job_id=monday_destinations_9cb22d46789544beb84de90a79ae7430.
+- Scheduler ENABLED, 0 6 * * *, America/Sao_Paulo. Job em daily.
+  Proxima execucao automatica v17 ainda nao observada.
+- Populacao selecionada, nao cobertura integral da operacao. Sem mapa nao entra;
+  continuidade nao homologada fica em baixa qualidade. Nao inventar historico.
+- Alertas externos: preparacao em docs/ALERTAS_MONITORING.md; ainda sem recibo
+  de aplicacao/recebimento. Nao declarar entrega de e-mail homologada.
+
 ## Estado posterior: v16 publicada e reconciliação conferida pelo operador
 
 Esta seção prevalece sobre os recibos anteriores. Build
