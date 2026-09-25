@@ -3,9 +3,12 @@
 Estado posterior em 25/09: politica criada e verificada pelo operador apos
 liberacao de acesso: alertPolicies/14344268581677879515 no projeto PRD.
 Canais originais: 13521791824308717423 e 13521791824308717798.
-Teste escrito e2cc0722-4759-4e31-ba58-39d01528a41d; confirmar entrega individual.
-Usuario solicitou adicionar gustavo.siano@viu.com.br, mantendo Caio e Cristina.
-Script atualizado/testado localmente; inclusao do terceiro canal no GCP pendente.
+Terceiro canal incluido e verificado: 9595854790757074136, Gustavo,
+mantendo Caio e Cristina. Testes cbb6435f-84d8-4dce-af9c-d4df776377f3 e
+7bef179c-47eb-4cd9-8f91-9d1ff9be03e3 registrados. Usuario confirmou em 25/09
+recebimento pelos TRES destinatarios, com imagem da confirmacao de Gustavo.
+Entrega de notificacao de teste homologada; nao comprova deteccao de silencio
+nem recuperacao automatica. Nao e necessario repetir testes de e-mail agora.
 Nao precisa de imagem nova nem SMTP.
 
 ## Aplicacao serial no Cloud Shell
