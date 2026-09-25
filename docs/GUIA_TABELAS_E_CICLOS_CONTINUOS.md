@@ -4,9 +4,11 @@
 
 Producao v17 ainda usa exclusao integral por qualidade de trajetoria e regra
 antiga de precificacao. Nao publicar novos KPIs como se essa regra ja tivesse
-sido substituida. Motor live_cycles.py e candidato offline, nao integrado ao
-worker, schema ou publicador. Doze testes sinteticos aprovados; impacto real,
-contrato fisico, recuperacao e deploy ainda pendentes.
+sido substituida. Motor live_cycles.py e contrato de monday_ciclos_orcamento
+implementados localmente, com 18 testes especificos de motor/contrato/ensaio.
+Worker oferece ensaio somente leitura; publicacao diaria permanece v17.
+Impacto real, migracao do publicador, recuperacao e deploy ainda pendentes.
+Procedimento: [ENSAIO_CICLOS_CONTINUOS.md](ENSAIO_CICLOS_CONTINUOS.md).
 
 ## Decisao de negocio atual (substitui proposta de so ciclos concluidos)
 

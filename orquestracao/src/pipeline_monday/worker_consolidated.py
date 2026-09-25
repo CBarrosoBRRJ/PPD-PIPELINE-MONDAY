@@ -4,6 +4,8 @@ import argparse
 import hashlib
 import json
 import os
+from collections import Counter
+from contextlib import nullcontext
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -39,7 +41,10 @@ def ensure_current(rows, scheduled, timezone):
     return cut
 
 
-def execute(settings, scheduled, *, recover_only=False, initialize_destinations=False):
+def execute(settings, scheduled, *, recover_only=False, initialize_destinations=False,
+            cycles_check=False):
+    if cycles_check and (recover_only or initialize_destinations):
+        raise ValueError('Ciclos: ensaio nao permite escrita/recuperacao')
     if (settings.bq_project != PROJECT or settings.bq_dataset != DATASET
             or settings.bq_table != "monday_sla_orcamento_globocorp"
             or settings.gcs_bucket != BUCKET or settings.gcs_prefix != "sla_orcamento"
@@ -57,7 +62,9 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                                                   gcs_prefix='snapshots/' + BACKLOG_SPEC['table']))
     context_store = SnapshotStore(source.client, context_objects, BACKLOG_SPEC)
     # Always acquire source first. Keeps globocorp writer out through publication.
-    with source.lock(), objects.lock(), context_objects.lock():
+    with (nullcontext() if cycles_check else source.lock()), \
+            (nullcontext() if cycles_check else objects.lock()), \
+            (nullcontext() if cycles_check else context_objects.lock()):
         from monday_sla_orcamento.destination_publication import CONTROL, DestinationStore
         from monday_sla_orcamento.destinations import build as split_destinations
 
@@ -71,7 +78,12 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                     'daily_rebuild_required': True}
         bundle_active = objects.get(CONTROL)[0] is not None
         if bundle_active:
-            destinations.recover()
+            if cycles_check:
+                read_control = destinations.control()
+                if read_control[0]['pending'] or read_control[0]['initializing']:
+                    raise ValueError('Ciclos: destinos em publicacao')
+            else:
+                destinations.recover()
             if recover_only:
                 descriptor = destinations.control()[0]['active']
                 if descriptor is None:
@@ -80,16 +92,26 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                 return {'status': 'success', 'publication_verified': True,
                         'gold_rows': descriptor['tables']['monday_sla_orcamento']['rows'],
                         'gold_cut_utc': descriptor['cut']}
-        publisher.bootstrap([json.loads(line) for line in checked_object(
-            objects.bucket, INITIAL_PREFIX + "consolidated.ndjson.gz", INITIAL_SHA).splitlines()])
-        if not bundle_active:
+        if not cycles_check:
+            publisher.bootstrap([json.loads(line) for line in checked_object(
+                objects.bucket, INITIAL_PREFIX + "consolidated.ndjson.gz", INITIAL_SHA).splitlines()])
+        elif not bundle_active:
+            raise ValueError('Ciclos: ensaio exige destinos v17 inicializados')
+        if not bundle_active and not cycles_check:
             publisher.recover()  # Resolve an older uncertain load before admitting a candidate.
         if recover_only:
             active = publisher.control()[0]["active"]
             publisher.verify(active)
             return {"status": "success", "publication_verified": True,
                     "gold_rows": active["rows"], "gold_cut_utc": active["cut"]}
-        connection = source.check_connection()
+        if cycles_check:
+            source_control = source._control()
+            if source_control[0]['pending'] is not None:
+                raise ValueError('Ciclos: fonte pendente')
+            source.verify_publication(source_control[0]['active'])
+            connection = {'pending': False, 'published': source_control[0]['active']['gold_hash'] is not None}
+        else:
+            connection = source.check_connection()
         if connection["pending"] or not connection["published"]:
             raise ValueError("Consolidado: origem com publicacao pendente")
         before = source.client.get_table(SOURCE)
@@ -99,7 +121,8 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
         new = [json.loads(r["registro"]) for r in query.result(timeout=settings.bq_job_timeout_seconds)]
         ensure_current(new, scheduled, settings.preferred_timezone)
         versions = {r["versao_regras"] for r in new}
-        rule_snapshots = source.read("meta_gold_rule_snapshot", settings.monday_board_id)
+        rule_snapshots = (source._read_state(source_control[0]['active'])["meta_gold_rule_snapshot"]
+                          if cycles_check else source.read("meta_gold_rule_snapshot", settings.monday_board_id))
         confirmed = {r["versao_regras"] for r in rule_snapshots
                      if r["conteudo"].get("title_scope_version") == SCOPE_VERSION}
         if not versions <= confirmed:
@@ -116,7 +139,7 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             if blob is None:
                 raise ValueError("Consolidado: contexto viu2 ausente")
             return blob.download_as_bytes(if_generation_match=int(blob.generation))
-        context_control, _ = context_store.control()
+        context_control, context_generation = context_store.control()
         descriptor = context_control['active']
         if context_control['pending'] is not None or not descriptor:
             raise ValueError('Consolidado: cadastro atual nao publicado')
@@ -132,9 +155,34 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             raise ValueError('Consolidado: fingerprint de cadastro divergente')
         rows, report = build(old, new, mapping, old_inputs=frozen_inputs(read_context), current_context=context)
         # Detect external edits as well as conflicting cooperative pipeline writes.
-        source.check_connection()
+        if cycles_check:
+            if source._control() != source_control:
+                raise ValueError('Ciclos: fonte mudou durante ensaio')
+        else:
+            source.check_connection()
         if source.client.get_table(SOURCE).etag != before.etag:
             raise ValueError("Consolidado: fonte mudou durante a leitura")
+        if cycles_check:
+            from monday_sla_orcamento.cycle_contract import project as validate_cycles
+            from monday_sla_orcamento.live_cycles import build as build_cycles
+            from sls_orcamento_ppd.rules.business_time import BusinessCalendar
+
+            if context_store.control() != (context_control, context_generation) or destinations.control() != read_control:
+                raise ValueError('Ciclos: controle mudou durante ensaio; repetir')
+            if not rows:
+                raise ValueError('Ciclos: populacao vazia')
+            result = build_cycles(rows, BusinessCalendar('America/Sao_Paulo'),
+                                  cut=rows[0]['corte_globocorp_utc'])
+            validate_cycles(result)
+            return {'status': 'cycles_rehearsal_only', 'data_modified': False,
+                    'publication_verified': False, 'source_projects': report['projects'],
+                    'source_passages': len(rows), 'candidate_projects': len({r['projeto_id'] for r in result['passagens']}),
+                    'excluded_projects': len(result['excluidos']), 'cycles': len(result['ciclos']),
+                    'cycles_by_state': dict(Counter(c['situacao'] for c in result['ciclos'])),
+                    'passages_by_duration_origin': dict(Counter(p['origem_duracao'] for p in result['passagens'])),
+                    'observed_deliveries': sum(c['kpi_entrega_observada'] for c in result['ciclos']),
+                    'cycles_with_estimate': sum(c['contem_estimativa'] for c in result['ciclos']),
+                    'note': 'Candidato nao publicado. Idade aberta exige evidencia no corte; sem evidencia permanece nula.'}
         evidence = {"table": SOURCE, "etag": before.etag, "history_sha": HISTORY_SHA,
                     "map_sha": MAP_SHA, "scheduled_for": scheduled.isoformat()}
         if bundle_active:
