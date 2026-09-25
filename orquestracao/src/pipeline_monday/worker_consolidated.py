@@ -39,7 +39,7 @@ def ensure_current(rows, scheduled, timezone):
     return cut
 
 
-def execute(settings, scheduled, *, recover_only=False):
+def execute(settings, scheduled, *, recover_only=False, initialize_destinations=False):
     if (settings.bq_project != PROJECT or settings.bq_dataset != DATASET
             or settings.bq_table != "monday_sla_orcamento_globocorp"
             or settings.gcs_bucket != BUCKET or settings.gcs_prefix != "sla_orcamento"
@@ -58,9 +58,32 @@ def execute(settings, scheduled, *, recover_only=False):
     context_store = SnapshotStore(source.client, context_objects, BACKLOG_SPEC)
     # Always acquire source first. Keeps globocorp writer out through publication.
     with source.lock(), objects.lock(), context_objects.lock():
+        from monday_sla_orcamento.destination_publication import CONTROL, DestinationStore
+        from monday_sla_orcamento.destinations import build as split_destinations
+
+        destinations = DestinationStore(source.client, objects, settings.bq_job_timeout_seconds)
+        if initialize_destinations:
+            if recover_only:
+                raise ValueError('Destinos: opcoes incompatíveis')
+            publisher.recover()
+            destinations.initialize(publisher)
+            return {'status': 'initialized', 'publication_verified': False,
+                    'daily_rebuild_required': True}
+        bundle_active = objects.get(CONTROL)[0] is not None
+        if bundle_active:
+            destinations.recover()
+            if recover_only:
+                descriptor = destinations.control()[0]['active']
+                if descriptor is None:
+                    raise ValueError('Destinos: primeira publicacao pendente')
+                destinations.verify(descriptor)
+                return {'status': 'success', 'publication_verified': True,
+                        'gold_rows': descriptor['tables']['monday_sla_orcamento']['rows'],
+                        'gold_cut_utc': descriptor['cut']}
         publisher.bootstrap([json.loads(line) for line in checked_object(
             objects.bucket, INITIAL_PREFIX + "consolidated.ndjson.gz", INITIAL_SHA).splitlines()])
-        publisher.recover()  # Resolve an older uncertain load before admitting a candidate.
+        if not bundle_active:
+            publisher.recover()  # Resolve an older uncertain load before admitting a candidate.
         if recover_only:
             active = publisher.control()[0]["active"]
             publisher.verify(active)
@@ -114,6 +137,11 @@ def execute(settings, scheduled, *, recover_only=False):
             raise ValueError("Consolidado: fonte mudou durante a leitura")
         evidence = {"table": SOURCE, "etag": before.etag, "history_sha": HISTORY_SHA,
                     "map_sha": MAP_SHA, "scheduled_for": scheduled.isoformat()}
+        if bundle_active:
+            outputs, split_report = split_destinations(rows)
+            split_report['consolidation'] = report
+            evidence['cut'] = rows[0]['corte_globocorp_utc'] if rows else None
+            return destinations.publish(outputs, split_report, evidence, publisher)
         return publisher.publish(rows, report, evidence)
 
 
@@ -123,6 +151,7 @@ def main():
     parser.add_argument("--scheduled-for", required=True)
     parser.add_argument("--result", required=True)
     parser.add_argument("--recover-only", action="store_true")
+    parser.add_argument("--initialize-destinations", action="store_true")
     args = parser.parse_args()
     try:
         scheduled = datetime.fromisoformat(args.scheduled_for)
@@ -132,7 +161,10 @@ def main():
             raise ValueError("Consolidado: seletor de configuracao invalido")
         # Explicit source runtime binding, not a second secret file. Output settings
         # are fixed separately; BQ_TABLE is never changed to the consolidated target.
-        receipt = execute(load_settings(".env"), scheduled, recover_only=args.recover_only)
+        options = {'recover_only': args.recover_only}
+        if args.initialize_destinations:
+            options['initialize_destinations'] = True
+        receipt = execute(load_settings(".env"), scheduled, **options)
         with Path(args.result).open("x", encoding="utf-8") as handle:
             json.dump(receipt, handle)
         print(json.dumps({"event": "consolidated_publication_confirmed", **receipt}), flush=True)

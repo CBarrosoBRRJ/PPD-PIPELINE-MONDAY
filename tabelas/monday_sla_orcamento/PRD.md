@@ -1,5 +1,18 @@
 # SLA consolidado — contrato de consumo
 
+## Candidato v17 — separação de destinos (não implantado)
+
+Schema v9 preservado; população muda somente após inicialização explícita do
+journal destinos-projeto-v1. Worker reconstroi toda a população anterior das fontes
+verificadas e só então separa por projeto, permitindo reinclusão após correção.
+SLA recebe sequência aceita começando em Entrada; fila recebe Entrada isolada
+confirmada no cadastro atual; baixa qualidade recebe projeto inteiro com motivos.
+Entrada em outro dia que criação é permitida; fluxo direto observado até Feedback
+também. Prefixos nulos são preservados como evidência sem KPI, não etapas inventadas.
+Projetos em andamento com sequência aceita não são automaticamente entregas.
+Detalhes, recuperação e limitação da população: docs/SEPARACAO_SLA_FILA_QUALIDADE.md
+na raiz. Não inclui automaticamente itens sem mapa ou fora dos filtros anteriores.
+
 ## Candidato v9 — talento atual unificado (ainda não implantado)
 
 ### Revisão v15: escopo obrigatório de talento

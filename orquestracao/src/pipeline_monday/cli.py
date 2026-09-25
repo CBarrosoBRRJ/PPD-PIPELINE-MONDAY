@@ -27,13 +27,31 @@ def maintenance(document, args):
 
 def main():
     parser = argparse.ArgumentParser(description="Pipeline Monday — execução sequencial por produto")
-    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "rename-sla-plan", "rename-sla-apply"])
+    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "initialize-destinations", "rename-sla-plan", "rename-sla-apply"])
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--expected-generation", type=int)
     parser.add_argument("--writers-stopped", action="store_true")
     args = parser.parse_args()
     try:
         document = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
+        if args.command == 'initialize-destinations':
+            if not args.writers_stopped or args.expected_generation is not None:
+                raise ValueError('Destinos: declarar escritores parados; nao usa geracao manual')
+            plan(document)
+            from datetime import UTC, datetime
+
+            from sls_orcamento_ppd.config import load_settings
+
+            from .worker_consolidated import execute
+
+            try:
+                receipt = execute(load_settings('.env'), datetime.now(UTC), initialize_destinations=True)
+                print(json.dumps({'event': 'destinations_initialized', **receipt}), flush=True)
+            except Exception as error:
+                print(json.dumps({'event': 'destinations_initialization_failed',
+                                  'error_type': type(error).__name__}), flush=True)
+                raise SystemExit(1) from None
+            return
         if args.command.startswith("rename-sla-"):
             try:
                 print(json.dumps(maintenance(document, args)), flush=True)

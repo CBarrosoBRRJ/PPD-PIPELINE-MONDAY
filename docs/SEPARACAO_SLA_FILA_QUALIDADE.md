@@ -1,5 +1,49 @@
 # Separação de consumo — candidato, não implantado
 
+## Implementação posterior v17 (local)
+
+Classificação integrada ao worker, contratos gerados nas pastas dos dois novos
+produtos e publicador transacional implementados. Espera da fila usa calendário
+versionado até captura do cadastro. Treze testes adicionais de projeção/publicação
+passaram, inclusive falha, timeout, perda de confirmação e recuperação.
+As pendências de implementação descritas no ensaio abaixo foram substituídas
+por esta implementação candidata; implantação e homologação reais continuam pendentes.
+
+Ativação exige initialize-destinations com escritores parados. Usa controle
+separado destinations-control.json no MESMO prefixo/lock consolidado/diario.
+Somente após essa inicialização daily utiliza a nova separação. Sem o controle,
+o comportamento v16 permanece, evitando ativação acidental por simples troca de imagem.
+Referência do ensaio real: 1.363 projetos/6.366 passagens SLA, 4 projetos de fila,
+816 projetos de qualidade representando 3.224 passagens. Fontes dinâmicas podem mudar.
+
+## Protocolo e recuperação
+
+Inicialização confere a publicação v16, recusa adotar novas tabelas já existentes
+sem journal e cria somente as duas tabelas novas vazias. Não usar essas tabelas
+até primeira publicação conjunta confirmada. Se criação falhar, repetir inicialização
+com a mesma imagem; não apagar controle ou tabelas. Inicialização incompleta bloqueia daily.
+
+Cada rodada grava artefatos imutáveis por destino, hashes e relatório privado;
+registra pending antes de submeter um único query job. Tabelas temporárias da
+consulta materializam os artefatos; DELETE/INSERT nas três tabelas ocorrem dentro
+de BEGIN/COMMIT TRANSACTION. Sem novas tabelas permanentes de staging. Schemas
+e conteúdos são conferidos após commit antes de promover active por CAS no GCS.
+Em falha terminal há rollback do DML; resultado incerto mantém pending e consulta
+o mesmo job na recuperação. Não submeter novo candidato antes de resolver pending.
+GCS e BQ não têm transação distribuída; o journal cobre perda de confirmação.
+
+Após ativação, os scripts antigos que consultam control.json não verificam o
+novo conjunto. Usar destinations-control.json/report do conjunto. O controle v16
+é preservado como referência da transição, não atualizado como se ainda fosse ativo.
+Não voltar à v16 isoladamente: sua verificação deve recusar a tabela filtrada.
+Rollback exige procedimento explícito para as três tabelas e controles.
+
+O SLA mantém schema/contrato físico v9; a regra da população e os novos produtos
+são versionados destinos-projeto-v1 no controle/relatórios/novas tabelas.
+Baixa qualidade armazena uma linha por projeto e evidências em JSON; fila uma
+linha por projeto. Não comparar suas contagens de linhas com passagens do SLA.
+Atualizar Power BI somente após receipt publication_verified=true do conjunto.
+
 Decisão do usuário: monday_sla_orcamento, monday_fila_precificacao e
 monday_sla_baixa_qualidade_de_dado. Novos destinos autorizados, mas ainda não
 criados. A v16 continua publicando a população anterior. Não declarar entrega
