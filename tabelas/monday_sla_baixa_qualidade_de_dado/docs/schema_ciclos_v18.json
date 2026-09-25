@@ -1,0 +1,87 @@
+[
+  {
+    "name": "projeto_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "projeto_nome",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "item_id_viu2",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "item_id_globocorp",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "quantidade_passagens",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "status_atual",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_capturado_em",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "corte_historico_utc",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "marca",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "talento",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "eh_interveniencia",
+    "type": "BOOLEAN",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cadastro_atual_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "motivos_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "primeiro_status_conhecido",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "primeira_entrada_observada_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "evidencias_passagens_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  }
+]

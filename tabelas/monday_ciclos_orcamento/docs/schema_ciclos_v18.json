@@ -1,0 +1,132 @@
+[
+  {
+    "name": "projeto_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ciclo_id",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "numero_ciclo",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "tipo_ciclo",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id_inicio",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "interval_id_fim",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "item_id_viu2",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "item_id_globocorp",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "inicio_utc",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "fim_utc",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "corte_utc",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "situacao",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "operacao_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "operacao_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "terceiros_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "terceiros_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "standby_horas_corridas",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "standby_horas_uteis",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "duracao_completa",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "kpi_entrega_observada",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "contem_estimativa",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "contem_idade_aberta",
+    "type": "BOOLEAN",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "quantidade_passagens_operacionais",
+    "type": "INTEGER",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "motivos_json",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_regra",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "versao_calendario",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  }
+]

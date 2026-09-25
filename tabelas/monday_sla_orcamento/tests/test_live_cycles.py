@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
@@ -7,6 +8,25 @@ from monday_sla_orcamento.live_cycles import build
 from sls_orcamento_ppd.rules.business_time import BusinessCalendar
 
 CAL = BusinessCalendar("America/Sao_Paulo")
+
+
+def test_open_age_uses_verified_source_cut_and_rejects_divergence():
+    data = rows(['Entrada'])
+    row = data[0]
+    row.pop('estado_confirmado_no_corte')
+    row.update(interval_id_origem='native', item_id_globocorp=123)
+    source = {'qualidade_historico': 'observed', 'intervalo_aberto': True,
+        'eh_ultimo_registro': True, 'status_atual_divergente': False,
+        'tempo_status_atual_horas': 10, 'versao_calendario': CAL.version,
+        'interval_id': 'native', 'item_id': 123, 'saida_status_utc': None,
+        'corte_utc': '2026-09-24T23:00:00Z',
+        'entrada_status_utc': row['entrada_status_utc'], 'status_nome': 'Entrada'}
+    row['registro_origem_json'] = json.dumps(source)
+    assert run(data)['ciclos'][0]['operacao_horas_corridas'] == 10
+    for key, invalid in [('status_atual_divergente', True), ('corte_utc', '2026-09-25T23:00:00Z'),
+                         ('interval_id', 'wrong'), ('qualidade_historico', 'initial_inferred')]:
+        row['registro_origem_json'] = json.dumps({**source, key: invalid})
+        assert run(data)['ciclos'][0]['operacao_horas_corridas'] is None
 
 
 def rows(labels):

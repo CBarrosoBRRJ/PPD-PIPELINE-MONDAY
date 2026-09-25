@@ -1,8 +1,9 @@
 # monday_ciclos_orcamento — candidato aprovado para implementacao
 
-NAO PUBLICADO. O schema e motor estao locais; ainda nao integrado ao journal de
-publicacao diaria. Nao executar schema.sql isoladamente nem substituir imagem v17
+NAO PUBLICADO. Schema, motor e publicador de quatro tabelas integrados localmente
+para release v18. Nao executar schema.sql isoladamente nem substituir imagem v17
 pelo pacote de ensaio. Criacao aprovada pelo usuario em 25/09/2026.
+Plano e mudancas de consumo: docs/ENTREGA_V18_CICLOS.md na raiz.
 
 ## Grao, origem e relacionamentos
 
@@ -33,7 +34,8 @@ Ausencia de movimento nao comprova que nada aconteceu no intervalo migrado.
 Campos de horas uteis usam calendario do projeto (seg-sex 10-13/14-19 Sao Paulo,
 feriados BR PUBLIC e extras). Desconhecido permanece NULL, nao zero. Idade aberta
 exige prova do estado no corte, nao um cadastro posterior; integracao dessa prova
-ainda pendente e atualmente produz NULL se nao fornecida. Nao calcular ate NOW().
+usa a Gold Globocorp observada, aberta, sem divergencia, mesmo corte/calendario/ID.
+Sem essa prova produz NULL. Nao calcular ate NOW().
 
 operacao_* exclui terceiros/standby; terceiros_* e standby_* sao tempos separados
 internos ao ciclo. Feedback apos entrega fica na trajetoria para analise de espera,

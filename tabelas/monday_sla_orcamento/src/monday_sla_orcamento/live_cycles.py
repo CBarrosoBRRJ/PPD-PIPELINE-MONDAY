@@ -39,6 +39,26 @@ def category(label):
     return "terminal" if value in TERMINALS else "desconhecido"
 
 
+def confirmed_open_at_cut(row, cutoff, calendar):
+    """Use verified closed-day Gold evidence, never a later backlog snapshot."""
+    if row['ambiente_origem'] != 'globocorp':
+        return False
+    source = json.loads(row.get('registro_origem_json', '{}'))
+    return (source.get('qualidade_historico') == 'observed'
+        and source.get('intervalo_aberto') is True
+        and source.get('eh_ultimo_registro') is True
+        and source.get('status_atual_divergente') is False
+        and source.get('tempo_status_atual_horas') is not None
+        and source.get('versao_calendario') == calendar.version
+        and source.get('interval_id') is not None
+        and source.get('interval_id') == row.get('interval_id_origem')
+        and source.get('item_id') == row.get('item_id_globocorp')
+        and source.get('saida_status_utc') is None
+        and instant(source.get('corte_utc')) == cutoff
+        and instant(source.get('entrada_status_utc')) == instant(row['entrada_status_utc'])
+        and normalize(source.get('status_nome')) == normalize(row.get('status_nome')))
+
+
 def build(rows, calendar, *, cut):
     """Input: trajetoria PRE filtro v17, IDs preservados, corte explicito UTC.
 
@@ -148,7 +168,7 @@ def build(rows, calendar, *, cut):
                 right, provenance = starts[i + 1], "estimada_migracao"
             elif end is None and i == len(group) - 1 and kind != "desconhecido":
                 # Precisa de confirmacao do estado no corte, nao apenas snapshot atual posterior.
-                if row.get("estado_confirmado_no_corte") is True:
+                if row.get("estado_confirmado_no_corte") is True or confirmed_open_at_cut(row, cutoff, calendar):
                     right, provenance = cutoff, "idade_aberta_no_corte"
             if right is None and i >= first and kind not in {"terminal"}:
                 issues.append("duracao_nao_comprovada")

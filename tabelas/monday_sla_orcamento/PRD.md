@@ -1,5 +1,16 @@
 # SLA consolidado — contrato de consumo
 
+## Candidato v18 — ciclos continuos (ainda nao implantado)
+
+Ver docs/ENTREGA_V18_CICLOS.md e docs/VALIDACAO_E_ANALISE_CICLOS_V18.md na raiz.
+Publicacao de quatro tabelas com journal separado e transacao unica. Colunas
+aditivas sla_* e ciclo_id; contrato fisico docs/schema_ciclos_v18.json. Mantem
+linhagem v9, cujos campos de precificacao sao legados e nao medem ciclos novos.
+Nova tabela monday_ciclos_orcamento e referencia de totais e KPI de entrega.
+Fila e subconjunto da principal; qualidade diagnostica pode coexistir com SLA.
+Esta decisao substitui exclusao integral v17 exceto falta de Entrada inicial
+ou prefixo nulo sobreposto. Evidencias/cadastros/filtros de escopo preservados.
+
 ## Candidato v17 — separação de destinos (não implantado)
 
 Schema v9 preservado; população muda somente após inicialização explícita do

@@ -42,9 +42,12 @@ def ensure_current(rows, scheduled, timezone):
 
 
 def execute(settings, scheduled, *, recover_only=False, initialize_destinations=False,
-            cycles_check=False):
-    if cycles_check and (recover_only or initialize_destinations):
+            cycles_check=False, initialize_cycles=False, cycles_bundle_check=False):
+    cycles_check = cycles_check or cycles_bundle_check
+    if cycles_check and (recover_only or initialize_destinations or initialize_cycles):
         raise ValueError('Ciclos: ensaio nao permite escrita/recuperacao')
+    if initialize_cycles and (initialize_destinations or recover_only):
+        raise ValueError('Ciclos: opcoes incompativeis')
     if (settings.bq_project != PROJECT or settings.bq_dataset != DATASET
             or settings.bq_table != "monday_sla_orcamento_globocorp"
             or settings.gcs_bucket != BUCKET or settings.gcs_prefix != "sla_orcamento"
@@ -65,10 +68,22 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
     with (nullcontext() if cycles_check else source.lock()), \
             (nullcontext() if cycles_check else objects.lock()), \
             (nullcontext() if cycles_check else context_objects.lock()):
+        from monday_sla_orcamento.cycle_publication import CONTROL as CYCLE_CONTROL
+        from monday_sla_orcamento.cycle_publication import CycleStore
         from monday_sla_orcamento.destination_publication import CONTROL, DestinationStore
         from monday_sla_orcamento.destinations import build as split_destinations
 
         destinations = DestinationStore(source.client, objects, settings.bq_job_timeout_seconds)
+        cycles_active = objects.get(CYCLE_CONTROL)[0] is not None
+        if initialize_cycles:
+            CycleStore(source.client, objects, settings.bq_job_timeout_seconds).initialize()
+            return {'status': 'cycles_initialized', 'publication_verified': False,
+                    'daily_rebuild_required': True}
+        if cycles_active:
+            if initialize_destinations:
+                raise ValueError('Ciclos: retorno ao inicializador legado proibido')
+            destinations = CycleStore(source.client, objects, settings.bq_job_timeout_seconds)
+            from monday_sla_orcamento.cycle_destinations import build as split_destinations
         if initialize_destinations:
             if recover_only:
                 raise ValueError('Destinos: opcoes incompatíveis')
@@ -76,7 +91,7 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             destinations.initialize(publisher)
             return {'status': 'initialized', 'publication_verified': False,
                     'daily_rebuild_required': True}
-        bundle_active = objects.get(CONTROL)[0] is not None
+        bundle_active = cycles_active or objects.get(CONTROL)[0] is not None
         if bundle_active:
             if cycles_check:
                 read_control = destinations.control()
@@ -92,7 +107,7 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                 return {'status': 'success', 'publication_verified': True,
                         'gold_rows': descriptor['tables']['monday_sla_orcamento']['rows'],
                         'gold_cut_utc': descriptor['cut']}
-        if not cycles_check:
+        if not cycles_check and not cycles_active:
             publisher.bootstrap([json.loads(line) for line in checked_object(
                 objects.bucket, INITIAL_PREFIX + "consolidated.ndjson.gz", INITIAL_SHA).splitlines()])
         elif not bundle_active:
@@ -171,6 +186,14 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                 raise ValueError('Ciclos: controle mudou durante ensaio; repetir')
             if not rows:
                 raise ValueError('Ciclos: populacao vazia')
+            if cycles_bundle_check:
+                from monday_sla_orcamento.cycle_destinations import build as build_bundle
+                from monday_sla_orcamento.cycle_publication import validate_bundle
+
+                outputs, summary = build_bundle(rows)
+                validate_bundle(outputs, summary)
+                return {'status': 'cycles_bundle_plan_verified', 'data_modified': False,
+                        'publication_verified': False, **summary}
             result = build_cycles(rows, BusinessCalendar('America/Sao_Paulo'),
                                   cut=rows[0]['corte_globocorp_utc'])
             validate_cycles(result)
@@ -189,6 +212,8 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             outputs, split_report = split_destinations(rows)
             split_report['consolidation'] = report
             evidence['cut'] = rows[0]['corte_globocorp_utc'] if rows else None
+            if cycles_active:
+                return destinations.publish(outputs, split_report, evidence)
             return destinations.publish(outputs, split_report, evidence, publisher)
         return publisher.publish(rows, report, evidence)
 

@@ -34,7 +34,7 @@ def test_rehearsal_does_not_lock_recover_bootstrap_or_publish(monkeypatch):
                 'conteudo': {'title_scope_version': w.SCOPE_VERSION}}]})
     monkeypatch.setattr(w, 'get_store', lambda _: source)
     monkeypatch.setattr(w, 'ObjectStore', lambda _: SimpleNamespace(
-        lock=forbidden, get=lambda key: (raw, 1), bucket=object()))
+        lock=forbidden, get=lambda key: (None, 0) if key == 'cycles-destinations-control.json' else (raw, 1), bucket=object()))
     monkeypatch.setattr(w, 'ConsolidatedStore', lambda *a, **k: SimpleNamespace(
         bootstrap=forbidden, recover=forbidden, publish=forbidden))
     monkeypatch.setattr(destination_publication, 'DestinationStore', lambda *a: SimpleNamespace(

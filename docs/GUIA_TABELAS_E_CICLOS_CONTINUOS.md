@@ -2,6 +2,10 @@
 
 ## Estado em 25/09/2026
 
+Atualizacao posterior: publicacao integrada candidata v18 em
+[ENTREGA_V18_CICLOS.md](ENTREGA_V18_CICLOS.md). Nao implantada; essa nota
+prevalece sobre referencias abaixo a integracao ainda inexistente.
+
 Producao v17 ainda usa exclusao integral por qualidade de trajetoria e regra
 antiga de precificacao. Nao publicar novos KPIs como se essa regra ja tivesse
 sido substituida. Motor live_cycles.py e contrato de monday_ciclos_orcamento

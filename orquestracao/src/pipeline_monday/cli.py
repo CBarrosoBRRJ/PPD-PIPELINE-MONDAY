@@ -27,14 +27,32 @@ def maintenance(document, args):
 
 def main():
     parser = argparse.ArgumentParser(description="Pipeline Monday — execução sequencial por produto")
-    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "initialize-destinations", "rename-sla-plan", "rename-sla-apply"])
+    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "cycles-plan", "initialize-destinations", "initialize-cycles", "rename-sla-plan", "rename-sla-apply"])
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--expected-generation", type=int)
     parser.add_argument("--writers-stopped", action="store_true")
     args = parser.parse_args()
     try:
         document = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
-        if args.command == 'initialize-destinations':
+        if args.command == 'cycles-plan':
+            if args.writers_stopped or args.expected_generation is not None:
+                raise ValueError('Ciclos: plano nao recebe opcoes de migracao')
+            plan(document)
+            from datetime import UTC, datetime
+
+            from sls_orcamento_ppd.config import load_settings
+
+            from .worker_consolidated import execute
+
+            try:
+                receipt = execute(load_settings('.env'), datetime.now(UTC), cycles_bundle_check=True)
+            except Exception as error:
+                print(json.dumps({'event': 'cycles_bundle_plan_failed',
+                                  'error_type': type(error).__name__}), flush=True)
+                raise SystemExit(1) from None
+            print(json.dumps({'event': 'cycles_bundle_plan', **receipt}), flush=True)
+            return
+        if args.command in {'initialize-destinations', 'initialize-cycles'}:
             if not args.writers_stopped or args.expected_generation is not None:
                 raise ValueError('Destinos: declarar escritores parados; nao usa geracao manual')
             plan(document)
@@ -45,7 +63,8 @@ def main():
             from .worker_consolidated import execute
 
             try:
-                receipt = execute(load_settings('.env'), datetime.now(UTC), initialize_destinations=True)
+                option = 'initialize_cycles' if args.command == 'initialize-cycles' else 'initialize_destinations'
+                receipt = execute(load_settings('.env'), datetime.now(UTC), **{option: True})
                 print(json.dumps({'event': 'destinations_initialized', **receipt}), flush=True)
             except Exception as error:
                 print(json.dumps({'event': 'destinations_initialization_failed',

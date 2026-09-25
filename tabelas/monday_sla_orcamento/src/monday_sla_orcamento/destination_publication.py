@@ -105,30 +105,35 @@ def fingerprint(name, rows):
         sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
-def transaction(descriptors, objects):
+def transaction(descriptors, objects, *, contracts=None):
     """Materialize immutable external inputs before starting the DML transaction."""
+    contracts = CONTRACTS if contracts is None else contracts
     statements, definitions = [], {}
-    for i, name in enumerate(CONTRACTS):
+    for i, name in enumerate(contracts):
         descriptor = descriptors[name]
-        columns = ', '.join('`' + key + '`' for key in CONTRACTS[name])
+        columns = ', '.join('`' + key + '`' for key in contracts[name])
         if descriptor['rows']:
             external = bigquery.ExternalConfig('NEWLINE_DELIMITED_JSON')
             external.source_uris = [objects.uri(descriptor['artifact'])]
-            external.schema = schema(name)
+            external.schema = [bigquery.SchemaField(k, t, mode='REQUIRED' if required else 'NULLABLE')
+                               for k, (t, required) in contracts[name].items()]
             external.ignore_unknown_values = False
             external.max_bad_records = 0
             definitions['input_' + str(i)] = external
             statements.append(f'CREATE TEMP TABLE batch_{i} AS SELECT {columns} FROM input_{i};')
         else:
             types = {'INTEGER': 'INT64', 'FLOAT': 'FLOAT64', 'BOOLEAN': 'BOOL'}
-            ddl = ', '.join(f'`{k}` {types.get(t, t)}' for k, (t, _) in CONTRACTS[name].items())
+            ddl = ', '.join(f'`{k}` {types.get(t, t)}' for k, (t, _) in contracts[name].items())
             statements.append(f'CREATE TEMP TABLE batch_{i} ({ddl});')
         statements.append(f'ASSERT (SELECT COUNT(*) FROM batch_{i}) = {descriptor["rows"]} AS "Contagem divergente";')
     statements.append('BEGIN TRANSACTION;')
-    for i, name in enumerate(CONTRACTS):
-        columns = ', '.join('`' + key + '`' for key in CONTRACTS[name])
-        statements.extend([f'DELETE FROM `{target(name)}` WHERE TRUE;',
-                           f'INSERT INTO `{target(name)}` ({columns}) SELECT {columns} FROM batch_{i};'])
+    for i, name in enumerate(contracts):
+        if not name.replace('_', '').isalnum():
+            raise ValueError('Destinos: nome invalido')
+        destination = PROJECT + '.' + DATASET + '.' + name
+        columns = ', '.join('`' + key + '`' for key in contracts[name])
+        statements.extend([f'DELETE FROM `{destination}` WHERE TRUE;',
+                           f'INSERT INTO `{destination}` ({columns}) SELECT {columns} FROM batch_{i};'])
     statements.append('COMMIT TRANSACTION;')
     return '\n'.join(statements), definitions
 
