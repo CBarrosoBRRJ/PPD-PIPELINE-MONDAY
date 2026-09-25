@@ -66,6 +66,14 @@ vinculo e reabertura, mas nao comprovam que ha atividade operacional em ambos
 ambientes para todos os 221 projetos vinculados. Esse recorte ainda requer
 consulta especifica antes de afirmar continuidade operacional interambiente.
 
+Consulta especifica na mesma publicacao: dos 221 projetos vinculados, 16 tem
+passagens operacionais em ambos ambientes e 193 tem no Globocorp apenas trecho
+terminal, sem passagem operacional. A consulta contou 32 passagens operacionais
+e 189 de Feedback estimadas no ViU2 na fronteira de migracao. Esses grupos de
+passagens nao sao automaticamente projetos distintos nem ciclos completos.
+Ainda e preciso conferir quantos dos 16 compartilham o mesmo `ciclo_id` entre
+ViU2 e Globocorp; nao chamar os 221 de ciclos operacionais interambiente.
+
 ## O que muda
 
 Quatro tabelas publicadas juntas em uma transacao BigQuery:
