@@ -2,8 +2,9 @@
 
 ## Estado em 25/09/2026
 
-V18 publicada manualmente em 25/09/2026; agenda ainda pausada ate a validacao
-complementar. Recibos, contagens e pendencias em
+V18 publicada manualmente em 25/09/2026; agenda reativada para 06:00
+America/Sao_Paulo. Primeira execucao automatica ainda nao observada. Recibos,
+contagens e pendencias em
 [ENTREGA_V18_CICLOS.md](ENTREGA_V18_CICLOS.md). As notas de planejamento v17
 abaixo sao historicas quando divergirem da v18. KPI observado deve usar
 `monday_ciclos_orcamento.kpi_entrega_observada`; os campos antigos de

@@ -1,8 +1,8 @@
 # monday_ciclos_orcamento — contrato de consumo v18
 
 Publicado pela primeira vez em 25/09/2026: 1.685 ciclos para 1.583 projetos,
-com recibo de publicacao verificada. Agenda diaria ainda aguarda retomada e
-primeira execucao automatica. Nao executar schema.sql isoladamente nem substituir
+com recibo de publicacao verificada. Agenda diaria retomada; primeira execucao
+automatica ainda aguarda verificacao. Nao executar schema.sql isoladamente nem substituir
 a imagem de producao pelo pacote de ensaio. Recibos, limites e validacoes:
 docs/ENTREGA_V18_CICLOS.md na raiz.
 

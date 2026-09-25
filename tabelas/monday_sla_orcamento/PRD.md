@@ -11,7 +11,8 @@ Fila e subconjunto da principal; qualidade diagnostica pode coexistir com SLA.
 Esta decisao substitui exclusao integral v17 exceto falta de Entrada inicial
 ou prefixo nulo sobreposto. Evidencias/cadastros/filtros de escopo preservados.
 Em 25/09/2026, primeira publicacao manual verificada com 7.625 passagens de
-1.583 projetos; validacao complementar e retomada da agenda ainda pendentes.
+1.583 projetos; validacao agregada aprovada e agenda retomada. Amostras e
+primeira execucao automatica ainda pendentes.
 
 ## Historico v17 — separacao de destinos (substituida pela v18)
 
