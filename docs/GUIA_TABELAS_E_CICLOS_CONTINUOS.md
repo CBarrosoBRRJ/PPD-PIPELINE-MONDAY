@@ -2,17 +2,12 @@
 
 ## Estado em 25/09/2026
 
-Atualizacao posterior: publicacao integrada candidata v18 em
-[ENTREGA_V18_CICLOS.md](ENTREGA_V18_CICLOS.md). Nao implantada; essa nota
-prevalece sobre referencias abaixo a integracao ainda inexistente.
-
-Producao v17 ainda usa exclusao integral por qualidade de trajetoria e regra
-antiga de precificacao. Nao publicar novos KPIs como se essa regra ja tivesse
-sido substituida. Motor live_cycles.py e contrato de monday_ciclos_orcamento
-implementados localmente, com 18 testes especificos de motor/contrato/ensaio.
-Worker oferece ensaio somente leitura; publicacao diaria permanece v17.
-Impacto real, migracao do publicador, recuperacao e deploy ainda pendentes.
-Procedimento: [ENSAIO_CICLOS_CONTINUOS.md](ENSAIO_CICLOS_CONTINUOS.md).
+V18 publicada manualmente em 25/09/2026; agenda ainda pausada ate a validacao
+complementar. Recibos, contagens e pendencias em
+[ENTREGA_V18_CICLOS.md](ENTREGA_V18_CICLOS.md). As notas de planejamento v17
+abaixo sao historicas quando divergirem da v18. KPI observado deve usar
+`monday_ciclos_orcamento.kpi_entrega_observada`; os campos antigos de
+precificacao permanecem somente para compatibilidade.
 
 ## Decisao de negocio atual (substitui proposta de so ciclos concluidos)
 
@@ -39,9 +34,10 @@ e uteis, calendario seg-sex 10-13/14-19, feriados BR PUBLIC e extras configurado
 
 | Tabela | Pergunta / acao de gestao | Cuidado |
 |---|---|---|
-| monday_sla_orcamento | Onde as passagens observadas consomem tempo? Mediana/P90 por etapa para escolher gargalos a investigar. | Uma linha por passagem; populacao filtrada v17. Nao representa toda operacao nem novos ciclos ainda. |
+| monday_sla_orcamento | Onde as passagens consomem tempo operacional ou de espera? Mediana/P90 por etapa para escolher gargalos. | Uma linha por passagem; filtrar `sla_categoria_tempo` e `sla_origem_duracao`. Nao somar observada e estimada sem separar. |
+| monday_ciclos_orcamento | Quantas tentativas de orcamento foram entregues, interrompidas ou seguem abertas? Qual a duracao operacional por ciclo? | Uma linha por ciclo; KPI estrito requer `kpi_entrega_observada`. Relacionar a passagens por `ciclo_id`, nao somente `projeto_id`. |
 | monday_fila_precificacao | Quais projetos selecionados so tem Entrada e ha quanto tempo aguardam? Priorizar triagem. | Uma linha por projeto; idade ate captura. Nao e toda fila do board. |
-| monday_sla_baixa_qualidade_de_dado | Por que um projeto ficou fora? Priorizar correcoes e revisar evidencias. | Uma linha por projeto, varios motivos; nao somar motivos como projetos distintos. |
+| monday_sla_baixa_qualidade_de_dado | Quais projetos ou trechos exigem correcao e por que? | Diagnostico pode coexistir com SLA; uma linha por projeto, varios motivos. Nao somar com a populacao principal. |
 | monday_backlog_agenciamento_2026 | Como esta a carteira atual por status, marca, talento, tipo e responsaveis cadastrados? Distribuir demandas e achar campos ausentes. | Retrato diario; contagem de itens nao e automaticamente contagem de projetos. Nao mede historico de transicoes ou autoria passada. |
 | monday_talentos_exclusivos | Como esta o cadastro de talentos/vinculos e responsaveis? Identificar ausencia de dono e apoiar segmentacao. | Associar ao backlog por vinculo validado; nao join aproximado por nome. Nao contem receita ou performance economica comprovada. |
 | monday_sla_orcamento_viu2 | Auditar passagens historicas e recuperar trecho antigo do projeto. | Fonte congelada; nao somar diretamente com consolidada. |

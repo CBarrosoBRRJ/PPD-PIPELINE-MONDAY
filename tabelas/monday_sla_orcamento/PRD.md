@@ -1,6 +1,6 @@
 # SLA consolidado — contrato de consumo
 
-## Candidato v18 — ciclos continuos (ainda nao implantado)
+## V18 — ciclos continuos (primeira publicacao confirmada)
 
 Ver docs/ENTREGA_V18_CICLOS.md e docs/VALIDACAO_E_ANALISE_CICLOS_V18.md na raiz.
 Publicacao de quatro tabelas com journal separado e transacao unica. Colunas
@@ -10,8 +10,10 @@ Nova tabela monday_ciclos_orcamento e referencia de totais e KPI de entrega.
 Fila e subconjunto da principal; qualidade diagnostica pode coexistir com SLA.
 Esta decisao substitui exclusao integral v17 exceto falta de Entrada inicial
 ou prefixo nulo sobreposto. Evidencias/cadastros/filtros de escopo preservados.
+Em 25/09/2026, primeira publicacao manual verificada com 7.625 passagens de
+1.583 projetos; validacao complementar e retomada da agenda ainda pendentes.
 
-## Candidato v17 — separação de destinos (não implantado)
+## Historico v17 — separacao de destinos (substituida pela v18)
 
 Schema v9 preservado; população muda somente após inicialização explícita do
 journal destinos-projeto-v1. Worker reconstroi toda a população anterior das fontes
@@ -24,7 +26,7 @@ Projetos em andamento com sequência aceita não são automaticamente entregas.
 Detalhes, recuperação e limitação da população: docs/SEPARACAO_SLA_FILA_QUALIDADE.md
 na raiz. Não inclui automaticamente itens sem mapa ou fora dos filtros anteriores.
 
-## Candidato v9 — talento atual unificado (ainda não implantado)
+## Historico v9 — talento atual unificado (linhagem preservada)
 
 ### Revisão v15: escopo obrigatório de talento
 

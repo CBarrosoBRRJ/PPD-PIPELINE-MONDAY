@@ -1,9 +1,10 @@
-# monday_ciclos_orcamento — candidato aprovado para implementacao
+# monday_ciclos_orcamento — contrato de consumo v18
 
-NAO PUBLICADO. Schema, motor e publicador de quatro tabelas integrados localmente
-para release v18. Nao executar schema.sql isoladamente nem substituir imagem v17
-pelo pacote de ensaio. Criacao aprovada pelo usuario em 25/09/2026.
-Plano e mudancas de consumo: docs/ENTREGA_V18_CICLOS.md na raiz.
+Publicado pela primeira vez em 25/09/2026: 1.685 ciclos para 1.583 projetos,
+com recibo de publicacao verificada. Agenda diaria ainda aguarda retomada e
+primeira execucao automatica. Nao executar schema.sql isoladamente nem substituir
+a imagem de producao pelo pacote de ensaio. Recibos, limites e validacoes:
+docs/ENTREGA_V18_CICLOS.md na raiz.
 
 ## Grao, origem e relacionamentos
 

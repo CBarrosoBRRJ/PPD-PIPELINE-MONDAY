@@ -1,10 +1,11 @@
-# Entrega candidata v18 — ciclos continuos
+# Entrega v18 — ciclos continuos
 
-Estado: codigo integrado e testes locais; NAO implantado. Producao v17 preservada
-ate migracao explicita. O ensaio recebido pelo operador teve 2.183 projetos,
+Estado em 25/09/2026: v18 implantada e primeira publicacao manual confirmada;
+validacao analitica complementar e retomada da agenda diaria ainda pendentes.
+O ensaio anterior recebido pelo operador teve 2.183 projetos,
 9.617 passagens, 1.583 candidatos, 600 excluidos sem Entrada inicial, 1.685 ciclos
 (1.346 entregues, 92 em andamento, 247 interrompidos), 1.211 entregas observadas,
-221 passagens estimadas e 32 ciclos com estimativa. Isso NAO e recibo de publicacao.
+221 passagens estimadas e 32 ciclos com estimativa. Isso era ensaio, nao recibo de publicacao.
 Contagens podem mudar: v18 tambem reconhece idade aberta quando comprovada na
 Gold Globocorp no mesmo corte, mesmo item/passagem, calendario, sem divergencia.
 
@@ -12,8 +13,38 @@ Verificacao local final: 621 testes aprovados, 3 ignorados; Ruff nos arquivos
 alterados sem erros. Pacote runtime/pipeline-monday-release-20260925-v18-ciclos.zip,
 107 arquivos fonte, SHA256:
 ad9a802572c5bb9b13140cf6018a90fe345cbbfcf6c8a4bf98ee80815eedfdbb.
-Nenhum segredo ou dado privado no pacote. Imagem, inicializacao, publicacao e
-execucao automatica v18 ainda dependem de recibos GCP; testes nao os substituem.
+Nenhum segredo ou dado privado no pacote. Imagem, inicializacao e primeira
+publicacao ja possuem recibos GCP; execucao automatica v18 ainda nao foi observada.
+
+## Recibos da primeira publicacao
+
+Build `61d5a7f7-3bef-45db-8970-cfb1aa852588` concluiu com sucesso; o Job
+usa o digest imutavel `sha256:dd3ab2619c6e489ca084562e81a947f4e8ac8b723f2b30bfd549071435e88a65`.
+`cycles-plan` (`pipeline-monday-kj74t`) verificou 2.183 projetos-fonte,
+9.617 passagens, 1.583 projetos aceitos, 600 excluidos e reconciliacao.
+`initialize-cycles` (`pipeline-monday-s6rpj`) confirmou `cycles_initialized`.
+
+A primeira tentativa diaria (`pipeline-monday-xf7wt`) falhou no snapshot do
+backlog com `ValueError`; a causa exata nao foi comprovada. O preflight posterior
+(`pipeline-monday-5b2cs`) validou 4.879 linhas de backlog e 41 de talentos,
+sem escrita. A nova execucao diaria (`pipeline-monday-928tn`) concluiu com
+`orchestration_end.status=success` e `consolidated_publication_confirmed`,
+`publication_verified=true`, corte `2026-09-25T03:00:00Z`:
+
+| Destino | Linhas | Projetos |
+|---|---:|---:|
+| `monday_sla_orcamento` | 7.625 | 1.583 |
+| `monday_ciclos_orcamento` | 1.685 | 1.583 |
+| `monday_fila_precificacao` | 4 | 4 |
+| `monday_sla_baixa_qualidade_de_dado` | 1.636 | 1.636 |
+
+O journal `cycles-destinations-control.json` ficou ativo, sem `pending`,
+`initializing=false`, contrato `destinos-ciclos-v2`. Uma consulta BigQuery
+independente confirmou zero chaves repetidas, passagens sem ciclo e inicios de
+ciclo sem passagem; registrou 1.211 entregas observadas e 32 ciclos com
+estimativa. Ainda falta executar todas as consultas de
+`VALIDACAO_E_ANALISE_CICLOS_V18.md`, inspecionar amostras interambiente e
+retomar/verificar o Cloud Scheduler. Nao chamar isso de homologacao final.
 
 ## O que muda
 
@@ -85,6 +116,9 @@ ficar publicada sozinha. Temporarias de query nao sao tabelas permanentes extras
 Timeout conserva pending e recupera mesmo job_id; erro definitivo da transacao
 preserva o lote anterior. Nao apagar lock, journal ou tabela para destravar.
 
+Passos 1 a 7 realizados; o primeiro `daily` falhou e a repeticao concluiu.
+Passos 8 a 10 permanecem criterios de fechamento:
+
 1. Upload ZIP v18, conferir SHA256 e fazer build --async (nao pausa agenda).
 2. Conferir SUCCESS e digest da imagem; nao usar tag mutavel no deploy.
 3. Pausar somente pipeline-monday-diario; conferir nenhuma execucao ativa.
@@ -106,7 +140,7 @@ Se inicializacao interromper, repetir inicializador v18 com escritores parados.
 Se daily falhar, manter imagem v18, investigar log e pendencia; a recuperacao e
 automatica na proxima tentativa. Restauracao v17 requer plano proprio com
 artefatos preservados e verificacao dos tres destinos; nao prometemos rollback
-automatico por troca de imagem. Antes da migracao, v17 segue operando normalmente.
+automatico por troca de imagem. Antes desta migracao, v17 seguia operando normalmente.
 
 ## Aceite
 
