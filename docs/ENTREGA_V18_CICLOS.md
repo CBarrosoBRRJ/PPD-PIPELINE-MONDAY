@@ -1,8 +1,8 @@
 # Entrega v18 — ciclos continuos
 
 Estado em 25/09/2026: v18 implantada e primeira publicacao manual confirmada;
-validacao agregada de integridade aprovada. Agenda diaria reativada e verificada;
-recorte operacional interambiente e primeira execucao automatica ainda pendentes.
+validacao agregada de integridade e amostras interambiente aprovadas. Agenda
+diaria reativada e verificada; primeira execucao automatica ainda pendente.
 O ensaio anterior recebido pelo operador teve 2.183 projetos,
 9.617 passagens, 1.583 candidatos, 600 excluidos sem Entrada inicial, 1.685 ciclos
 (1.346 entregues, 92 em andamento, 247 interrompidos), 1.211 entregas observadas,
@@ -49,7 +49,7 @@ inconsistentes e projetos da fila fora da principal. Encontrou 221 projetos
 aceitos com passagens nos dois ambientes. Da qualidade diagnostica, 1.036
 projetos tambem estao no SLA e 600 estao fora, somando os 1.636 registros
 publicados; nao somar qualidade a SLA como populacoes disjuntas. Ainda falta
-aprofundar o recorte interambiente e observar a primeira execucao automatica.
+observar a primeira execucao automatica.
 Antes da retomada, o Job foi conferido com a imagem v18
 imutavel acima e args `daily,--manifest,/app/pipelines.json`. O Cloud Scheduler
 `pipeline-monday-diario` foi retomado e retornou `ENABLED`, `0 6 * * *`,
@@ -75,8 +75,11 @@ Nao chamar os 221 de ciclos operacionais interambiente.
 
 Consulta por `ciclo_id` confirmou 14 projetos e 14 ciclos com passagens
 operacionais em ambos ambientes. Dois dos 16 projetos com operacao nos dois
-ambientes nao compartilharam `ciclo_id` operacional; isso nao prova erro, pois
-pode haver entrega e reabertura na fronteira, mas exige inspecao especifica.
+ambientes nao compartilharam `ciclo_id` operacional; suas sequencias foram
+inspecionadas e mostram entrega anterior no ViU2, Encerrado Globocorp e nova
+Entrada Globocorp em 24/09, que inicia revisao em andamento. Portanto, a
+separacao em dois ciclos e coerente com a regra de reabertura, nao uma quebra
+de ciclo operacional na migracao.
 Tres exemplos de ciclos compartilhados mostraram Entrada/etapas ViU2 e
 elaboracao/revisao Globocorp. As passagens estimadas permanecem marcadas;
 um exemplo termina com Feedback `indisponivel` e outro tem elaboracao Globocorp
@@ -86,9 +89,14 @@ Validacao dos indicadores publicados: entre os 14 ciclos operacionais
 interambiente, 7 estao `entregue`, 9 tem `duracao_completa`, todos os 14 tem
 `contem_estimativa=true` e nenhum tem `kpi_entrega_observada=true`. Portanto,
 entrega de processo e duracao estritamente observada sao medidas distintas;
-esses 14 ciclos nao entram no KPI observado. Os dois projetos com atividade
-operacional nos dois ambientes mas sem ciclo compartilhado requerem leitura da
-sequencia individual para confirmar se houve entrega e reabertura na fronteira.
+esses 14 ciclos nao entram no KPI observado. Nos dois projetos com ciclos
+separados, a primeira entrega ViU2 tem `kpi_entrega_observada=true` porque
+as passagens operacionais do ciclo sao observadas; a espera posterior em
+Feedback foi estimada e e medida separada. O segundo ciclo Globocorp esta
+`em_andamento`, com etapa final `indisponivel` e
+`kpi_entrega_observada=false`. Horarios quase identicos nos dois projetos
+nao comprovam duplicidade de identidade; o construtor do mapa rejeita IDs
+nativos ViU2 ou Globocorp associados a mais de um `projeto_id`.
 
 ## O que muda
 
@@ -161,8 +169,7 @@ Timeout conserva pending e recupera mesmo job_id; erro definitivo da transacao
 preserva o lote anterior. Nao apagar lock, journal ou tabela para destravar.
 
 Passos 1 a 7 realizados; o primeiro `daily` falhou e a repeticao concluiu.
-Parte do passo 8 e o passo 9 foram verificados; recorte operacional
-interambiente e passo 10 permanecem criterios de fechamento:
+Passos 8 e 9 foram verificados; o passo 10 permanece criterio de fechamento:
 
 1. Upload ZIP v18, conferir SHA256 e fazer build --async (nao pausa agenda).
 2. Conferir SUCCESS e digest da imagem; nao usar tag mutavel no deploy.
@@ -179,6 +186,30 @@ interambiente e passo 10 permanecem criterios de fechamento:
    initializing=false, contract=destinos-ciclos-v2 no journal novo.
 9. Retomar scheduler e confirmar ENABLED, 0 6 * * *, America/Sao_Paulo.
 10. Confirmar proxima execucao automatica e recebimento de alertas se houver falha.
+
+Para o primeiro disparo automatico esperado em 26/09/2026, apos 06:00 de
+Sao Paulo (09:00 UTC), consultar as execucoes recentes e o recibo final:
+
+```bash
+gcloud scheduler jobs describe pipeline-monday-diario \
+  --project=gglobo-viu-dados-hdg-prd --location=us-central1 \
+  --format='yaml(state,lastAttemptTime,status)'
+
+gcloud run jobs executions list --job=pipeline-monday \
+  --project=gglobo-viu-dados-hdg-prd --region=us-central1 \
+  --limit=3 \
+  --format='table(metadata.name,status.startTime,status.completionTime,status.succeededCount,status.failedCount)'
+
+gcloud logging read \
+  'resource.type="cloud_run_job" AND resource.labels.job_name="pipeline-monday" AND timestamp>="2026-09-26T09:00:00Z" AND jsonPayload.event="orchestration_end"' \
+  --project=gglobo-viu-dados-hdg-prd --order=desc --limit=3 \
+  --format='json(timestamp,labels,jsonPayload)'
+```
+
+Exigir execucao gerada pelo agendamento, `orchestration_end.status=success`,
+destinos confirmados e `publication_verified=true`. Se falhar, manter journal
+e artefatos intactos, conferir os eventos `*_worker_failed` da mesma execucao
+e tratar o alerta; nao inferir sucesso apenas do estado `ENABLED` do Scheduler.
 
 Depois de initialize-cycles, NAO voltar imagem v17 simplesmente: schema mudou.
 Se inicializacao interromper, repetir inicializador v18 com escritores parados.
