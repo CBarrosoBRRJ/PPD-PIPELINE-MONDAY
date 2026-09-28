@@ -33,6 +33,8 @@ from sls_orcamento_ppd.db import get_store
 from sls_orcamento_ppd.db.gcs import ObjectStore
 from sls_orcamento_ppd.rules.cutoff import closed_day_cut
 
+from pipeline_monday.termination import install_termination_handler
+
 
 def ensure_current(rows, scheduled, timezone):
     cut = closed_day_cut(scheduled, timezone)
@@ -42,10 +44,14 @@ def ensure_current(rows, scheduled, timezone):
 
 
 def execute(settings, scheduled, *, recover_only=False, initialize_destinations=False,
-            cycles_check=False, initialize_cycles=False, cycles_bundle_check=False):
+            cycles_check=False, initialize_cycles=False, cycles_bundle_check=False, initialize_model=False,
+            retire_v18=False):
     cycles_check = cycles_check or cycles_bundle_check
     if cycles_check and (recover_only or initialize_destinations or initialize_cycles):
         raise ValueError('Ciclos: ensaio nao permite escrita/recuperacao')
+    if (initialize_model or retire_v18) and (initialize_destinations or recover_only or initialize_cycles
+                                             or cycles_check or (initialize_model and retire_v18)):
+        raise ValueError('Modelo v19: opcoes incompativeis')
     if initialize_cycles and (initialize_destinations or recover_only):
         raise ValueError('Ciclos: opcoes incompativeis')
     if (settings.bq_project != PROJECT or settings.bq_dataset != DATASET
@@ -72,9 +78,20 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
         from monday_sla_orcamento.cycle_publication import CycleStore
         from monday_sla_orcamento.destination_publication import CONTROL, DestinationStore
         from monday_sla_orcamento.destinations import build as split_destinations
+        from monday_sla_orcamento.modelo_publication import ModelStore
 
         destinations = DestinationStore(source.client, objects, settings.bq_job_timeout_seconds)
         cycles_active = objects.get(CYCLE_CONTROL)[0] is not None
+        model = ModelStore(source.client, objects, settings.bq_job_timeout_seconds)
+        # Depois de aposentada, a v18 não é recuperada, verificada nem publicada: só a v19.
+        v19_only = model.v18_retired()
+        if retire_v18:
+            return {**model.retire_v18(), 'publication_verified': True}
+        if initialize_model:
+            if not cycles_active:
+                raise ValueError('Modelo v19: exige destinos v18 ativos')
+            return {**model.initialize(),
+                    'publication_verified': False, 'daily_rebuild_required': True}
         if initialize_cycles:
             CycleStore(source.client, objects, settings.bq_job_timeout_seconds).initialize()
             return {'status': 'cycles_initialized', 'publication_verified': False,
@@ -97,13 +114,19 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
                 read_control = destinations.control()
                 if read_control[0]['pending'] or read_control[0]['initializing']:
                     raise ValueError('Ciclos: destinos em publicacao')
-            else:
+            elif not v19_only:
                 destinations.recover()
+            if recover_only and v19_only:
+                recover_model(source, objects, settings)
+                active = model.control()[0]['active']
+                return {'status': 'success', 'publication_verified': True,
+                        'gold_rows': active['tables']['monday_sla_projeto']['rows'], 'gold_cut_utc': active['cut']}
             if recover_only:
                 descriptor = destinations.control()[0]['active']
                 if descriptor is None:
                     raise ValueError('Destinos: primeira publicacao pendente')
                 destinations.verify(descriptor)
+                recover_model(source, objects, settings)
                 return {'status': 'success', 'publication_verified': True,
                         'gold_rows': descriptor['tables']['monday_sla_orcamento']['rows'],
                         'gold_cut_utc': descriptor['cut']}
@@ -212,10 +235,50 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             outputs, split_report = split_destinations(rows)
             split_report['consolidation'] = report
             evidence['cut'] = rows[0]['corte_globocorp_utc'] if rows else None
+            if cycles_active and v19_only:
+                receipt = publish_model(source, objects, settings, outputs, report, new, mapping, context,
+                                        evidence, old)
+                return {'status': 'success', 'publication_verified': receipt['publication_verified'],
+                        'gold_rows': receipt['tables']['monday_sla_projeto'], 'gold_cut_utc': evidence['cut'],
+                        'contract': receipt['contract']}
             if cycles_active:
-                return destinations.publish(outputs, split_report, evidence)
+                receipt = destinations.publish(outputs, split_report, evidence)
+                receipt['modelo_v19'] = publish_model(source, objects, settings, outputs, report,
+                                                      new, mapping, context, evidence, old)
+                return receipt
             return destinations.publish(outputs, split_report, evidence, publisher)
         return publisher.publish(rows, report, evidence)
+
+
+def recover_model(source, objects, settings):
+    """Resolve uma publicação v19 incerta antes de declarar o lote verificado."""
+    from monday_sla_orcamento.modelo_publication import CONTROL as MODEL_CONTROL
+    from monday_sla_orcamento.modelo_publication import ModelStore
+
+    if objects.get(MODEL_CONTROL)[0] is not None:
+        model = ModelStore(source.client, objects, settings.bq_job_timeout_seconds)
+        model.recover()
+        active = model.control()[0]["active"]
+        if active:
+            model.verify(active)
+
+
+def publish_model(source, objects, settings, outputs, report, new, mapping, context, evidence, old=()):
+    """Modelo v19 (uma tabela por pergunta), publicado na mesma trava, depois da v18."""
+    from monday_sla_orcamento.destinations import QUALITY, SLA
+    from monday_sla_orcamento.modelo_publication import CONTROL as MODEL_CONTROL
+    from monday_sla_orcamento.modelo_publication import ModelStore
+    from monday_sla_orcamento.modelo_v19 import board_status_labels, from_pipeline
+    from sls_orcamento_ppd.rules.business_time import BusinessCalendar
+
+    if objects.get(MODEL_CONTROL)[0] is None:
+        return {"status": "nao_inicializado"}
+    schemas = source.read("bronze_monday_board_schema_raw", settings.monday_board_id)
+    labels = board_status_labels(max(schemas, key=lambda r: r["snapshot_at"])["raw_data"]) if schemas else []
+    model_outputs = from_pipeline(outputs[SLA], outputs[QUALITY], report, new, mapping, context,
+                                  cut=evidence["cut"], calendar=BusinessCalendar(settings.preferred_timezone),
+                                  board_labels=labels, old_rows=old)
+    return ModelStore(source.client, objects, settings.bq_job_timeout_seconds).publish(model_outputs, evidence)
 
 
 def main():
@@ -225,7 +288,10 @@ def main():
     parser.add_argument("--result", required=True)
     parser.add_argument("--recover-only", action="store_true")
     parser.add_argument("--initialize-destinations", action="store_true")
+    parser.add_argument("--initialize-v19", action="store_true")
+    parser.add_argument("--retire-v18", action="store_true")
     args = parser.parse_args()
+    install_termination_handler()
     try:
         scheduled = datetime.fromisoformat(args.scheduled_for)
         if scheduled.utcoffset() is None:
@@ -237,6 +303,10 @@ def main():
         options = {'recover_only': args.recover_only}
         if args.initialize_destinations:
             options['initialize_destinations'] = True
+        if args.initialize_v19:
+            options['initialize_model'] = True
+        if args.retire_v18:
+            options['retire_v18'] = True
         receipt = execute(load_settings(".env"), scheduled, **options)
         with Path(args.result).open("x", encoding="utf-8") as handle:
             json.dump(receipt, handle)

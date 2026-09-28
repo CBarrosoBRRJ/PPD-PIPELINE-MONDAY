@@ -224,6 +224,8 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
                         or motivos_input(old_inputs.get((int(row["board_id"]), int(row["item_id"]))))))):
                 title_excluded.add(pair["projeto_id"])
     groups, excluded, seen = defaultdict(list), Counter(), set()
+    # Motivo por projeto: nenhum projeto sai da população sem registro (modelo v19, R15).
+    excluded_projects = defaultdict(set)
     for env, source in (("viu2", old_rows), ("globocorp", new_rows)):
         for r in source:
             item = int(r["item_id"])
@@ -239,12 +241,15 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
                 continue
             if pair['projeto_id'] in talent_excluded:
                 excluded[env + ':talento_fora_escopo'] += 1
+                excluded_projects[pair['projeto_id']].add('talento_fora_escopo')
                 continue
             if pair["projeto_id"] in title_excluded:
                 excluded[env + ":titulo_fora_escopo"] += 1
+                excluded_projects[pair['projeto_id']].add('titulo_fora_escopo')
                 continue
             if pair["projeto_id"] not in active:
                 excluded[env + ":sem_item_na_gold_atual"] += 1
+                excluded_projects[pair['projeto_id']].add('sem_item_na_gold_atual')
                 continue
             old = env == "viu2"
             status = r["status_index"] if old else r["status_id"]
@@ -311,6 +316,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
         ambiguous_order = any(n > 1 for n in times.values())
         if ambiguous_order:
             excluded["consolidado:projeto_com_ordem_ambigua"] += len(group)
+            excluded_projects[group[0]["projeto_id"]].add("ordem_temporal_ambigua")
             continue
         for order, row in enumerate(timed, 1):
             issues = json.loads(row["pendencias_json"])
@@ -359,6 +365,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
                     "rows_by_origin": dict(Counter(r["ambiente_origem"] for r in result)),
                     "rows_by_type": dict(Counter(r["tipo_registro"] for r in result)),
                     "excluded_source_rows": dict(excluded), "overlapping_rows": conflicts,
+                    "excluded_projects_detail": {k: sorted(v) for k, v in sorted(excluded_projects.items())},
                     "talent_scope_rule": TALENT_SCOPE_RULE,
                     "talent_excluded_selected_projects": len(talent_excluded),
                     "talent_excluded_projects": talent_excluded,

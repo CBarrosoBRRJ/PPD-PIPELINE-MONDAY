@@ -5,7 +5,14 @@ from types import SimpleNamespace
 import pytest
 from google.api_core.exceptions import NotFound
 from monday_sla_orcamento.cycle_destinations import CONTRACTS, CYCLES, build
-from monday_sla_orcamento.cycle_publication import CycleStore, schema, target, validate_bundle
+from monday_sla_orcamento.cycle_publication import (
+    CycleStore,
+    content_fingerprint,
+    fingerprint,
+    schema,
+    target,
+    validate_bundle,
+)
 from monday_sla_orcamento.destination_publication import CONTROL as OLD_CONTROL
 from monday_sla_orcamento.destination_publication import IDENTITY as OLD_IDENTITY
 from monday_sla_orcamento.destination_publication import fingerprint as old_fingerprint
@@ -190,3 +197,9 @@ def test_same_project_can_have_quality_without_losing_sla():
     outputs, report = build(candidate())
     assert {r['projeto_id'] for r in outputs[QUALITY]} <= {r['projeto_id'] for r in outputs[SLA]}
     assert report['source_projects'] == report['accepted_projects'] == 1
+
+
+def test_content_fingerprint_matches_full_validation_for_published_rows():
+    outputs, _ = build(candidate())
+    for name, rows in outputs.items():
+        assert content_fingerprint(name, rows) == fingerprint(name, rows)

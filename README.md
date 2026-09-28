@@ -14,6 +14,9 @@ liberação ainda precisa de conferência. A documentação v12/v17 permanece co
 histórico, não como contrato vigente. Não repetir migrações nem implantar
 releases anteriores.
 Veja a [organização das iniciativas no GCP compartilhado](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
+A próxima implantação é a **v19** (modelo de consumo com uma tabela por pergunta + correções de
+estabilidade): [passo a passo](docs/IMPLANTACAO_V19.md), [contrato](tabelas/monday_sla_orcamento/docs/CONTRATO_MODELO_V19.md). O padrão de
+[escala e custo](docs/ESCALA_E_CUSTO.md) vale para todos os pipelines novos.
 
 ## Organização
 

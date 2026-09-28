@@ -1,5 +1,10 @@
 # Implantação GCP e GitHub — 4.0.0
 
+> **Obsoleto.** O job `pipeline-orcamento`, sua agenda e a tabela `sla_orcamento`
+> foram substituídos pelo coordenador `pipeline-monday` (ver `orquestracao/deploy/`).
+> `deploy/deploy.sh` e `deploy/schedule.sh` agora abortam; não recriar esses recursos.
+> Este documento permanece apenas como histórico.
+
 Organização: código, Dockerfile e deploy estão em tabelas/monday_sla_orcamento_globocorp/.
 Terraform e workflows continuam na raiz. Os comandos Terraform abaixo partem da raiz.
 Instalações Python relativas (pip install -e .) partem da pasta do produto;

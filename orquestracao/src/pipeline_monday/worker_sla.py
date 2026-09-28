@@ -5,6 +5,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from pipeline_monday.termination import install_termination_handler
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -12,6 +14,7 @@ def main():
     parser.add_argument("--scheduled-for", required=True)
     parser.add_argument("--result", required=True)
     args = parser.parse_args()
+    install_termination_handler()
     try:
         # Imports stay in the child so large product dependencies leave with it.
         from sls_orcamento_ppd.config import load_settings

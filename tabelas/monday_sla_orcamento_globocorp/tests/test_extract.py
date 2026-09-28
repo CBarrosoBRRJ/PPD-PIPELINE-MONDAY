@@ -64,6 +64,24 @@ def test_incremental_reads_extra_boundary_page(settings):
     assert len(rows) == 3
 
 
+def test_out_of_order_pages_disable_early_stop(settings):
+    settings.monday_log_page_size = 1
+    settings.run_window_hours = 1
+    settings.overlap_minutes = 0
+    hours = {1: 12, 2: 11, 3: 12, 4: 10}
+
+    class Client:
+        pages_logs = 0
+
+        def activity_page(self, page, start, end):
+            self.pages_logs += 1
+            return [raw_event(str(page), hours[page])] if page in hours else []
+
+    rows = extract_activities(Client(), settings, at(13), at(13))
+    # Page 3 is newer than page 2: newest-first cannot be assumed, read the whole window.
+    assert sorted(r["event_id"] for r in rows) == ["1", "2", "3", "4"]
+
+
 def test_repeated_page_aborts(settings):
     settings.monday_log_page_size = 1
 

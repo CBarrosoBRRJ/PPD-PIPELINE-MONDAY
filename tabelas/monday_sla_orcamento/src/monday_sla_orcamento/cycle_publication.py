@@ -97,6 +97,14 @@ def fingerprint(name, rows):
         sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
+def content_fingerprint(name, rows):
+    """Hash of type-normalized content only. Equals `fingerprint` for valid rows, but does
+    not re-run business rules: a rule or holiday-library update must not block verifying
+    what is already published. Candidates are still fully validated before publishing."""
+    return hashlib.sha256(json.dumps(typed(name, rows), ensure_ascii=False,
+        sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
 def validate_bundle(outputs, report):
     if set(outputs) != set(CONTRACTS) or not report.get('balanced'):
         raise ValueError('Ciclos: lote incompleto')
@@ -192,7 +200,7 @@ class CycleStore:
             rows = [dict(r) for r in self.client.list_rows(table)]
             expected = descriptor['tables'][name]
             if (schema_signature(table.schema) != schema_signature(schema(name))
-                    or len(rows) != expected['rows'] or fingerprint(name, rows) != expected['fingerprint']
+                    or len(rows) != expected['rows'] or content_fingerprint(name, rows) != expected['fingerprint']
                     or self.client.get_table(target(name)).etag != table.etag):
                 raise ValueError('Ciclos: conteudo remoto divergente')
 

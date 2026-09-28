@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Run from repository root, in Cloud Shell or GitHub Actions; never executes a load.
 set -euo pipefail
+echo "Obsoleto: pipeline-orcamento foi substituído pelo coordenador pipeline-monday" >&2
+echo "(orquestracao/deploy). Executar este script recriaria o escritor/agenda removidos." >&2
+exit 1
 : "${IMAGE:?Set the built image URL}"
 : "${GCS_BUCKET:?Set the provisioned private bucket name}"
 PROJECT_ID="gglobo-viu-dados-hdg-prd"

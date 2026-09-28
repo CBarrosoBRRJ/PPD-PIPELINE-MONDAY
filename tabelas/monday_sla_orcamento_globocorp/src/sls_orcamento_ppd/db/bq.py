@@ -5,10 +5,12 @@ subsequent write. A deterministic load job ID bridges BQ and GCS crash recovery.
 """
 
 import copy
+import gzip
 import hashlib
 import json
 import uuid
 from contextlib import contextmanager
+from zoneinfo import ZoneInfo
 
 from google.api_core.exceptions import Conflict, NotFound
 from google.cloud import bigquery
@@ -23,6 +25,9 @@ from ..utils.logging import emit
 from .checkpoint import canonical_json, decode, encode, fingerprint
 from .gcs import ObjectStore
 from .state_payload import merge_state, validate_state
+
+# ~4.8 MB after compaction (09/2026); warn well before memory pressure (~25 MB was 1.2 GB).
+STATE_WARNING_BYTES = 15_000_000
 
 BQ_TYPES = {
     "text": "STRING",
@@ -132,6 +137,12 @@ class BigQueryStore:
         saved, _ = self.objects.get(path)
         if saved != raw:
             raise RuntimeError("Checkpoint GCS não reconciliado após upload")
+        del saved
+        # Early warning long before the job's memory limit; see docs/ESCALA_E_CUSTO.md.
+        emit("state_size", compressed_bytes=len(raw), warning=len(raw) > STATE_WARNING_BYTES)
+        # Already validated by merge_state; avoids a second download/decode on publication.
+        self._data = data
+        self._state_key = path
         return {
             "version": version,
             "state": path,
@@ -347,6 +358,14 @@ class BigQueryStore:
                 "published": control["active"]["gold_hash"] is not None,
                 "pending": bool(control["pending"]),
             }
+
+    def archive_bronze(self, kind, at, rows):
+        """Append-only raw landing: one immutable gzip JSONL per run, partitioned by day."""
+        day = at.astimezone(ZoneInfo(self.settings.preferred_timezone)).date().isoformat()
+        raw = gzip.compress(b"".join(canonical_json(r) + b"\n" for r in rows), mtime=0)
+        path = f"bronze/{kind}/dt={day}/{uuid.uuid4().hex}.jsonl.gz"
+        self.objects.put(path, raw, content_type="application/gzip")
+        return self.objects.uri(path)
 
     def write_artifact(self, name, data):
         path = f"reports/{uuid.uuid4().hex}/{name}.json"

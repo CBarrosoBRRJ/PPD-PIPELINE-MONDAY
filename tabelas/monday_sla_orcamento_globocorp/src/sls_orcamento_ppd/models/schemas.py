@@ -165,6 +165,7 @@ def foreign_keys():
 
 
 REPLACE_TABLES = {
+    "bridge_item_person",
     "quarentena_projeto",
     "gold_projeto_status",
     "silver_monday_status_event_stg",

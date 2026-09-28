@@ -6,6 +6,7 @@ inferred: an API retention window cannot prove the first lifetime status.
 """
 
 import hashlib
+from bisect import bisect_right
 from collections import defaultdict
 from datetime import UTC, datetime, time, timedelta
 from decimal import Decimal
@@ -85,6 +86,7 @@ def transform(events, snapshots, statuses, settings, at, active_ids):
     bridge = {}
     for item_id in sorted(set(versions) | set(by_item)):
         history = versions[item_id]
+        history_at = [v["snapshot_at"] for v in history]
         ordered = sorted(
             by_item[item_id],
             key=lambda e: (
@@ -199,10 +201,11 @@ def transform(events, snapshots, statuses, settings, at, active_ids):
             end = next_transition[0] if next_transition else at
             if end < start:
                 raise ValueError(f"Intervalo negativo: item {item_id}")
-            candidates = [v for v in history if v["snapshot_at"] <= start]
-            attrs = candidates[-1] if candidates else (history[0] if history else {})
+            # History is sorted by snapshot_at; bisect keeps the last observation as of start.
+            found = bisect_right(history_at, start)
+            attrs = history[found - 1] if found else (history[0] if history else {})
             attribute_source = (
-                "as_of_start" if candidates else "earliest_available" if history else "unavailable"
+                "as_of_start" if found else "earliest_available" if history else "unavailable"
             )
             interval = {
                 "interval_id": key(board_id, item_id, event_id or "initial", sid),
@@ -228,7 +231,9 @@ def transform(events, snapshots, statuses, settings, at, active_ids):
             }
             intervals.append(interval)
             cursor = start
-            while cursor < end:
+            # Days spent in a terminal status carry no SLA; skipping them keeps the
+            # daily fact bounded by open work instead of growing with every closed item.
+            while cursor < end and not dims[sid]["is_terminal"]:
                 local_date = cursor.astimezone(zone).date()
                 midnight = datetime.combine(
                     local_date + timedelta(days=1), time.min, zone
@@ -236,8 +241,8 @@ def transform(events, snapshots, statuses, settings, at, active_ids):
                 stop = min(end, midnight)
                 daily_key = (local_date, item_id, sid)
                 # Daily dimensions use latest snapshot observed by day's end.
-                day_versions = [v for v in history if v["snapshot_at"] <= stop]
-                day_attrs = day_versions[-1] if day_versions else attrs
+                found = bisect_right(history_at, stop)
+                day_attrs = history[found - 1] if found else attrs
                 if daily_key not in daily:
                     daily[daily_key] = {
                         "board_id": board_id,
@@ -316,8 +321,12 @@ def validate(result, expected_active):
     if any(not i["current_status_id"] for i in items):
         raise ValueError("Item sem chave de status atual")
     totals, daily_totals, groups = defaultdict(float), defaultdict(float), defaultdict(list)
+    open_totals = defaultdict(float)
+    terminal = {d["status_id"] for d in result["dim_status"] if d["is_terminal"]}
     for row in result["fct_item_status_interval"]:
         totals[row["item_id"]] += row["duration_minutes"]
+        if row["status_id"] not in terminal:
+            open_totals[row["item_id"]] += row["duration_minutes"]
         groups[row["item_id"]].append(row)
     for row in result["fct_item_status_daily"]:
         daily_totals[row["item_id"]] += row["minutes_in_status"]
@@ -328,6 +337,6 @@ def validate(result, expected_active):
         ).total_seconds() / 60
         if (
             abs(expected - totals[item_id]) > 1e-5
-            or abs(totals[item_id] - daily_totals[item_id]) > 1e-5
+            or abs(open_totals[item_id] - daily_totals[item_id]) > 1e-5
         ):
             raise ValueError(f"Duração não reconciliada: item {item_id}")

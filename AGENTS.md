@@ -1,7 +1,15 @@
 # Manutenção do PIPELINE-MONDAY
 
-Estado operacional mais recente: docs/ESTADO_GCP_2026_09_24.md prevalece sobre
-anotações cronológicas abaixo. V12/contrato v7 implantada; execução
+Estado operacional mais recente: v18 de ciclos (25/09/2026), conforme README.md e
+docs/ENTREGA_V18_CICLOS.md; prevalece sobre ESTADO_GCP_2026_09_24.md e sobre as
+anotações cronológicas abaixo (inclusive "V12/contrato v7", mantido como histórico).
+Release local v18.1 (28/09/2026, não implantada até recibo do operador): compacta o estado
+do SLA Globocorp, arquiva bruto diário em sla_orcamento/bronze/ e verifica a consolidada
+por hash. Modelo v19 local (modelo_v19.py/modelo_publication.py, 15 tabelas, inicialização explícita
+initialize-v19): docs/IMPLANTACAO_V19.md. Procedimento técnico: docs/IMPLANTACAO_V18_1_ESTABILIDADE.md; padrão de escala e custo
+para novos pipelines: docs/ESCALA_E_CUSTO.md. infra/ não deve ser aplicado (infra/README.md).
+Scripts legados deploy.sh/schedule.sh do globocorp e o publicador de log_monday_viu2
+abortam de propósito; não reativá-los. A seguir, estado anterior: V12/contrato v7 implantada; execução
 pipeline-monday-jdc47 e durações unificadas conferidas no BQ pelo operador.
 Agenda ativa confirmada. Execução diária de 24/09 concluída e publicação v12 verificada;
 ver docs/ENTREGA_V12_DURACAO_UNIFICADA.md. Durações unificadas têm proveniência;

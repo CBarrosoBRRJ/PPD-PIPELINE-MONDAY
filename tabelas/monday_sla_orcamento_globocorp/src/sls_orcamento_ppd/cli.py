@@ -145,7 +145,8 @@ def main():
             from .pipelines.runner import run
             from .utils.time import utcnow
 
-            run(settings, args.command, scheduled_for=utcnow() if args.command == "daily" else None)
+            now = utcnow()  # one instant for both the daily claim and the Gold cut
+            run(settings, args.command, at=now, scheduled_for=now if args.command == "daily" else None)
         elif args.command in ("replay", "preview-gold"):
             from .pipelines.runner import replay
 
@@ -180,7 +181,7 @@ def main():
             from .services.transform import validate
 
             store = get_store(settings)
-            names = ["dim_item", "fct_item_status_interval", "fct_item_status_daily"]
+            names = ["dim_item", "dim_status", "fct_item_status_interval", "fct_item_status_daily"]
             payload = store.read_many(names, settings.monday_board_id)
             if not payload["dim_item"]:
                 raise ValueError("Banco ainda sem itens")

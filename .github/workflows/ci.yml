@@ -44,15 +44,17 @@ jobs:
       - run: python -m pip install --no-deps -e ../monday_backlog_agenciamento_2026 -e ../monday_talentos_exclusivos
       - run: python -m pip install --no-deps -e ../../orquestracao
       - run: python -m pytest ../../orquestracao/tests -q
-      - run: python -m ruff check ../../orquestracao
       - run: python -m pytest -q
       - run: python -m pytest ../monday_sla_orcamento_viu2/tests -q
       - run: python -m pytest ../monday_log_viu2/tests ../monday_sla_orcamento/tests -q
       - run: python -m pytest ../../compartilhado/tests -q
-      - run: python -m ruff check ../monday_log_viu2 ../monday_sla_orcamento
-      - run: python -m ruff check ../monday_sla_orcamento_viu2
-      - run: python -m ruff check src tests scripts/generate_ddl.py scripts/generate_contract_docs.py
+      - name: Lint whole repository
+        run: python -m ruff check .
+        working-directory: .
       - run: |
           python scripts/generate_ddl.py
           python scripts/generate_contract_docs.py
           git diff --exit-code -- sql docs/CONTRATOS_DE_DADOS.md docs/CONTRATO_SLA_ORCAMENTO.md
+      - run: |
+          python ../monday_sla_orcamento/scripts/generate_v19_docs.py
+          git diff --exit-code -- ../monday_sla_orcamento/docs/CONTRATO_MODELO_V19.md

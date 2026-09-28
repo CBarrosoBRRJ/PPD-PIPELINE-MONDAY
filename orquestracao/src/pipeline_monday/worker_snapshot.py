@@ -13,6 +13,8 @@ from sls_orcamento_ppd.clients.monday_client import MondayClient
 from sls_orcamento_ppd.config import load_settings
 from sls_orcamento_ppd.db.gcs import ObjectStore
 
+from pipeline_monday.termination import install_termination_handler
+
 
 class SnapshotClient(MondayClient):
     def board(self):
@@ -31,6 +33,7 @@ def main(spec):
     parser.add_argument('--scheduled-for', required=True)
     parser.add_argument('--result', required=True)
     args = parser.parse_args()
+    install_termination_handler()
     try:
         if args.env_file != spec['table'] + '-runtime':
             raise ValueError('Snapshot: seletor invalido')

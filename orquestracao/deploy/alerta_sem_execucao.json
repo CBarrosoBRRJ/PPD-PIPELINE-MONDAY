@@ -1,0 +1,27 @@
+{
+  "displayName": "pipeline-monday: sem execução com sucesso há 26h",
+  "documentation": {
+    "content": "O pipeline-monday não registrou orchestration_end com status success nas últimas 26 horas. Verifique o Scheduler pipeline-monday-diario e as execuções do job pipeline-monday. Runbook: docs/IMPLANTACAO_V18_1_ESTABILIDADE.md.",
+    "mimeType": "text/markdown"
+  },
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "Nenhum sucesso em 26h",
+      "conditionAbsent": {
+        "filter": "resource.type = \"cloud_run_job\" AND metric.type = \"logging.googleapis.com/user/pipeline_monday_sucesso\"",
+        "duration": "93600s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "3600s",
+            "perSeriesAligner": "ALIGN_COUNT"
+          }
+        ]
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "86400s"
+  },
+  "enabled": true
+}

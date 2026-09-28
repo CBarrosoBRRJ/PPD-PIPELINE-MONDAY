@@ -199,6 +199,8 @@ def extract_activities(client, settings, at, watermark=None):
         local = []
         safety_page = None
         signatures = set()
+        oldest_seen = None
+        descending = True
         while True:
             logs = client.activity_page(page, iso(start), iso(end))
             if not logs:
@@ -215,10 +217,17 @@ def extract_activities(client, settings, at, watermark=None):
                             "Evento com timestamp de negócio posterior ao corte; watermark preservado"
                         )
                     local.append(parsed)
-            if cutoff and any(parse_timestamp(v["created_at"]) < cutoff for v in logs):
+            created = [parse_timestamp(v["created_at"]) for v in logs]
+            # Early stop assumes newest-first pages; otherwise read the whole window.
+            if oldest_seen is not None and max(created) > oldest_seen:
+                if descending:
+                    emit("activity_order_unexpected", page=page, start=iso(start), end=iso(end))
+                descending = False
+            oldest_seen = min(created) if oldest_seen is None else min(oldest_seen, *created)
+            if cutoff and descending and any(c < cutoff for c in created):
                 if safety_page is None:
                     safety_page = page + 1
-            if safety_page is not None and page >= safety_page:
+            if descending and safety_page is not None and page >= safety_page:
                 break
             if len(logs) < settings.monday_log_page_size:
                 break

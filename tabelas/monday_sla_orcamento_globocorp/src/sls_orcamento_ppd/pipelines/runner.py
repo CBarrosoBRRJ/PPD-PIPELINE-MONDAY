@@ -7,7 +7,7 @@ from ..db import get_store
 from ..rules.cutoff import closed_day_cut
 from ..services.extract import discover, extract_activities, snapshot
 from ..services.gold import build_gold
-from ..services.load import merge_rows
+from ..services.load import compact_snapshots, merge_rows
 from ..services.state import watermark, write_status
 from ..services.transform import transform
 from ..utils.logging import emit
@@ -132,7 +132,11 @@ def run(settings, mode="daily", *, client=None, store=None, at=None, scheduled_f
                 previous["last_run_utc"] if previous and mode == "daily" else None,
             )
             all_events = merge_rows(old_events, events, "bronze_monday_activity_log_raw")
-            all_snapshots = merge_rows(old_snapshots, snapshots, "bronze_monday_item_snapshot_raw")
+            # Full daily payload goes to an immutable GCS file; the state keeps versions only.
+            store.archive_bronze("item_snapshots", started, snapshots)
+            all_snapshots = compact_snapshots(
+                merge_rows(old_snapshots, snapshots, "bronze_monday_item_snapshot_raw")
+            )
             payload = transform(all_events, all_snapshots, statuses, settings, started, active_ids)
             report.update(
                 build_gold(
@@ -249,7 +253,8 @@ def run(settings, mode="daily", *, client=None, store=None, at=None, scheduled_f
         )
         # Exception messages can contain SQL parameters and credentials. Only
         # explicit domain errors are safe to surface; no traceback in production.
-        if isinstance(error, (ValueError, MondayError, RuntimeError)):
+        # Exact types: subclasses (pydantic, JSONDecodeError) may echo input values.
+        if type(error) in (ValueError, MondayError, RuntimeError):
             report["error"] = str(error)[:1000]
         if claimed:
             # Keep the claim even on failure: no automatic second attempt today.

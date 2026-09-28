@@ -27,7 +27,7 @@ def maintenance(document, args):
 
 def main():
     parser = argparse.ArgumentParser(description="Pipeline Monday — execução sequencial por produto")
-    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "cycles-plan", "initialize-destinations", "initialize-cycles", "rename-sla-plan", "rename-sla-apply"])
+    parser.add_argument("command", choices=["plan", "snapshot-check", "daily", "cycles-plan", "initialize-destinations", "initialize-cycles", "initialize-v19", "retire-v18", "rename-sla-plan", "rename-sla-apply"])
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--expected-generation", type=int)
     parser.add_argument("--writers-stopped", action="store_true")
@@ -52,7 +52,7 @@ def main():
                 raise SystemExit(1) from None
             print(json.dumps({'event': 'cycles_bundle_plan', **receipt}), flush=True)
             return
-        if args.command in {'initialize-destinations', 'initialize-cycles'}:
+        if args.command in {'initialize-destinations', 'initialize-cycles', 'initialize-v19', 'retire-v18'}:
             if not args.writers_stopped or args.expected_generation is not None:
                 raise ValueError('Destinos: declarar escritores parados; nao usa geracao manual')
             plan(document)
@@ -63,7 +63,9 @@ def main():
             from .worker_consolidated import execute
 
             try:
-                option = 'initialize_cycles' if args.command == 'initialize-cycles' else 'initialize_destinations'
+                option = {'initialize-cycles': 'initialize_cycles', 'initialize-v19': 'initialize_model',
+                          'retire-v18': 'retire_v18'}.get(
+                    args.command, 'initialize_destinations')
                 receipt = execute(load_settings('.env'), datetime.now(UTC), **{option: True})
                 print(json.dumps({'event': 'destinations_initialized', **receipt}), flush=True)
             except Exception as error:

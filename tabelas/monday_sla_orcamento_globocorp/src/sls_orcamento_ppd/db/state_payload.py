@@ -2,7 +2,7 @@
 
 from ..models.contracts import prepare_payload, validate_table
 from ..models.schemas import DEFINITIONS, REPLACE_TABLES, foreign_keys
-from ..services.load import merge_rows
+from ..services.load import SNAPSHOT, compact_snapshots, merge_rows
 
 
 def validate_state(data, board_id):
@@ -32,5 +32,7 @@ def merge_state(old, payload, board_id, *, reviewed=False):
                     for r in rows
                 ]
             data[name] = merge_rows(old[name], rows, name)
+            if name == SNAPSHOT:
+                data[name] = compact_snapshots(data[name])
     validate_state(data, board_id)
     return data

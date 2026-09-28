@@ -95,6 +95,11 @@ def local_files(archive):
 
 
 def publish(archive):
+    # log_monday_viu2 was removed; its successor is monday_log_viu2. CREATE_IF_NEEDED
+    # below would recreate the legacy table, so this one-off rescue is retired.
+    raise RuntimeError(
+        "Publicador legado aposentado: log_monday_viu2 foi removida e não deve ser recriada"
+    )
     files, export = local_files(archive)
     print(f"Arquivos locais validados: {len(files)}; linhas: {export['rows']}", flush=True)
     api = GoogleAPI()

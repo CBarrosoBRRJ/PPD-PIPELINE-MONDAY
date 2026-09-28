@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Only after initial load, reconciliation and a successful manual daily execution.
 set -euo pipefail
+echo "Obsoleto: pipeline-orcamento foi substituído pelo coordenador pipeline-monday" >&2
+echo "(orquestracao/deploy). Executar este script recriaria o escritor/agenda removidos." >&2
+exit 1
 PROJECT_ID="gglobo-viu-dados-hdg-prd"
 REGION="${REGION:-us-central1}"
 SCHEDULER_SA="scheduler-sla-orcamento@${PROJECT_ID}.iam.gserviceaccount.com"

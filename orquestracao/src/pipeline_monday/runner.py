@@ -14,6 +14,9 @@ RUNNERS = {"sla_orcamento": "pipeline_monday.worker_sla",
            "monday_talentos_exclusivos": "pipeline_monday.worker_talents",
            "monday_sla_orcamento": "pipeline_monday.worker_consolidated"}
 PRODUCT_FIELDS = {"id", "runner", "env_file", "depends_on"}
+# Do not start a product that would be killed mid-write; SIGTERM lets workers release locks.
+MIN_START_SECONDS = 300
+TERMINATION_GRACE_SECONDS = 30
 
 
 def plan(document):
@@ -69,13 +72,21 @@ def execute_product(product, scheduled_for, timeout):
                    "--result", str(result_file)]
         try:
             # Stream existing domain logs; do not accumulate raw logs in parent memory.
-            completed = subprocess.run(command, timeout=timeout, check=False, shell=False)
-        except subprocess.TimeoutExpired:
-            return {"status": "failed", "reason": "timeout_inspect_product_lock"}
+            process = subprocess.Popen(command, shell=False)
         except OSError:
             return {"status": "failed", "reason": "worker_start_failed"}
-        if completed.returncode != 0:
-            return {"status": "failed", "reason": "worker_failed", "exit_code": completed.returncode}
+        try:
+            returncode = process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.terminate()
+            try:
+                process.wait(timeout=TERMINATION_GRACE_SECONDS)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            return {"status": "failed", "reason": "timeout_inspect_product_lock"}
+        if returncode != 0:
+            return {"status": "failed", "reason": "worker_failed", "exit_code": returncode}
         if not result_file.exists() or result_file.stat().st_size > 65536:
             return {"status": "failed", "reason": "missing_or_invalid_receipt"}
         try:
@@ -104,10 +115,14 @@ def run(document, *, execute=execute_product, clock=time.monotonic, scheduled_fo
                 results[d]["status"] == "skipped" and results[d].get("publication_verified") is True)
                for d in product["depends_on"]):
             results[identity] = {"status": "blocked", "reason": "dependency_not_refreshed"}
-            continue
-        remaining = document["deadline_seconds"] - (clock() - started)
-        if remaining <= 0:
-            results[identity] = {"status": "blocked", "reason": "global_deadline"}
+        else:
+            remaining = document["deadline_seconds"] - (clock() - started)
+            if remaining <= 0:
+                results[identity] = {"status": "blocked", "reason": "global_deadline"}
+            elif remaining < min(MIN_START_SECONDS, document["deadline_seconds"] // 4):
+                results[identity] = {"status": "blocked", "reason": "insufficient_time_for_product"}
+        if identity in results:
+            print(json.dumps({"event": "product_end", "product": identity, **results[identity]}), flush=True)
             continue
         try:
             results[identity] = execute(product, scheduled_for, remaining)

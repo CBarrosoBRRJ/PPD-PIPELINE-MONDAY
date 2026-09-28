@@ -2,7 +2,6 @@ import copy
 import json
 import subprocess
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from pipeline_monday.runner import execute_product, plan, run
@@ -74,27 +73,61 @@ def test_verified_reused_source_can_feed_consolidation():
     assert result["status"] == "success"
 
 
-def test_worker_requires_verified_receipt(monkeypatch):
-    def fake(command, **kwargs):
+class FakeProcess:
+    def __init__(self, command, returncode=0, receipt=None, waits=()):
+        self.command, self.returncode, self.signals = command, returncode, []
+        self.waits = list(waits)
+        if receipt is not None:
+            Path(command[-1]).write_text(json.dumps(receipt))
+
+    def wait(self, timeout=None):
+        if self.waits and self.waits.pop(0) == "timeout":
+            raise subprocess.TimeoutExpired("worker", timeout)
+        return self.returncode
+
+    def terminate(self):
+        self.signals.append("terminate")
+
+    def kill(self):
+        self.signals.append("kill")
+
+
+def fake_popen(monkeypatch, **options):
+    processes = []
+
+    def popen(command, **kwargs):
         assert kwargs["shell"] is False
-        assert kwargs["timeout"] == 12
-        Path(command[-1]).write_text(json.dumps({"status": "success", "publication_verified": False}))
-        return SimpleNamespace(returncode=0)
-    monkeypatch.setattr(subprocess, "run", fake)
+        processes.append(FakeProcess(command, **options))
+        return processes[-1]
+    monkeypatch.setattr(subprocess, "Popen", popen)
+    return processes
+
+
+def test_worker_requires_verified_receipt(monkeypatch):
+    fake_popen(monkeypatch, receipt={"status": "success", "publication_verified": False})
     assert execute_product(product("x"), "2026-09-21T09:00:00Z", 12)["status"] == "failed"
 
 
 def test_successful_worker_receipt(monkeypatch):
-    def fake(command, **kwargs):
-        Path(command[-1]).write_text(json.dumps({"status": "success", "publication_verified": True, "gold_rows": 5, "secret": "not-forwarded"}))
-        return SimpleNamespace(returncode=0)
-    monkeypatch.setattr(subprocess, "run", fake)
+    fake_popen(monkeypatch, receipt={"status": "success", "publication_verified": True, "gold_rows": 5, "secret": "not-forwarded"})
     result = execute_product(product("x"), "2026-09-21T09:00:00Z", 12)
     assert result == {"status": "success", "publication_verified": True, "gold_rows": 5}
 
 
-def test_timeout_requires_lock_inspection(monkeypatch):
-    def timeout(*args, **kwargs):
-        raise subprocess.TimeoutExpired("worker", 1)
-    monkeypatch.setattr(subprocess, "run", timeout)
+def test_timeout_terminates_gracefully_before_kill(monkeypatch):
+    graceful = fake_popen(monkeypatch, waits=["timeout"])
     assert execute_product(product("x"), "2026-09-21T09:00:00Z", 1)["reason"] == "timeout_inspect_product_lock"
+    assert graceful[0].signals == ["terminate"]
+    stuck = fake_popen(monkeypatch, waits=["timeout", "timeout"])
+    assert execute_product(product("x"), "2026-09-21T09:00:00Z", 1)["reason"] == "timeout_inspect_product_lock"
+    assert stuck[0].signals == ["terminate", "kill"]
+
+
+def test_product_not_started_without_minimum_time():
+    times = iter([0, 1, 90])
+    called = []
+    result = run(manifest(product("first"), product("second")), clock=lambda: next(times),
+                 execute=lambda p, at, timeout: called.append(p["id"]) or {"status": "success"})
+    assert called == ["first"]
+    assert result["products"]["second"] == {"status": "blocked", "reason": "insufficient_time_for_product"}
+    assert result["status"] == "failed"

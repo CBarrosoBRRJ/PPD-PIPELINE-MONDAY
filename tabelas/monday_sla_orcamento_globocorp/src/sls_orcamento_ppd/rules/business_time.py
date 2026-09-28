@@ -77,6 +77,13 @@ class BusinessCalendar:
         weekdays -= sum(interior <= d < last and d.weekday() < 5 for d in excluded)
         return partial(first) + partial(last) + weekdays * 8.0
 
+    def holiday_name(self, day):
+        """National or configured holiday name for a local date; None on regular days."""
+        _ = day in self._national  # populate the year lazily
+        if day in self._national:
+            return self._national[day]
+        return "Feriado configurado" if day in self.holidays else None
+
     def snapshot(self):
         return {
             "version": self.version,
