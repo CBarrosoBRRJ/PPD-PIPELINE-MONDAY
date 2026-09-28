@@ -5,18 +5,23 @@ Pipelines do Monday organizados por tabela de consumo no BigQuery.
 O nível compartilhado é **pipeline-monday**, sem referência a orçamento. Orçamento
 é um produto, não a plataforma inteira. Consulte a
 [separação entre plataforma e produtos](docs/PADRAO_NOMES_TABELAS.md).
-O estado publicado mais recente é o **v18 de ciclos** (25/09/2026), com
-`monday_sla_orcamento` por passagem, `monday_ciclos_orcamento` por tentativa,
-fila de Entrada e diagnóstico de qualidade por projeto. Consulte o
-[recibo e procedimento v18](docs/ENTREGA_V18_CICLOS.md) antes de operar o job.
-O agendamento diário foi reativado; a primeira execução automática após essa
-liberação ainda precisa de conferência. A documentação v12/v17 permanece como
-histórico, não como contrato vigente. Não repetir migrações nem implantar
-releases anteriores.
-Veja a [organização das iniciativas no GCP compartilhado](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
-A próxima implantação é a **v19** (modelo de consumo com uma tabela por pergunta + correções de
-estabilidade): [passo a passo](docs/IMPLANTACAO_V19.md), [contrato](tabelas/monday_sla_orcamento/docs/CONTRATO_MODELO_V19.md). O padrão de
-[escala e custo](docs/ESCALA_E_CUSTO.md) vale para todos os pipelines novos.
+**Versão vigente: v19.** O modelo de consumo tem **uma tabela por pergunta de negócio** (17 tabelas `monday_sla_*` e
+`monday_dim_*`). Ele mede:
+- quanto tempo levamos para orçar;
+- quanto o cliente demora para responder;
+- onde o tempo se acumula;
+- como está o preenchimento do Monday.
+
+A v19 junta as contas ViU2 e Globocorp numa só linha do tempo por projeto e substitui as tabelas da v18.
+
+- **Colocar em produção:** [IMPLANTACAO_V19.md](docs/IMPLANTACAO_V19.md), em 11 passos com backup.
+- **Contrato das tabelas:** [CONTRATO_MODELO_V19.md](tabelas/monday_sla_orcamento/docs/CONTRATO_MODELO_V19.md).
+- **Índice da documentação** (vigente × histórico): [docs/README.md](docs/README.md).
+- **Padrão para pipelines novos:** [ESCALA_E_CUSTO.md](docs/ESCALA_E_CUSTO.md).
+- **Projeto GCP compartilhado** (a LIA fica fora do escopo): [ORGANIZACAO_INICIATIVAS_GCP.md](docs/ORGANIZACAO_INICIATIVAS_GCP.md).
+
+As regras de negócio (R1–R20) e as propostas ao time ficam na nota do projeto no Obsidian.
+Não repita migrações nem implante releases anteriores.
 
 ## Organização
 
