@@ -111,7 +111,7 @@ Para desfazer, rode o mesmo comando trocando `remove-iam-policy-binding` por `ad
 ## Alerta: "o job não rodou"
 
 Hoje só existe alerta de erro. Se a agenda não disparar, ninguém fica sabendo.
-O alerta abaixo avisa quando passarem 26 horas sem nenhuma execução com sucesso.
+O alerta abaixo avisa quando passarem 25 horas sem nenhuma execução com sucesso (conta os sucessos numa janela de 25 h e dispara também se não houver dado nenhum).
 
 ```bash
 gcloud logging metrics create pipeline_monday_sucesso --project=gglobo-viu-dados-hdg-prd \

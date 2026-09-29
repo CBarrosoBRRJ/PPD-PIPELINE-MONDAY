@@ -1,22 +1,27 @@
 {
-  "displayName": "pipeline-monday: sem execução com sucesso há 26h",
+  "displayName": "pipeline-monday: nenhuma execução com sucesso em 25h",
   "documentation": {
-    "content": "O pipeline-monday não registrou orchestration_end com status success nas últimas 26 horas. Verifique o Scheduler pipeline-monday-diario e as execuções do job pipeline-monday. Runbook: docs/IMPLANTACAO_V18_1_ESTABILIDADE.md.",
+    "content": "O pipeline-monday não registrou orchestration_end com status success nas últimas 25 horas (a execução diária é às 06h, America/Sao_Paulo). Verifique o Scheduler pipeline-monday-diario e as execuções do job pipeline-monday. Runbook: docs/IMPLANTACAO_V19.md.",
     "mimeType": "text/markdown"
   },
   "combiner": "OR",
   "conditions": [
     {
-      "displayName": "Nenhum sucesso em 26h",
-      "conditionAbsent": {
+      "displayName": "Sucessos nas últimas 25h < 1 (inclusive sem dados)",
+      "conditionThreshold": {
         "filter": "resource.type = \"cloud_run_job\" AND metric.type = \"logging.googleapis.com/user/pipeline_monday_sucesso\"",
-        "duration": "93600s",
         "aggregations": [
           {
-            "alignmentPeriod": "3600s",
-            "perSeriesAligner": "ALIGN_COUNT"
+            "alignmentPeriod": "90000s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM"
           }
-        ]
+        ],
+        "comparison": "COMPARISON_LT",
+        "thresholdValue": 1,
+        "duration": "0s",
+        "evaluationMissingData": "EVALUATION_MISSING_DATA_ACTIVE",
+        "trigger": {"count": 1}
       }
     }
   ],
