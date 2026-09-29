@@ -575,13 +575,14 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `relogio_horas_uteis` | FLOAT |  |
 | `dias_corridos` | INTEGER |  |
 | `percentil_na_fila` | FLOAT |  |
-| `faixa` | STRING |  |
+| `faixa_na_fila` | STRING |  |
+| `faixa_dias_trabalho` | STRING |  |
 | `eh_atipico` | BOOLEAN |  |
 | `contem_estimativa` | BOOLEAN | sim |
 | `corte_utc` | TIMESTAMP | sim |
 | `versao_regra` | STRING | sim |
 
-**Memória de cálculo:** `trabalho_horas_uteis` soma as horas úteis nos status de trabalho do 1º ciclo (Entrada, Elaboração, Revisão), da Entrada ao primeiro Aguardando Feedback; Standby e espera da marca ficam em `pausas_horas_uteis`; `relogio_horas_uteis` = trabalho + pausas; `dias_corridos` conta datas de calendário em São Paulo. `percentil_na_fila` = % dos projetos entregues com tempo menor ou igual. `faixa`: `ate_mediana`, `ate_p80`, `ate_p90`, `cauda`. `eh_atipico`: acima de Q3 + 1,5 × (Q3 − Q1), a regra do boxplot. Projeto sem entrega tem tempos nulos.
+**Memória de cálculo:** `trabalho_horas_uteis` soma as horas úteis nos status de trabalho do 1º ciclo (Entrada, Elaboração, Revisão), da Entrada ao primeiro Aguardando Feedback; Standby e espera da marca ficam em `pausas_horas_uteis`; `relogio_horas_uteis` = trabalho + pausas; `dias_corridos` conta datas de calendário em São Paulo. `percentil_na_fila` = % dos projetos entregues com tempo menor ou igual. `faixa_na_fila`: `ate_mediana`, `ate_p80`, `ate_p90`, `cauda`. `faixa_dias_trabalho` (1 dia = 8 h úteis): `ate_1_dia`, `1_a_2_dias`, `2_a_3_dias`, `3_a_5_dias`, `mais_de_5_dias`, as mesmas faixas do relatório. `eh_atipico`: acima de Q3 + 1,5 × (Q3 − Q1), a regra do boxplot. Projeto sem entrega tem tempos nulos.
 
 ## `monday_sla_etapa_ciclo`
 

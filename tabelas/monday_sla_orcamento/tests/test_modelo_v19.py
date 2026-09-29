@@ -364,8 +364,11 @@ def test_delivery_time_answers_how_long_until_first_delivery():
     assert a["dias_corridos"] == 2 and a["pausas_horas_uteis"] == 0
     assert b["pausas_horas_uteis"] > 0 and b["relogio_horas_uteis"] == pytest.approx(
         b["trabalho_horas_uteis"] + b["pausas_horas_uteis"])
-    assert (a["percentil_na_fila"], a["faixa"], b["percentil_na_fila"], b["faixa"]) == (50.0, "ate_mediana", 100.0, "cauda")
-    assert not c["entregue"] and c["trabalho_horas_uteis"] is None and c["faixa"] is None and c["eh_atipico"] is None
+    assert (a["percentil_na_fila"], a["faixa_na_fila"], b["percentil_na_fila"], b["faixa_na_fila"]) == (50.0, "ate_mediana", 100.0, "cauda")
+    assert a["faixa_dias_trabalho"] == ("ate_1_dia" if a["trabalho_horas_uteis"] <= 8 else "1_a_2_dias")
+    assert not c["entregue"] and c["trabalho_horas_uteis"] is None and c["faixa_na_fila"] is None and c["eh_atipico"] is None
+    assert c["faixa_dias_trabalho"] is None
+    assert [n for _, n in m.DAY_BANDS] == ["ate_1_dia", "1_a_2_dias", "2_a_3_dias", "3_a_5_dias", "mais_de_5_dias"]
 
 
 def test_cycle_steps_flatten_each_status_inside_each_cycle():

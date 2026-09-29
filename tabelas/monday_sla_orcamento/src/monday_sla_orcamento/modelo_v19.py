@@ -176,7 +176,7 @@ CONTRACTS.update({
         "projeto_id:STRING! projeto_nome:STRING conta_origem:STRING! marca:STRING talento:STRING tipo_projeto:STRING "
         "responsavel:STRING entrada_utc:TIMESTAMP! mes_entrada:DATE! entregue:BOOLEAN! primeira_entrega_utc:TIMESTAMP "
         "mes_entrega:DATE trabalho_horas_uteis:FLOAT pausas_horas_uteis:FLOAT relogio_horas_uteis:FLOAT "
-        "dias_corridos:INTEGER percentil_na_fila:FLOAT faixa:STRING eh_atipico:BOOLEAN contem_estimativa:BOOLEAN! "
+        "dias_corridos:INTEGER percentil_na_fila:FLOAT faixa_na_fila:STRING faixa_dias_trabalho:STRING eh_atipico:BOOLEAN contem_estimativa:BOOLEAN! "
         "corte_utc:TIMESTAMP! versao_regra:STRING!"),
     # Base plana para análises: cada etapa dentro de cada ciclo, já com nome, marca, talento e responsável.
     "monday_sla_etapa_ciclo": _fields(
@@ -772,6 +772,10 @@ def _coverage(out, stamp):
                                             "itens": itens, **stamp})
 
 
+# Faixas de dias de trabalho usadas em todo o relatório (1 dia de trabalho = 8 h úteis).
+DAY_BANDS = ((8, "ate_1_dia"), (16, "1_a_2_dias"), (24, "2_a_3_dias"), (40, "3_a_5_dias"), (float("inf"), "mais_de_5_dias"))
+
+
 def _delivery_time(out, stamp):
     """Da Entrada à 1ª entrega (primeiro Aguardando Feedback), por projeto, com a posição na fila dos entregues.
 
@@ -785,12 +789,13 @@ def _delivery_time(out, stamp):
     for p in out["monday_sla_projeto"]:
         h, delivered = p["tempo_ate_primeira_entrega_horas_uteis"], p["primeira_entrega_utc"] is not None
         clock = p["bruto_ate_primeira_entrega_horas_uteis"] if delivered else None
-        rank = band = outlier = None
+        rank = band = days = outlier = None
         if delivered and h is not None:
             rank = round(100 * bisect_right(work, h) / len(work), 1)
             band = ("ate_mediana" if h <= cuts[.5] else "ate_p80" if h <= cuts[.8]
                     else "ate_p90" if h <= cuts[.9] else "cauda")
             outlier = h > fence
+            days = next(nome for limite, nome in DAY_BANDS if h <= limite)
         first = instant(p["primeira_entrega_utc"]) if delivered else None
         out["monday_sla_tempo_entrega"].append({
             **{f: p[f] for f in ("projeto_id", "projeto_nome", "conta_origem", "marca", "talento", "tipo_projeto",
@@ -800,7 +805,7 @@ def _delivery_time(out, stamp):
             "trabalho_horas_uteis": h if delivered else None, "relogio_horas_uteis": clock,
             "pausas_horas_uteis": round(max(clock - h, 0.0), 3) if clock is not None and h is not None else None,
             "dias_corridos": (local_date(first) - local_date(instant(p["entrada_utc"]))).days if first else None,
-            "percentil_na_fila": rank, "faixa": band, "eh_atipico": outlier, **stamp})
+            "percentil_na_fila": rank, "faixa_na_fila": band, "faixa_dias_trabalho": days, "eh_atipico": outlier, **stamp})
 
 
 def _cycle_steps(out, stamp):

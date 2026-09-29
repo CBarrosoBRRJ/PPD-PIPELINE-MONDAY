@@ -243,7 +243,7 @@ migração antes da execução diária.
 | `monday_dim_marca` | marca | Catálogo de marcas: grafias, usos e possível duplicata |
 | `monday_ponte_talento` | item × talento | Liga o nome digitado no item à chave do catálogo (relação no Power BI) |
 | `monday_ponte_marca` | item | Liga a marca digitada no item à chave do catálogo |
-| `monday_sla_tempo_entrega` | projeto do SLA | Pergunta da diretoria: da Entrada à 1ª entrega, com trabalho, pausas, relógio, dias corridos, posição na fila, faixa e fora da curva |
+| `monday_sla_tempo_entrega` | projeto do SLA | Pergunta da diretoria: da Entrada à 1ª entrega, com trabalho, pausas, relógio, dias corridos, faixa de dias de trabalho (até 1, 1–2, 2–3, 3–5, mais de 5), posição na fila e fora da curva |
 | `monday_sla_etapa_ciclo` | projeto × ciclo × etapa | Base plana: tempo de cada etapa dentro de cada ciclo, com nome, marca, talento e responsável |
 | `monday_sla_cobertura` | origem × situação × motivo | Abertura do quadro: analisados, sem Entrada, pool, erro de talento, fora do escopo, duplicados, sem histórico, por origem (100% ViU2, ViU2 → Globocorp, 100% Globocorp) |
 
@@ -257,17 +257,17 @@ criando só as 9 tabelas novas (vazias) e registrando-as no controle; nada exist
 (`consolidado/diario/modelo-v19-control.json`) está em `modelo-v19-1`, 17 tabelas, sem pendência, e a identidade
 bate com a origem da migração prevista no código.
 
-**Pacote:** `runtime/pipeline-monday-release-20260929-v20c.zip`, 110 arquivos, SHA256
-`746ba316fb5d69c772ba44609782e298f603f9d9a6c74023143e8b5fe520983e`. Substitui os pacotes `-v20.zip` e `-v20b.zip`, que não foram implantados.
+**Pacote:** `runtime/pipeline-monday-release-20260929-v20d.zip`, 110 arquivos, SHA256
+`6b612ab93c86ed367620672964010755bdec2605b87854413981eb736bdae09f`. Substitui os pacotes `-v20.zip`, `-v20b.zip` e `-v20c.zip`, que não foram implantados.
 
 **Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
 ```bash
 # 1. pacote e hash
-sha256sum pipeline-monday-release-20260929-v20c.zip
+sha256sum pipeline-monday-release-20260929-v20d.zip
 # 2. cópia de segurança do controle (permite voltar para a v19-2 se precisar)
 gcloud storage cp gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/consolidado/diario/modelo-v19-control.json   gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/backups/modelo-v19-control-antes-v20.json
 # 3. imagem
-rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20c.zip -d release-v20 && cd release-v20
+rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20d.zip -d release-v20 && cd release-v20
 gcloud builds submit . --project=gglobo-viu-dados-hdg-prd --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20
 # 4. pausar a agenda e migrar o contrato (cria as 9 tabelas novas)
 gcloud scheduler jobs pause pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
