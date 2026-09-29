@@ -260,3 +260,16 @@ def test_validation_rejects_negative_duration_and_mixed_cuts():
     bad["monday_sla_projeto"][0]["quantidade_retrabalhos"] = 1
     with pytest.raises(ValueError, match="retrabalhos"):
         m.validate(bad)
+
+
+def test_every_board_item_is_traceable(monkeypatch):
+    # R15: item do quadro sem histórico de status e sem vínculo com a ViU2 entra na qualidade, com o motivo.
+    rows = trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)])
+    monkeypatch.setattr(m, "from_v18", lambda sla: ({"p": rows}, {"p": attrs()}))
+    monkeypatch.setattr(m, "native_globocorp", lambda *a: ({}, {}, {}))
+    context = [{"item_id": 1, "item_nome": "[Marca] Talento"}, {"item_id": 77, "item_nome": "Cópia da migração"}]
+    out = m.from_pipeline([], [], {}, [], {"rows": []}, context, cut=CUT, calendar=CAL)
+    quality = {q["chave"]: q for q in out["monday_sla_qualidade"]}
+    assert set(quality) == {"item:77"}
+    assert quality["item:77"]["projeto_id"] is None and quality["item:77"]["situacao_calculo"] == "fora_do_calculo"
+    assert json.loads(quality["item:77"]["motivos_json"]) == ["sem_historico_de_status"]

@@ -218,3 +218,27 @@ A diferença de 1 caso entre a comparação local (98) e a produção (99) já e
 partiu das passagens exportadas com horário truncado em segundos. A variação produzida pela regra é a mesma (−3).
 
 Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885`.
+
+## Atualização v19-3 — todo item do quadro rastreável (29/09/2026)
+
+**Por quê.** A análise de cobertura cruzou os 5.000 itens do quadro (`monday_backlog_agenciamento_2026`) com as
+tabelas do modelo: 1.791 no cálculo, 19 duplicados, 657 fora do cálculo e 2.147 fora do escopo, todos com motivo, mas
+**386 itens sem nenhum rastro**. São cópias da migração, criadas em setembro/2026, sem troca de status na Globocorp e
+sem vínculo com a ViU2. Isso fere a R15.
+
+**O que muda.** Esses itens passam a entrar em `monday_sla_qualidade` com `situacao_calculo = fora_do_calculo`,
+`motivos_json = ["sem_historico_de_status"]`, `projeto_id` vazio e `chave = item:<item_id>`. O esquema não muda e o
+contrato continua `modelo-v19-1`; só a regra passa a `modelo-v19-3`. 658 testes aprovados.
+
+**Pacote:** `runtime/pipeline-monday-release-20260929-v19-3.zip`, 110 arquivos, SHA256
+`69d81d58ea22017fe4cc09ec366945d9de6e444ec755fd0ed18fe22433b565bf`. Os passos são os mesmos da v19-2, com a tag
+`pipeline-monday:v19-3`. Para voltar atrás, use o digest da v19-2 (`sha256:4f5efb23…`).
+
+**Conferência esperada:** `versao_regra = modelo-v19-3` e cerca de 386 linhas novas na qualidade:
+```sql
+SELECT motivos_json, COUNT(*) FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_qualidade` GROUP BY 1 ORDER BY 2 DESC;
+```
+
+**Decisão pendente, com o time:** 1.413 itens estão no quadro, mas não tiveram troca de status na Globocorp desde a
+migração (`sem_item_na_gold_atual`). É a maior perda de cobertura: incluí-los pode levar a análise de 36% para até 64%
+do quadro, mas é preciso antes confirmar se são orçamentos ativos.

@@ -1,4 +1,4 @@
-# Contrato do modelo v19 (`modelo-v19-2`)
+# Contrato do modelo v19 (`modelo-v19-3`)
 
 Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R20) e
 `src/monday_sla_orcamento/modelo_v19.py`. Horas úteis: seg–sex, 10–13h e 14–19h, America/Sao_Paulo.

@@ -25,7 +25,7 @@ from monday_comum.escopo_sla import motivos_exclusao, motivos_input
 from monday_sla_orcamento.pricing import PAUSES, TERMINALS, WORK, normalize
 from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
 
-RULE = "modelo-v19-2"  # v19-2: revisão técnica de 28/09/2026 (retrabalho, série diária, duplicados)
+RULE = "modelo-v19-3"  # v19-2: revisão técnica de 28/09/2026; v19-3: todo item do quadro rastreável (R15)
 # Contrato publicado (esquema das 17 tabelas). Só muda com mudança de esquema: é a identidade
 # gravada no controle do GCS; mudar sem migração faz a publicação recusar ("identidade divergente").
 CONTRACT = "modelo-v19-1"
@@ -389,8 +389,10 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
     for pid, info in dict(excluded).items():
         a = {"projeto_nome": info.get("projeto_nome"), "item_id_viu2": info.get("item_id_viu2"),
              "item_id_globocorp": info.get("item_id_globocorp"), "contas": set(info.get("contas", ()))}
-        state = "fora_do_escopo" if not {"sem_entrada_inicial", "sem_evento_datado"} & set(info["motivos"]) else "fora_do_calculo"
-        out["monday_sla_qualidade"].append(_quality(pid, a, state, info["motivos"], info.get("passagens", 0), stamp))
+        state = ("fora_do_escopo" if not {"sem_entrada_inicial", "sem_evento_datado", "sem_historico_de_status"} & set(info["motivos"])
+                 else "fora_do_calculo")
+        real_pid = None if str(pid).startswith("item:") else pid  # item do quadro sem projeto montado
+        out["monday_sla_qualidade"].append(_quality(real_pid, a, state, info["motivos"], info.get("passagens", 0), stamp))
 
     for item in context:
         _registration_errors(item, error)
@@ -972,6 +974,15 @@ def from_pipeline(sla_rows, quality_rows, consolidation_report, new_rows, mappin
             excluded[pid] = {"projeto_nome": None, "item_id_viu2": _int(pair.get("viu2_item_id")),
                              "item_id_globocorp": _int(pair.get("globocorp_item_id")), "passagens": 0,
                              "motivos": sorted(reasons)}
+    # R15: todo item do quadro atual aparece em algum lugar. Itens sem nenhuma mudança de status na
+    # Globocorp e sem vínculo com a ViU2 (cópias da migração) vão para a qualidade com o motivo.
+    seen = ({_int(a.get("item_id_globocorp")) for a in attrs.values()}
+            | {_int(e.get("item_id_globocorp")) for e in excluded.values()})
+    for item_id, c in context_index.items():
+        if item_id not in seen:
+            excluded[f"item:{item_id}"] = {"projeto_nome": c.get("item_nome"), "item_id_viu2": None,
+                                           "item_id_globocorp": item_id, "passagens": 0,
+                                           "motivos": ["sem_historico_de_status"]}
     usage = status_usage([*old_rows, *new_rows]) if old_rows else None
     return build(passages, attrs, cut=cut, calendar=calendar, excluded=excluded,
                  board_labels=board_labels, context=context, usage=usage)
