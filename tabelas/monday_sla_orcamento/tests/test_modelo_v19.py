@@ -343,9 +343,11 @@ def test_coverage_counts_every_project_once_by_origin_and_situation():
     ats["pool"].update(pool=["talento_multiplo"])
     ats["se"]["contas"] = {"viu2"}
     excluded = {"x": {"projeto_nome": "[Marca] Curadoria", "motivos": ["titulo_curadoria"], "contas": ["globocorp"]},
-                "item:9": {"projeto_nome": "Sem talento", "item_id_globocorp": 9, "motivos": ["talento_nao_informado"]}}
+                "item:9": {"projeto_nome": "Sem talento", "item_id_globocorp": 9, "motivos": ["talento_nao_informado"]},
+                "h": {"projeto_nome": "Antigo", "item_id_viu2": 5, "item_id_globocorp": 6, "motivos": ["titulo_fora_escopo"]}}
     out = m.build(rows, ats, cut=CUT, calendar=CAL, excluded=excluded)
     cov = {(r["origem"], r["situacao"]): r["itens"] for r in out["monday_sla_cobertura"]}
     assert cov == {("100% Globocorp", "analisado"): 1, ("100% ViU2", "sem_entrada"): 1,
                    ("100% Globocorp", "pool"): 1, ("100% Globocorp", "fora_do_escopo"): 1,
-                   ("sem histórico", "erro_cadastro_talento"): 1}
+                   ("100% Globocorp", "erro_cadastro_talento"): 1,
+                   ("ViU2 (histórico, ciclo não montado)", "fora_do_escopo"): 1}

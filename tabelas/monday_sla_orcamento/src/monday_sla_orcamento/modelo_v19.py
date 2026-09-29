@@ -716,7 +716,8 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         day += timedelta(days=1)
 
 
-ORIGENS = {"viu2": "100% ViU2", "viu2+globocorp": "ViU2 → Globocorp", "globocorp": "100% Globocorp"}
+ORIGENS = {"viu2": "100% ViU2", "viu2+globocorp": "ViU2 → Globocorp", "globocorp": "100% Globocorp",
+           "viu2_historico": "ViU2 (histórico, ciclo não montado)"}
 TALENT_ERRORS = {"talento_ambas_colunas", "talento_nao_informado"}
 NO_HISTORY = {"sem_evento_datado", "sem_historico_de_status"}
 
@@ -743,8 +744,10 @@ def _coverage(out, stamp):
         motivos = set(json.loads(r["motivos_json"]))
         situacao = ("erro_cadastro_talento" if motivos & TALENT_ERRORS else
                     "sem_historico" if motivos & NO_HISTORY else "fora_do_escopo")
-        add(r["projeto_id"] if r["projeto_id"] is not None else r["chave"], r["conta_origem"], situacao,
-            ",".join(sorted(motivos)))
+        # Excluído antes de montar o ciclo não tem conta registrada: a origem sai dos códigos de item.
+        origem = r["conta_origem"] or ("viu2_historico" if r["item_id_viu2"] is not None
+                                       else "globocorp" if r["item_id_globocorp"] is not None else None)
+        add(r["projeto_id"] if r["projeto_id"] is not None else r["chave"], origem, situacao, ",".join(sorted(motivos)))
     for (origem, situacao, motivo), itens in sorted(counts.items()):
         out["monday_sla_cobertura"].append({"origem": origem, "situacao": situacao, "motivo": motivo,
                                             "itens": itens, **stamp})

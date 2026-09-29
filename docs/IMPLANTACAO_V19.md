@@ -256,7 +256,7 @@ criando só as 7 tabelas novas (vazias) e registrando-as no controle; nada exist
 bate com a origem da migração prevista no código.
 
 **Pacote:** `runtime/pipeline-monday-release-20260929-v20.zip`, 110 arquivos, SHA256
-`4cb5457f565db0e1f82b04a7c4d189105f2852dffd7df1e80425bda34598787c`.
+`b6a6c377c6f5728b13d0705878fad4e8fe637839067073ad0c8a134464fed570`.
 
 **Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
 ```bash
