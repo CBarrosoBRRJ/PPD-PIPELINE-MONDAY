@@ -366,3 +366,16 @@ def test_delivery_time_answers_how_long_until_first_delivery():
         b["trabalho_horas_uteis"] + b["pausas_horas_uteis"])
     assert (a["percentil_na_fila"], a["faixa"], b["percentil_na_fila"], b["faixa"]) == (50.0, "ate_mediana", 100.0, "cauda")
     assert not c["entregue"] and c["trabalho_horas_uteis"] is None and c["faixa"] is None and c["eh_atipico"] is None
+
+
+def test_cycle_steps_flatten_each_status_inside_each_cycle():
+    out = run(a=trajectory("a", [("Entrada", 1), ("Em Elaboração", 2), ("Standby", 3), ("Em Elaboração", 7),
+                                 ("Aguardando Feedback", 9), ("Em revisão", 10), ("Aguardando Feedback", 11)]))
+    steps = {(r["numero_ciclo"], r["status_nome"]): r for r in out["monday_sla_etapa_ciclo"]}
+    assert set(steps) == {(1, "Entrada"), (1, "Em Elaboração"), (1, "Standby"), (2, "Em revisão")}
+    elab, standby = steps[(1, "Em Elaboração")], steps[(1, "Standby")]
+    assert elab["visitas"] == 2 and elab["projeto_nome"] == "a" and elab["tipo_ciclo"] == "orcamento"
+    assert standby["pct_trabalho_do_ciclo"] is None and not standby["conta_no_tempo_orcamento"]
+    work = sum(r["pct_trabalho_do_ciclo"] for (n, _), r in steps.items() if n == 1 and r["pct_trabalho_do_ciclo"] is not None)
+    assert work == pytest.approx(100, abs=0.2)
+    assert steps[(2, "Em revisão")]["tipo_ciclo"] == "retrabalho"

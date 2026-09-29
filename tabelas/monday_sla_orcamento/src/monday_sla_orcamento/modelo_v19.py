@@ -178,6 +178,14 @@ CONTRACTS.update({
         "mes_entrega:DATE trabalho_horas_uteis:FLOAT pausas_horas_uteis:FLOAT relogio_horas_uteis:FLOAT "
         "dias_corridos:INTEGER percentil_na_fila:FLOAT faixa:STRING eh_atipico:BOOLEAN contem_estimativa:BOOLEAN! "
         "corte_utc:TIMESTAMP! versao_regra:STRING!"),
+    # Base plana para análises: cada etapa dentro de cada ciclo, já com nome, marca, talento e responsável.
+    "monday_sla_etapa_ciclo": _fields(
+        "projeto_id:STRING! projeto_nome:STRING conta_origem:STRING! marca:STRING talento:STRING responsavel:STRING "
+        "ciclo_id:STRING! numero_ciclo:INTEGER! tipo_ciclo:STRING! situacao_ciclo:STRING! inicio_ciclo_utc:TIMESTAMP! "
+        "fim_ciclo_utc:TIMESTAMP mes_inicio_ciclo:DATE! status_nome:STRING! categoria:STRING! "
+        "conta_no_tempo_orcamento:BOOLEAN! visitas:INTEGER! primeira_entrada_utc:TIMESTAMP! horas_uteis:FLOAT "
+        "horas_corridas:FLOAT pct_trabalho_do_ciclo:FLOAT trabalho_ciclo_horas_uteis:FLOAT completo:BOOLEAN! "
+        "contem_estimativa:BOOLEAN! corte_utc:TIMESTAMP! versao_regra:STRING!"),
 })
 
 KEYS = {
@@ -194,6 +202,7 @@ KEYS = {
     "monday_dim_talento": ("chave_talento",), "monday_dim_marca": ("chave_marca",),
     "monday_ponte_talento": ("item_id_globocorp", "chave_talento"), "monday_ponte_marca": ("item_id_globocorp",),
     "monday_sla_cobertura": ("origem", "situacao", "motivo"), "monday_sla_tempo_entrega": ("projeto_id",),
+    "monday_sla_etapa_ciclo": ("ciclo_id", "status_nome"),
 }
 CLUSTERING = {
     "monday_sla_projeto": ["situacao_atual", "marca"], "monday_sla_passagem": ["projeto_id", "status_nome"],
@@ -456,6 +465,7 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
             out["monday_sla_erro_preenchimento"].append(e)
 
     _delivery_time(out, stamp)
+    _cycle_steps(out, stamp)
     _references(out, cut, stamp)
     _catalogs(out, context, attrs, stamp)
     _coverage(out, stamp)
@@ -791,6 +801,37 @@ def _delivery_time(out, stamp):
             "pausas_horas_uteis": round(max(clock - h, 0.0), 3) if clock is not None and h is not None else None,
             "dias_corridos": (local_date(first) - local_date(instant(p["entrada_utc"]))).days if first else None,
             "percentil_na_fila": rank, "faixa": band, "eh_atipico": outlier, **stamp})
+
+
+def _cycle_steps(out, stamp):
+    """Uma linha por etapa (status) dentro de cada ciclo, somando as visitas, com os dados do projeto ao lado.
+
+    Só passagens não ignoradas que pertencem a um ciclo; Aguardando Feedback fecha o ciclo e não é etapa dele.
+    `pct_trabalho_do_ciclo` = horas da etapa ÷ horas de trabalho do ciclo (só etapas de trabalho, ciclo completo).
+    """
+    projects = {p["projeto_id"]: p for p in out["monday_sla_projeto"]}
+    cycles = {c["ciclo_id"]: c for c in out["monday_sla_ciclo"]}
+    groups = defaultdict(list)
+    for r in out["monday_sla_passagem"]:
+        if r["ciclo_id"] is not None and not r["ignorada"]:
+            groups[(r["ciclo_id"], r["status_nome"])].append(r)
+    for (cid, status), items in sorted(groups.items()):
+        c, p = cycles[cid], projects[items[0]["projeto_id"]]
+        items.sort(key=lambda r: r["ordem"])
+        visits = sum(1 for k, r in enumerate(items) if k == 0 or items[k - 1]["ordem"] != r["ordem"] - 1)
+        hours = total(r["horas_uteis"] for r in items)
+        work = c["trabalho_horas_uteis"]
+        counts = items[0]["conta_no_tempo_orcamento"]
+        out["monday_sla_etapa_ciclo"].append({
+            **{f: p[f] for f in ("projeto_id", "projeto_nome", "conta_origem", "marca", "talento", "responsavel")},
+            "ciclo_id": cid, "numero_ciclo": c["numero_ciclo"], "tipo_ciclo": c["tipo_ciclo"], "situacao_ciclo": c["situacao"],
+            "inicio_ciclo_utc": c["inicio_utc"], "fim_ciclo_utc": c["fim_utc"], "mes_inicio_ciclo": month(instant(c["inicio_utc"])),
+            "status_nome": status, "categoria": items[0]["categoria"], "conta_no_tempo_orcamento": counts,
+            "visitas": visits, "primeira_entrada_utc": items[0]["inicio_utc"], "horas_uteis": hours,
+            "horas_corridas": total(r["horas_corridas"] for r in items),
+            "pct_trabalho_do_ciclo": round(100 * hours / work, 1) if counts and hours is not None and work else None,
+            "trabalho_ciclo_horas_uteis": work, "completo": hours is not None,
+            "contem_estimativa": any(r["origem_duracao"] == "estimada_migracao" for r in items), **stamp})
 
 
 POOL_FIELDS = ("projeto_id", "projeto_nome", "conta_origem", "item_id_viu2", "item_id_globocorp", "entrada_utc",
@@ -1145,6 +1186,8 @@ def validate(out):
             raise ValueError("Modelo v19: tempo do projeto diverge da soma dos ciclos")
         if p["quantidade_entregas"] < len(delivered):
             raise ValueError("Modelo v19: entregas menores que ciclos entregues")
+    if any(r["projeto_id"] not in projects or r["ciclo_id"] not in cycles for r in out["monday_sla_etapa_ciclo"]):
+        raise ValueError("Modelo v19: etapa de ciclo órfã")
     if {r["projeto_id"] for r in out["monday_sla_tempo_entrega"]} != projects:
         raise ValueError("Modelo v19: tempo de entrega não cobre exatamente os projetos do SLA")
     if any(r["projeto_id"] not in projects for r in out["monday_sla_standby"]):

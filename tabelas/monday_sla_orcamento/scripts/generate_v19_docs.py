@@ -29,10 +29,17 @@ QUESTIONS = {
     "monday_sla_cobertura": "Quanto do quadro é analisável, por origem (ViU2, ViU2 → Globocorp, Globocorp) e motivo?",
     "monday_ponte_talento": "Qual talento (chave do catálogo) foi digitado em cada item? Ponte para o Power BI.",
     "monday_sla_tempo_entrega": "Quanto tempo levamos para entregar um orçamento? Da Entrada à 1ª entrega, por projeto, com a posição na fila, a faixa e o caso atípico.",
+    "monday_sla_etapa_ciclo": "Quanto tempo cada etapa levou dentro de cada ciclo, com o nome do projeto, marca, talento e responsável? Base plana para análises.",
     "monday_ponte_marca": "Qual marca (chave do catálogo) foi digitada em cada item? Ponte para o Power BI.",
 }
 
 NOTES = {
+    "monday_sla_etapa_ciclo": (
+        "**Uma linha por etapa dentro de cada ciclo** (visitas repetidas ao mesmo status no ciclo somam). "
+        "Liga-se a `monday_sla_tempo_entrega`/`monday_sla_projeto` por `projeto_id` e a `monday_sla_ciclo` por `ciclo_id`, "
+        "mas já traz nome, marca, talento e responsável para dispensar junções. Aguardando Feedback fecha o ciclo e não é "
+        "etapa dele (está em `monday_sla_resposta_cliente`). `pct_trabalho_do_ciclo`: parte das horas de trabalho do ciclo "
+        "gasta na etapa; vazio para espera da marca, Standby e ciclos incompletos."),
     "monday_sla_tempo_entrega": (
         "**Memória de cálculo:** `trabalho_horas_uteis` soma as horas úteis nos status de trabalho do 1º ciclo "
         "(Entrada, Elaboração, Revisão), da Entrada ao primeiro Aguardando Feedback; Standby e espera da marca ficam "

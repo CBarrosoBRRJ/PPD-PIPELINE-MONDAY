@@ -33,7 +33,8 @@ IDENTITY = {"contract": CONTRACT, "tables": sorted(CONTRACTS), "location": "US"}
 # Contratos anteriores que podem ser migrados sem apagar nada: só se criam as tabelas novas (vazias).
 V19_TABLES = sorted(set(CONTRACTS) - {"monday_sla_projeto_pool", "monday_sla_sem_entrada", "monday_dim_talento",
                                       "monday_dim_marca", "monday_ponte_talento", "monday_ponte_marca",
-                                      "monday_sla_cobertura", "monday_sla_tempo_entrega"})
+                                      "monday_sla_cobertura", "monday_sla_tempo_entrega",
+                                      "monday_sla_etapa_ciclo"})
 PREVIOUS_IDENTITIES = ({"contract": "modelo-v19-1", "tables": V19_TABLES, "location": "US"},)
 PREFIX = "modelo_v19"
 

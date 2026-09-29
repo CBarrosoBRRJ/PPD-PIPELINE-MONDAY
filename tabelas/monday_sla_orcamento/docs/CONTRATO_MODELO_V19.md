@@ -582,3 +582,40 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `versao_regra` | STRING | sim |
 
 **Memória de cálculo:** `trabalho_horas_uteis` soma as horas úteis nos status de trabalho do 1º ciclo (Entrada, Elaboração, Revisão), da Entrada ao primeiro Aguardando Feedback; Standby e espera da marca ficam em `pausas_horas_uteis`; `relogio_horas_uteis` = trabalho + pausas; `dias_corridos` conta datas de calendário em São Paulo. `percentil_na_fila` = % dos projetos entregues com tempo menor ou igual. `faixa`: `ate_mediana`, `ate_p80`, `ate_p90`, `cauda`. `eh_atipico`: acima de Q3 + 1,5 × (Q3 − Q1), a regra do boxplot. Projeto sem entrega tem tempos nulos.
+
+## `monday_sla_etapa_ciclo`
+
+**Pergunta:** Quanto tempo cada etapa levou dentro de cada ciclo, com o nome do projeto, marca, talento e responsável? Base plana para análises.
+
+**Chave:** `ciclo_id`, `status_nome`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `projeto_id` | STRING | sim |
+| `projeto_nome` | STRING |  |
+| `conta_origem` | STRING | sim |
+| `marca` | STRING |  |
+| `talento` | STRING |  |
+| `responsavel` | STRING |  |
+| `ciclo_id` | STRING | sim |
+| `numero_ciclo` | INTEGER | sim |
+| `tipo_ciclo` | STRING | sim |
+| `situacao_ciclo` | STRING | sim |
+| `inicio_ciclo_utc` | TIMESTAMP | sim |
+| `fim_ciclo_utc` | TIMESTAMP |  |
+| `mes_inicio_ciclo` | DATE | sim |
+| `status_nome` | STRING | sim |
+| `categoria` | STRING | sim |
+| `conta_no_tempo_orcamento` | BOOLEAN | sim |
+| `visitas` | INTEGER | sim |
+| `primeira_entrada_utc` | TIMESTAMP | sim |
+| `horas_uteis` | FLOAT |  |
+| `horas_corridas` | FLOAT |  |
+| `pct_trabalho_do_ciclo` | FLOAT |  |
+| `trabalho_ciclo_horas_uteis` | FLOAT |  |
+| `completo` | BOOLEAN | sim |
+| `contem_estimativa` | BOOLEAN | sim |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
+**Uma linha por etapa dentro de cada ciclo** (visitas repetidas ao mesmo status no ciclo somam). Liga-se a `monday_sla_tempo_entrega`/`monday_sla_projeto` por `projeto_id` e a `monday_sla_ciclo` por `ciclo_id`, mas já traz nome, marca, talento e responsável para dispensar junções. Aguardando Feedback fecha o ciclo e não é etapa dele (está em `monday_sla_resposta_cliente`). `pct_trabalho_do_ciclo`: parte das horas de trabalho do ciclo gasta na etapa; vazio para espera da marca, Standby e ciclos incompletos.
