@@ -146,8 +146,9 @@ Nunca apague travas, journals ou o bucket para "destravar".
 | Exclusão v18 | `monday_sla_orcamento`, `monday_ciclos_orcamento`, `monday_fila_precificacao`, `monday_sla_baixa_qualidade_de_dado` |
 | Execução só v19 | `pipeline-monday-wcvjr`: `success`, v19 publicada e verificada (1.785 projetos) |
 | Agenda | `pipeline-monday-diario` ENABLED, `0 6 * * *`, America/Sao_Paulo |
+| Segurança | `roles/run.developer` removido da conta `deploy-sla-orcamento`; ficou só `serviceUsageConsumer` |
+| Alerta | métrica `pipeline_monday_sucesso` e política `alertPolicies/15463508235751031085` ("nenhuma execução com sucesso em 25h"), com aviso por e-mail para caio.barroso@viu.com.br |
 
 **Pendências:**
 - Conferir a primeira execução automática, em 29/09 depois das 06h.
-- Executar o passo 11: remover o IAM amplo e criar o alerta "26 h sem sucesso".
 - Depois de 7 dias estáveis, avaliar baixar a memória do job para 4 GB.
