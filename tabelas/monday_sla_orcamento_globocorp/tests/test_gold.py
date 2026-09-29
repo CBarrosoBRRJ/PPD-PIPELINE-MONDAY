@@ -80,7 +80,7 @@ def test_return_open_exit_and_original_durations(settings, board, sample):
 @pytest.mark.parametrize(
     "talent,inter,reason",
     [
-        ("Pessoa A", "Pessoa A", "talento_ambas_colunas"),
+        ("Pessoa A", "Pessoa B", "talento_ambas_colunas"),
         ("Pessoa A, Pessoa B", None, "talento_multiplo"),
         (None, "Pessoa A; Pessoa B", "talento_multiplo"),
         (None, "Pessoa A\nPessoa B", "talento_multiplo"),
@@ -128,11 +128,17 @@ def test_noop_and_same_timestamp_keep_transform_order(settings, board, sample):
     assert rows[-1]["eh_retorno"]
 
 
+def test_same_talent_in_both_columns_is_valid(settings, board, sample):
+    # Regra de 29/09/2026: o mesmo talento nas duas colunas vale como um só; nomes diferentes são erro.
+    sample[1][0].update(talento="Pessoa A", intervenciencia=" pessoa  a ")
+    assert build(settings, board, sample)["quarentena_projeto"] == []
+
+
 def test_catalog_review_preserves_identity_and_unknowns(settings, board, sample):
     sample[1][0].update(talento=None, intervenciencia=" Nome  Exemplo ", marca=None)
     initial = build(settings, board, sample)
-    assert initial["gold_projeto_status"] == []
-    assert initial["quarentena_projeto"][0]["motivos"] == ["talento_identidade_pendente"]
+    # Interveniência sem revisão no catálogo entra no SLA (identidade fica pendente só para análises por talento).
+    assert initial["quarentena_projeto"] == [] and initial["gold_projeto_status"] != []
     catalog = initial["meta_entity_mapping"]
     catalog[0].update(
         review_status="approved",
@@ -145,7 +151,7 @@ def test_catalog_review_preserves_identity_and_unknowns(settings, board, sample)
     row = reviewed["gold_projeto_status"][0]
     assert row["talento_chave"] == "talento-123"
     assert row["talento_nome"] == "Nome Exemplo"
-    assert row["versao_regras"] != initial["quarentena_projeto"][0]["versao_regras"]
+    assert row["versao_regras"] != initial["gold_projeto_status"][0]["versao_regras"]
     assert reviewed["quarentena_projeto"] == []
     assert reviewed["meta_entity_mapping"] == []  # Never overwrite reviewed records.
     assert row["entrada_comprovada_utc"] is None

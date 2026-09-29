@@ -8,10 +8,11 @@ from ..services.extract import norm, obj
 COLLECTIVES = {"bruno e marrone", "manual do mundo", "podpah"}
 
 EXCLUSION_REASONS = {
-    "talento_ambas_colunas": "Talento e Interveniência preenchidos",
-    "talento_multiplo": "Mais de um talento no projeto",
-    "talento_squad": "Squad de Talentos",
+    "talento_ambas_colunas": "Talentos diferentes em Talentos Exclusivos e Interveniência",
+    "talento_multiplo": "Mais de um talento no projeto (pool de talentos)",
+    "talento_squad": "Squad de Talentos (pool de talentos)",
     "talento_nao_individual": "Coletivo ou organização identificados",
+    # Obsoleto desde 2.3.0: a identidade não precisa de revisão para o SLA; mantido para ler quarentenas antigas.
     "talento_identidade_pendente": "Interveniência sem identidade individual revisada",
     "talento_revisao_manual": "Grafia ou identidade de talento em quarentena manual",
     "marca_revisao_manual": "Grafia ou identidade de Marca em quarentena manual",
@@ -24,7 +25,8 @@ def talent_decision(snapshot, mapping, catalog):
     for value in (talent, inter):
         catalog.get("talento", value)
     reasons = set()
-    if talent and inter:
+    # Regra de 29/09/2026: o mesmo talento nas duas colunas é válido; talentos diferentes são erro.
+    if talent and inter and norm(talent) != norm(inter):
         reasons.add("talento_ambas_colunas")
     values = {v["id"]: v for v in snapshot.get("raw_data", {}).get("column_values", [])}
     structured = obj(values.get(mapping.get("talento"), {}).get("value"))
@@ -51,7 +53,6 @@ def talent_decision(snapshot, mapping, catalog):
         if not approved_person and re.search(r"[,;\n\r+]|\s[&/]\s", original):
             reasons.add("talento_multiplo")
     origin = "talento" if talent else "intervenciencia" if inter else None
+    # A revisão do nome no catálogo segue disponível para análises por talento, mas não retém o projeto.
     identity = catalog.resolve("talento", talent or inter, exclusive=bool(talent))
-    if identity[2] == "pendente_revisao":
-        reasons.add("talento_identidade_pendente")
     return sorted(reasons), origin, identity

@@ -4,11 +4,22 @@ import json
 import re
 import unicodedata
 
-SCOPE_RULE = 'talento-cadastro-unico-v1'
+SCOPE_RULE = 'talento-canal-unico-v2'
+
+
+def same_talent(a, b):
+    """Mesmo nome nas duas colunas, ignorando acento, caixa e espaços."""
+    def key(text):
+        text = unicodedata.normalize('NFKD', text or '')
+        text = ''.join(c for c in text if not unicodedata.combining(c))
+        return ' '.join(text.casefold().split())
+    return bool(key(a)) and key(a) == key(b)
 
 
 def exclusion_reasons(source):
-    """Whole-project scope based on verified current registration, not historical claims."""
+    """Regras de talento (29/09/2026): Talentos Exclusivos e Interveniência viram um só talento.
+    Mesmo talento nas duas colunas vale; talentos diferentes, nenhum talento, squad ou mais de um talento
+    (pool de talentos) ficam fora do SLA, com o motivo."""
     raw = source.get('talentos_exclusivos_json')
     names = json.loads(raw) if raw is not None else []
     if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
@@ -19,7 +30,7 @@ def exclusion_reasons(source):
         raise ValueError('Talentos: interveniencia invalida')
     inter = (inter or '').strip()
     reasons = []
-    if names and inter:
+    if names and inter and not (len(names) == 1 and same_talent(names[0], inter)):
         reasons.append('talento_ambas_colunas')
     if not names and not inter:
         reasons.append('talento_nao_informado')

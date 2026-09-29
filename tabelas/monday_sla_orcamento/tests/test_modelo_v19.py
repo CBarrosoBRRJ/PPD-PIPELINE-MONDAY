@@ -267,9 +267,17 @@ def test_every_board_item_is_traceable(monkeypatch):
     rows = trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)])
     monkeypatch.setattr(m, "from_v18", lambda sla: ({"p": rows}, {"p": attrs()}))
     monkeypatch.setattr(m, "native_globocorp", lambda *a: ({}, {}, {}))
-    context = [{"item_id": 1, "item_nome": "[Marca] Talento"}, {"item_id": 77, "item_nome": "Cópia da migração"}]
+    context = [{"item_id": 1, "item_nome": "[Marca] Talento"}, {"item_id": 77, "item_nome": "Pedido novo"},
+               {"item_id": 78, "item_nome": "Pedido sem talento", "talentos_exclusivos_json": "[]"},
+               {"item_id": 79, "item_nome": "Pool", "talentos_exclusivos_json": '["Ana", "Bia"]'}]
+    for c in context[1:]:
+        c.setdefault("talentos_exclusivos_json", '["Ana"]')
     out = m.from_pipeline([], [], {}, [], {"rows": []}, context, cut=CUT, calendar=CAL)
     quality = {q["chave"]: q for q in out["monday_sla_qualidade"]}
-    assert set(quality) == {"item:77"}
+    assert set(quality) == {"item:77", "item:78", "item:79"}
     assert quality["item:77"]["projeto_id"] is None and quality["item:77"]["situacao_calculo"] == "fora_do_calculo"
     assert json.loads(quality["item:77"]["motivos_json"]) == ["sem_historico_de_status"]
+    # O motivo real da regra de talento aparece em vez de um motivo genérico.
+    assert json.loads(quality["item:78"]["motivos_json"]) == ["talento_nao_informado"]
+    assert json.loads(quality["item:79"]["motivos_json"]) == ["talento_multiplo"]
+    assert quality["item:79"]["situacao_calculo"] == "fora_do_escopo"

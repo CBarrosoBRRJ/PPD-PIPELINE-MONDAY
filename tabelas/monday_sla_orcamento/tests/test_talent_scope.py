@@ -16,7 +16,7 @@ def context(names, inter):
 
 @pytest.mark.parametrize(('names', 'inter', 'reason'), [
     (['Ana'], 'Bia', 'talento_ambas_colunas'),
-    (['Ana'], 'Ana', 'talento_ambas_colunas'),
+    (['Ana', 'Bia'], 'Ana', 'talento_ambas_colunas'),
     ([], None, 'talento_nao_informado'),
     (['  '], ' ', 'talento_nao_informado'),
     (['Squad'], None, 'talento_squad'),
@@ -73,3 +73,9 @@ def test_each_capture_reevaluates_valid_invalid_corrected_without_denylist():
     assert {r['interval_id'] for r in restored} == {r['interval_id'] for r in first}
     assert all(r['talento_nome_atual'] == 'Bia' and r['eh_interveniencia'] for r in restored)
     assert [r['duracao_horas'] for r in restored] == [r['duracao_horas'] for r in first]
+
+
+@pytest.mark.parametrize(('names', 'inter'), [(['Ana Maria'], 'ana  maria'), (['Ana'], None), ([], 'Bia')])
+def test_single_talent_from_either_column_is_in_scope(names, inter):
+    # Regra de 29/09/2026: Talentos Exclusivos e Interveniência viram um só talento; o mesmo nome nas duas vale.
+    assert exclusion_reasons(context(names, inter)) == []

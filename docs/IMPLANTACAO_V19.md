@@ -219,33 +219,37 @@ partiu das passagens exportadas com horário truncado em segundos. A variação 
 
 Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885`.
 
-## Atualização v19-3 — todo item do quadro rastreável (29/09/2026)
+## Atualização v19-3 — regras de talento R21–R26 e rastreabilidade total (29/09/2026)
 
-> **EM ESPERA — não implantar.** A investigação posterior mostrou que 382 dos 386 itens estão na quarentena da
-> Globocorp (`quarentena_projeto` no estado): 250 só por `talento_identidade_pendente`, 132 por regra de escopo. O
-> motivo genérico `sem_historico_de_status` esconderia essa causa. A v19-3 deve ser refeita para levar os motivos
-> reais da quarentena à `monday_sla_qualidade`, depois da decisão de negócio sobre o talento pendente de revisão
-> (1.620 itens, 852 nomes; nenhum nome do catálogo foi revisado até 29/09). Os 1.413 `sem_item_na_gold_atual`
-> também são quarentena: 1.370 só por talento pendente.
+**Por quê.** A análise de cobertura mostrou 35,8% do quadro na análise. A maior perda vinha do filtro da Globocorp
+(`quarentena_projeto` no estado): 1.620 itens retidos só por `talento_identidade_pendente` (talento em Interveniência
+sem revisão de nome no catálogo; nenhum nome tinha sido revisado). Também havia 386 itens do quadro sem registro em
+nenhuma tabela do modelo.
 
-**Por quê.** A análise de cobertura cruzou os 5.000 itens do quadro (`monday_backlog_agenciamento_2026`) com as
-tabelas do modelo: 1.791 no cálculo, 19 duplicados, 657 fora do cálculo e 2.147 fora do escopo, todos com motivo, mas
-**386 itens sem nenhum rastro**. São cópias da migração, criadas em setembro/2026, sem troca de status na Globocorp e
-sem vínculo com a ViU2. Isso fere a R15.
+**Regras de negócio (decididas em 29/09/2026):**
+- R21: Talentos Exclusivos e Interveniência viram um só talento (`talento` + `eh_interveniencia`).
+- R22: mesmo talento nas duas colunas vale (comparação sem acento, caixa ou espaços).
+- R23: talentos diferentes nas duas colunas → erro, fora do SLA (`talento_ambas_colunas`, gravidade erro).
+- R24: as duas vazias → erro, fora do SLA (`talento_nao_informado`).
+- R25: squad ou mais de um talento → pool, fora do SLA, para análise própria (`talento_squad`, `talento_multiplo`).
+- R26: revisão de nome no catálogo não retém mais o projeto (a revisão fica para análises por talento).
 
-**O que muda.** Esses itens passam a entrar em `monday_sla_qualidade` com `situacao_calculo = fora_do_calculo`,
-`motivos_json = ["sem_historico_de_status"]`, `projeto_id` vazio e `chave = item:<item_id>`. O esquema não muda e o
-contrato continua `modelo-v19-1`; só a regra passa a `modelo-v19-3`. 658 testes aprovados.
+**Código.**
+- Filtro da Globocorp `RULE_VERSION 2.3.0` (`rules/eligibility.py`): sem `talento_identidade_pendente`; `talento_ambas_colunas` só com nomes diferentes; `talent_policy` registrada no snapshot de regras.
+- Consolidação (`talent_context.py`, `talento-canal-unico-v2`): mesmas regras.
+- Modelo `modelo-v19-3`: todo item do quadro que não está em outra tabela entra em `monday_sla_qualidade` com o motivo real (título, input, talento); sem motivo, `sem_historico_de_status`. Descrições e gravidades dos erros de talento atualizadas.
+- Esquema e contrato inalterados (`modelo-v19-1`). 662 testes aprovados.
 
-**Pacote:** `runtime/pipeline-monday-release-20260929-v19-3.zip`, 110 arquivos, SHA256
-`69d81d58ea22017fe4cc09ec366945d9de6e444ec755fd0ed18fe22433b565bf`. Os passos são os mesmos da v19-2, com a tag
-`pipeline-monday:v19-3`. Para voltar atrás, use o digest da v19-2 (`sha256:4f5efb23…`).
+**Efeito estimado (quarentena de 29/09):** 1.620 itens liberados. ~561 do histórico da ViU2 que começam por Entrada e
+até 250 pedidos novos entram no SLA; ~809 da ViU2 sem Entrada comprovada vão para a qualidade com o motivo certo.
+Cobertura esperada de ~52% do quadro. Continuam retidos 860 itens por regra de escopo real.
 
-**Conferência esperada:** `versao_regra = modelo-v19-3` e cerca de 386 linhas novas na qualidade:
+**Pacote:** `runtime/pipeline-monday-release-20260929-v19-3.zip`, 110 arquivos, SHA256 `ffe9c049695f7cbe712a02cd9b772edc46345364a5dea91f966aeffceac22a49`.
+Passos iguais aos da v19-2, com a tag `pipeline-monday:v19-3`. Para voltar atrás: digest da v19-2 (`sha256:4f5efb23…`).
+
+**Conferência esperada:**
 ```sql
-SELECT motivos_json, COUNT(*) FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_qualidade` GROUP BY 1 ORDER BY 2 DESC;
+SELECT ANY_VALUE(versao_regra) regra, COUNT(*) projetos FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_projeto`;
+SELECT situacao_calculo, motivos_json, COUNT(*) FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_qualidade` GROUP BY 1, 2 ORDER BY 3 DESC;
 ```
-
-**Decisão pendente, com o time:** 1.413 itens estão no quadro, mas não tiveram troca de status na Globocorp desde a
-migração (`sem_item_na_gold_atual`). É a maior perda de cobertura: incluí-los pode levar a análise de 36% para até 64%
-do quadro, mas é preciso antes confirmar se são orçamentos ativos.
+Esperado: `modelo-v19-3`, cerca de 2.600 projetos e nenhum `sem_item_na_gold_atual` causado por talento pendente.

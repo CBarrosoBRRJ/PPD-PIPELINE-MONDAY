@@ -41,6 +41,7 @@ def build_gold(
         "cut_policy": "closed_day" if cutoff is not None else "ingestion_start",
         "title_scope_version": TITLE_SCOPE_VERSION,
         "missing_item_context_policy": "exclude_project_v1",
+        "talent_policy": "talento-canal-unico-v2",
     }
     digest = hashlib.sha256(
         json.dumps(version_input, sort_keys=True, default=str).encode()

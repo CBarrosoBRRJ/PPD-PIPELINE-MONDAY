@@ -168,10 +168,10 @@ ERRORS = {
     "parado_em_standby": ("atencao", f"Parado em Standby há mais de {STANDBY_STALE_DAYS} dias"),
     "nasceu_de_copia": ("atencao", "Item duplicado de outro orçamento (nasce em Aguardando Feedback ou Encerrado e vai para Entrada)"),
     "duplicado_original_ambiguo": ("atencao", "Item duplicado com mais de um orçamento original possível; vínculo deixado em branco"),
-    "talento_nao_informado": ("erro", "Cadastro sem talento nem interveniência"),
-    "talento_multiplo": ("atencao", "Mais de um talento no mesmo item"),
-    "talento_ambas_colunas": ("atencao", "Talento exclusivo e interveniência preenchidos ao mesmo tempo"),
-    "talento_squad": ("atencao", "Talento cadastrado como squad/grupo"),
+    "talento_nao_informado": ("erro", "Cadastro sem talento: Talentos Exclusivos e Interveniência vazios"),
+    "talento_multiplo": ("processo", "Mais de um talento no mesmo item (pool): o certo é um projeto por talento"),
+    "talento_ambas_colunas": ("erro", "Talentos diferentes em Talentos Exclusivos e Interveniência"),
+    "talento_squad": ("processo", "Squad de talentos (pool): o certo é um projeto por talento"),
     "marca_vazia": ("erro", "Cadastro sem marca"),
     "tipo_input_vazio": ("atencao", "Cadastro sem Tipo de Input"),
     "responsavel_vazio": ("atencao", "Cadastro sem responsável pelo orçamento"),
@@ -980,9 +980,11 @@ def from_pipeline(sla_rows, quality_rows, consolidation_report, new_rows, mappin
             | {_int(e.get("item_id_globocorp")) for e in excluded.values()})
     for item_id, c in context_index.items():
         if item_id not in seen:
+            reasons = sorted(set(motivos_exclusao(c.get("item_nome"))) | set(motivos_input(c.get("tipo_input")))
+                             | set(talent_exclusions(c)))
             excluded[f"item:{item_id}"] = {"projeto_nome": c.get("item_nome"), "item_id_viu2": None,
                                            "item_id_globocorp": item_id, "passagens": 0,
-                                           "motivos": ["sem_historico_de_status"]}
+                                           "motivos": reasons or ["sem_historico_de_status"]}
     usage = status_usage([*old_rows, *new_rows]) if old_rows else None
     return build(passages, attrs, cut=cut, calendar=calendar, excluded=excluded,
                  board_labels=board_labels, context=context, usage=usage)
