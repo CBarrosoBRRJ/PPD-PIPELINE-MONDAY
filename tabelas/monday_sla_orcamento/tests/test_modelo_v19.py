@@ -351,3 +351,18 @@ def test_coverage_counts_every_project_once_by_origin_and_situation():
                    ("100% Globocorp", "pool"): 1, ("100% Globocorp", "fora_do_escopo"): 1,
                    ("100% Globocorp", "erro_cadastro_talento"): 1,
                    ("ViU2 (histórico, ciclo não montado)", "fora_do_escopo"): 1}
+
+
+def test_delivery_time_answers_how_long_until_first_delivery():
+    out = run(a=trajectory("a", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)]),
+              b=trajectory("b", [("Entrada", 1), ("Em Elaboração", 2), ("Standby", 3), ("Em Elaboração", 7),
+                                 ("Aguardando Feedback", 9)]),
+              c=trajectory("c", [("Entrada", 1), ("Em Elaboração", 2)]))
+    a, b, c = (one(out, "monday_sla_tempo_entrega", pid) for pid in "abc")
+    assert a["entregue"] and a["trabalho_horas_uteis"] == one(out, "monday_sla_projeto", "a")[
+        "tempo_ate_primeira_entrega_horas_uteis"]
+    assert a["dias_corridos"] == 2 and a["pausas_horas_uteis"] == 0
+    assert b["pausas_horas_uteis"] > 0 and b["relogio_horas_uteis"] == pytest.approx(
+        b["trabalho_horas_uteis"] + b["pausas_horas_uteis"])
+    assert (a["percentil_na_fila"], a["faixa"], b["percentil_na_fila"], b["faixa"]) == (50.0, "ate_mediana", 100.0, "cauda")
+    assert not c["entregue"] and c["trabalho_horas_uteis"] is None and c["faixa"] is None and c["eh_atipico"] is None

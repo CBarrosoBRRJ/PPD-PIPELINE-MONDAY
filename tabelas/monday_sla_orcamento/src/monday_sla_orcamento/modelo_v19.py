@@ -15,6 +15,7 @@ Regras (fonte de verdade: nota do projeto no Obsidian, R1–R15 e D1–D3, 28/09
 import hashlib
 import json
 import re
+from bisect import bisect_right
 from collections import Counter, defaultdict
 from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID, uuid5
@@ -170,6 +171,13 @@ CONTRACTS.update({
         "corte_utc:TIMESTAMP! versao_regra:STRING!"),
     "monday_ponte_marca": _fields(
         "item_id_globocorp:INTEGER! chave_marca:STRING! nome_original:STRING! corte_utc:TIMESTAMP! versao_regra:STRING!"),
+    # Resposta direta à pergunta "quanto tempo levamos para entregar um orçamento": 1 linha por projeto do SLA.
+    "monday_sla_tempo_entrega": _fields(
+        "projeto_id:STRING! projeto_nome:STRING conta_origem:STRING! marca:STRING talento:STRING tipo_projeto:STRING "
+        "responsavel:STRING entrada_utc:TIMESTAMP! mes_entrada:DATE! entregue:BOOLEAN! primeira_entrega_utc:TIMESTAMP "
+        "mes_entrega:DATE trabalho_horas_uteis:FLOAT pausas_horas_uteis:FLOAT relogio_horas_uteis:FLOAT "
+        "dias_corridos:INTEGER percentil_na_fila:FLOAT faixa:STRING eh_atipico:BOOLEAN contem_estimativa:BOOLEAN! "
+        "corte_utc:TIMESTAMP! versao_regra:STRING!"),
 })
 
 KEYS = {
@@ -185,7 +193,7 @@ KEYS = {
     "monday_sla_projeto_pool": ("projeto_id",), "monday_sla_sem_entrada": ("projeto_id",),
     "monday_dim_talento": ("chave_talento",), "monday_dim_marca": ("chave_marca",),
     "monday_ponte_talento": ("item_id_globocorp", "chave_talento"), "monday_ponte_marca": ("item_id_globocorp",),
-    "monday_sla_cobertura": ("origem", "situacao", "motivo"),
+    "monday_sla_cobertura": ("origem", "situacao", "motivo"), "monday_sla_tempo_entrega": ("projeto_id",),
 }
 CLUSTERING = {
     "monday_sla_projeto": ["situacao_atual", "marca"], "monday_sla_passagem": ["projeto_id", "status_nome"],
@@ -447,6 +455,7 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
             seen.add(e["erro_id"])
             out["monday_sla_erro_preenchimento"].append(e)
 
+    _delivery_time(out, stamp)
     _references(out, cut, stamp)
     _catalogs(out, context, attrs, stamp)
     _coverage(out, stamp)
@@ -751,6 +760,37 @@ def _coverage(out, stamp):
     for (origem, situacao, motivo), itens in sorted(counts.items()):
         out["monday_sla_cobertura"].append({"origem": origem, "situacao": situacao, "motivo": motivo,
                                             "itens": itens, **stamp})
+
+
+def _delivery_time(out, stamp):
+    """Da Entrada à 1ª entrega (primeiro Aguardando Feedback), por projeto, com a posição na fila dos entregues.
+
+    Faixa: até a mediana, até o P80, até o P90 ou cauda. Atípico pela regra do boxplot: acima de Q3 + 1,5 × (Q3 − Q1).
+    Projeto ainda sem entrega entra com tempos nulos (desconhecido não vira zero).
+    """
+    work = sorted(p["tempo_ate_primeira_entrega_horas_uteis"] for p in out["monday_sla_projeto"]
+                  if p["primeira_entrega_utc"] and p["tempo_ate_primeira_entrega_horas_uteis"] is not None)
+    cuts = {q: percentile(work, q) for q in (.25, .5, .75, .8, .9)}
+    fence = cuts[.75] + 1.5 * (cuts[.75] - cuts[.25]) if work else None
+    for p in out["monday_sla_projeto"]:
+        h, delivered = p["tempo_ate_primeira_entrega_horas_uteis"], p["primeira_entrega_utc"] is not None
+        clock = p["bruto_ate_primeira_entrega_horas_uteis"] if delivered else None
+        rank = band = outlier = None
+        if delivered and h is not None:
+            rank = round(100 * bisect_right(work, h) / len(work), 1)
+            band = ("ate_mediana" if h <= cuts[.5] else "ate_p80" if h <= cuts[.8]
+                    else "ate_p90" if h <= cuts[.9] else "cauda")
+            outlier = h > fence
+        first = instant(p["primeira_entrega_utc"]) if delivered else None
+        out["monday_sla_tempo_entrega"].append({
+            **{f: p[f] for f in ("projeto_id", "projeto_nome", "conta_origem", "marca", "talento", "tipo_projeto",
+                                 "responsavel", "entrada_utc", "mes_entrada", "primeira_entrega_utc",
+                                 "contem_estimativa")},
+            "entregue": delivered, "mes_entrega": month(first) if first else None,
+            "trabalho_horas_uteis": h if delivered else None, "relogio_horas_uteis": clock,
+            "pausas_horas_uteis": round(max(clock - h, 0.0), 3) if clock is not None and h is not None else None,
+            "dias_corridos": (local_date(first) - local_date(instant(p["entrada_utc"]))).days if first else None,
+            "percentil_na_fila": rank, "faixa": band, "eh_atipico": outlier, **stamp})
 
 
 POOL_FIELDS = ("projeto_id", "projeto_nome", "conta_origem", "item_id_viu2", "item_id_globocorp", "entrada_utc",
@@ -1105,6 +1145,8 @@ def validate(out):
             raise ValueError("Modelo v19: tempo do projeto diverge da soma dos ciclos")
         if p["quantidade_entregas"] < len(delivered):
             raise ValueError("Modelo v19: entregas menores que ciclos entregues")
+    if {r["projeto_id"] for r in out["monday_sla_tempo_entrega"]} != projects:
+        raise ValueError("Modelo v19: tempo de entrega não cobre exatamente os projetos do SLA")
     if any(r["projeto_id"] not in projects for r in out["monday_sla_standby"]):
         raise ValueError("Modelo v19: standby com projeto órfão")
     for name in ("monday_sla_projeto_pool", "monday_sla_sem_entrada"):

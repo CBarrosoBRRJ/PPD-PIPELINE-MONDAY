@@ -28,10 +28,18 @@ QUESTIONS = {
     "monday_dim_marca": "Quais marcas aparecem no quadro, com que grafias e quantas vezes foram usadas?",
     "monday_sla_cobertura": "Quanto do quadro é analisável, por origem (ViU2, ViU2 → Globocorp, Globocorp) e motivo?",
     "monday_ponte_talento": "Qual talento (chave do catálogo) foi digitado em cada item? Ponte para o Power BI.",
+    "monday_sla_tempo_entrega": "Quanto tempo levamos para entregar um orçamento? Da Entrada à 1ª entrega, por projeto, com a posição na fila, a faixa e o caso atípico.",
     "monday_ponte_marca": "Qual marca (chave do catálogo) foi digitada em cada item? Ponte para o Power BI.",
 }
 
 NOTES = {
+    "monday_sla_tempo_entrega": (
+        "**Memória de cálculo:** `trabalho_horas_uteis` soma as horas úteis nos status de trabalho do 1º ciclo "
+        "(Entrada, Elaboração, Revisão), da Entrada ao primeiro Aguardando Feedback; Standby e espera da marca ficam "
+        "em `pausas_horas_uteis`; `relogio_horas_uteis` = trabalho + pausas; `dias_corridos` conta datas de calendário "
+        "em São Paulo. `percentil_na_fila` = % dos projetos entregues com tempo menor ou igual. `faixa`: "
+        "`ate_mediana`, `ate_p80`, `ate_p90`, `cauda`. `eh_atipico`: acima de Q3 + 1,5 × (Q3 − Q1), a regra do boxplot. "
+        "Projeto sem entrega tem tempos nulos."),
     "monday_sla_kpi_mensal": (
         "**Leitura das medidas de tempo:** `tempo_orcamento_p50_horas_uteis` e `tempo_orcamento_p80_horas_uteis` "
         "medem o trabalho **até a 1ª entrega** dos projetos que tiveram a 1ª entrega naquele mês, sem os ajustes "
