@@ -203,3 +203,18 @@ gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --reg
 bq query --use_legacy_sql=false 'SELECT versao_regra, COUNT(*) n FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_projeto` GROUP BY 1'
 ```
 Esperado: execução com sucesso e `versao_regra = modelo-v19-2`.
+
+### Recibo da v19-2 — 29/09/2026 (conferido por consulta de leitura)
+
+| Passo | Evidência |
+| :--- | :--- |
+| Pacote | SHA256 `b59fb1f3…` conferido no Cloud Shell |
+| Build | `b6b3fdf4-e5d5-4057-a551-ff2e1458eb3e` SUCCESS · imagem `pipeline-monday@sha256:4f5efb2312cb52779c923ef18bf94dd701be7f0a304aee687b3b530ceaa0d855` |
+| Troca de imagem | job `pipeline-monday` atualizado; argumentos `daily` mantidos |
+| Execução | `pipeline-monday-trh49`: sucesso, sem avisos nem erros no log (inclusive sem o `FutureWarning` do BigQuery) |
+| BigQuery | `versao_regra = modelo-v19-2`; corte 29/09; 1.791 projetos; 99 pediu ajuste e 2 `pausado`; 99 ciclos de retrabalho; 60.434 linhas na série diária; referência de atenção de Aguardando Feedback 48,5 h; alertas: 94 críticos, 92 em atenção, 67 ok |
+
+A diferença de 1 caso entre a comparação local (98) e a produção (99) já existia na v19-1: o ensaio local
+partiu das passagens exportadas com horário truncado em segundos. A variação produzida pela regra é a mesma (−3).
+
+Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885`.

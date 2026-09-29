@@ -2,11 +2,11 @@
 
 **Produção em 28/09/2026: v19 no ar e v18 apagada** (backup Avro conferido em
 backups/v18_20260928). O job publica só a v19 (modelo-v19-control.json com v18_aposentada=true),
-com a imagem sha256:34a629d4… e a agenda ativa. Recibo em docs/IMPLANTACAO_V19.md. Não recriar
+com a agenda ativa (imagem atual na nota abaixo; sha256:34a629d4… é a anterior, compatível para voltar atrás). Recibo em docs/IMPLANTACAO_V19.md. Não recriar
 as tabelas v18, não voltar a imagem anterior (ela espera a v18), não reexecutar initialize-v19
 nem retire-v18. Regras de negócio R1–R20: nota do Obsidian.
-1ª execução automática validada em 29/09/2026. Regra `modelo-v19-2` (revisão técnica) empacotada em
-29/09 (docs/IMPLANTACAO_V19.md, seção v19-2); a identidade do controle fica presa ao contrato `modelo-v19-1`:
+1ª execução automática validada em 29/09/2026. Regra `modelo-v19-2` (revisão técnica) EM PRODUÇÃO desde 29/09
+(imagem sha256:4f5efb23…, execução pipeline-monday-trh49; recibo em docs/IMPLANTACAO_V19.md); a identidade do controle fica presa ao contrato `modelo-v19-1`:
 mudar a regra não exige migração, mudar o esquema exige.
 Texto anterior, histórico:
 Estado operacional mais recente: v18 de ciclos (25/09/2026), conforme README.md e
