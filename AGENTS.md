@@ -9,7 +9,7 @@ nem retire-v18. Regras de negócio R1–R20: nota do Obsidian.
 (imagem sha256:4f5efb23…, execução pipeline-monday-trh49; recibo em docs/IMPLANTACAO_V19.md); a identidade do controle fica presa ao contrato `modelo-v19-1`:
 mudar a regra não exige migração, mudar o esquema exige. Pacote v20 (contrato e regra `modelo-v20-1`, filtro Globocorp 2.3.0: talento R21–R26, pool, sem Entrada,
 catálogos de talento e marca) pronto em 29/09, implantação pendente. A migração do contrato é o comando
-initialize-v19 (só cria as 4 tabelas novas); ver docs/IMPLANTACAO_V19.md, seção v20.
+initialize-v19 (só cria as 6 tabelas novas); ver docs/IMPLANTACAO_V19.md, seção v20.
 Texto anterior, histórico:
 Estado operacional mais recente: v18 de ciclos (25/09/2026), conforme README.md e
 docs/ENTREGA_V18_CICLOS.md; prevalece sobre ESTADO_GCP_2026_09_24.md e sobre as

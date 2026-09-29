@@ -329,3 +329,7 @@ def test_talent_and_brand_catalogs_group_spellings_and_flag_duplicates():
     brands = {b["chave_marca"]: b for b in out["monday_dim_marca"]}
     assert set(brands) == {"coca cola"}  # grafias com hífen, caixa e espaço viram uma marca só
     assert brands["coca cola"]["itens_quadro"] == 3 and brands["coca cola"]["quantidade_variantes"] == 3
+    # Pontes: o nome digitado em cada item ligado à chave do catálogo (relação no Power BI).
+    ponte = {(r["item_id_globocorp"], r["chave_talento"]) for r in out["monday_ponte_talento"]}
+    assert (2, "jonas sulzbach") in ponte and (4, "ana") in ponte and (4, "bia") in ponte
+    assert {r["chave_marca"] for r in out["monday_ponte_marca"]} == {"coca cola"}

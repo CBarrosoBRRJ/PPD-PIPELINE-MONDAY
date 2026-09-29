@@ -505,3 +505,32 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `possivel_duplicata_de` | STRING |  |
 | `corte_utc` | TIMESTAMP | sim |
 | `versao_regra` | STRING | sim |
+
+## `monday_ponte_talento`
+
+**Pergunta:** Qual talento (chave do catálogo) foi digitado em cada item? Ponte para o Power BI.
+
+**Chave:** `item_id_globocorp`, `chave_talento`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `item_id_globocorp` | INTEGER | sim |
+| `chave_talento` | STRING | sim |
+| `nome_original` | STRING | sim |
+| `eh_exclusivo` | BOOLEAN | sim |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
+## `monday_ponte_marca`
+
+**Pergunta:** Qual marca (chave do catálogo) foi digitada em cada item? Ponte para o Power BI.
+
+**Chave:** `item_id_globocorp`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `item_id_globocorp` | INTEGER | sim |
+| `chave_marca` | STRING | sim |
+| `nome_original` | STRING | sim |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |

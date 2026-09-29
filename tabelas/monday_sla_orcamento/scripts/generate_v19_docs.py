@@ -26,6 +26,8 @@ QUESTIONS = {
     "monday_sla_sem_entrada": "Quais projetos não começaram por Entrada, e qual foi a trajetória completa de cada um?",
     "monday_dim_talento": "Quais talentos aparecem no quadro, com que grafias, se são exclusivos e quantas vezes foram usados?",
     "monday_dim_marca": "Quais marcas aparecem no quadro, com que grafias e quantas vezes foram usadas?",
+    "monday_ponte_talento": "Qual talento (chave do catálogo) foi digitado em cada item? Ponte para o Power BI.",
+    "monday_ponte_marca": "Qual marca (chave do catálogo) foi digitada em cada item? Ponte para o Power BI.",
 }
 
 NOTES = {

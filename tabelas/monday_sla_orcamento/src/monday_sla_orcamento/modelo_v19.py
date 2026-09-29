@@ -162,6 +162,12 @@ CONTRACTS.update({
         "chave_marca:STRING! marca_nome:STRING! variantes_json:STRING! quantidade_variantes:INTEGER! "
         "itens_quadro:INTEGER! projetos_no_sla:INTEGER! possivel_duplicata_de:STRING corte_utc:TIMESTAMP! "
         "versao_regra:STRING!"),
+    # Pontes para o Power BI: o nome digitado no item ligado à chave do catálogo.
+    "monday_ponte_talento": _fields(
+        "item_id_globocorp:INTEGER! chave_talento:STRING! nome_original:STRING! eh_exclusivo:BOOLEAN! "
+        "corte_utc:TIMESTAMP! versao_regra:STRING!"),
+    "monday_ponte_marca": _fields(
+        "item_id_globocorp:INTEGER! chave_marca:STRING! nome_original:STRING! corte_utc:TIMESTAMP! versao_regra:STRING!"),
 })
 
 KEYS = {
@@ -176,6 +182,7 @@ KEYS = {
     "monday_sla_item_duplicado": ("projeto_id",), "monday_sla_standby": ("projeto_id",),
     "monday_sla_projeto_pool": ("projeto_id",), "monday_sla_sem_entrada": ("projeto_id",),
     "monday_dim_talento": ("chave_talento",), "monday_dim_marca": ("chave_marca",),
+    "monday_ponte_talento": ("item_id_globocorp", "chave_talento"), "monday_ponte_marca": ("item_id_globocorp",),
 }
 CLUSTERING = {
     "monday_sla_projeto": ["situacao_atual", "marca"], "monday_sla_passagem": ["projeto_id", "status_nome"],
@@ -783,10 +790,16 @@ def _catalogs(out, context, attrs, stamp):
             t = talents.setdefault(k, {"variantes": Counter(), "excl": 0, "inter": 0, "itens": set()})
             t["variantes"][name] += 1
             t["excl" if exclusive else "inter"] += 1
+            if item_id not in t["itens"]:
+                out["monday_ponte_talento"].append({"item_id_globocorp": item_id, "chave_talento": k,
+                                                     "nome_original": name, "eh_exclusivo": exclusive, **stamp})
             t["itens"].add(item_id)
         brand = (item.get("marca") or "").strip()
         if brand:
             b = brands.setdefault(_catalog_key(brand), {"variantes": Counter(), "itens": set()})
+            if _catalog_key(brand):
+                out["monday_ponte_marca"].append({"item_id_globocorp": item_id, "chave_marca": _catalog_key(brand),
+                                                   "nome_original": brand, **stamp})
             b["variantes"][brand] += 1
             b["itens"].add(item_id)
     keys = sorted(talents)
