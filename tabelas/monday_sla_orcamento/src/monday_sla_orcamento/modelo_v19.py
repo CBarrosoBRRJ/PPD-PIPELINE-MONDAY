@@ -15,7 +15,7 @@ Regras (fonte de verdade: nota do projeto no Obsidian, R1–R15 e D1–D3, 28/09
 import hashlib
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
@@ -23,13 +23,13 @@ from zoneinfo import ZoneInfo
 from monday_comum.escopo_sla import motivos_exclusao, motivos_input
 
 from monday_sla_orcamento.pricing import PAUSES, TERMINALS, WORK, normalize
-from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
+from monday_sla_orcamento.talent_context import POOL, exclusion_reasons as talent_exclusions, is_pool, same_talent
 
-RULE = "modelo-v19-3"  # v19-2: revisão técnica de 28/09/2026; v19-3: todo item do quadro rastreável (R15)
-# Contrato publicado (esquema das 17 tabelas). Só muda com mudança de esquema: é a identidade
-# gravada no controle do GCS; mudar sem migração faz a publicação recusar ("identidade divergente").
-CONTRACT = "modelo-v19-1"
-ID_SEED = CONTRACT  # semente dos IDs de ciclo: mantém os IDs estáveis entre versões da regra
+RULE = "modelo-v20-1"  # v19-2: revisão técnica; v20: talento R21–R26, pool, sem Entrada e catálogos (29/09/2026)
+# Contrato publicado (esquema das tabelas). Só muda com mudança de esquema: é a identidade gravada no controle
+# do GCS. A v20 acrescenta 4 tabelas; a migração a partir de modelo-v19-1 é feita por ModelStore.initialize().
+CONTRACT = "modelo-v20-1"
+ID_SEED = "modelo-v19-1"  # semente dos IDs de ciclo: mantém os IDs estáveis entre versões da regra e do contrato
 ZONE = ZoneInfo("America/Sao_Paulo")
 NAMESPACE = UUID("07530d27-26df-4c5f-a2a1-092eb8ef04cf")  # igual à consolidação
 FEEDBACK = normalize("Aguardando Feedback")
@@ -140,6 +140,30 @@ CONTRACTS = {
         "entregas_ate_o_dia:INTEGER! tempo_orcamento_acumulado_horas_uteis:FLOAT "
         "horas_uteis_desde_entrada:FLOAT! eh_dia_util:BOOLEAN! versao_regra:STRING!"),
 }
+CONTRACTS.update({
+    "monday_sla_projeto_pool": _fields(
+        "projeto_id:STRING! projeto_nome:STRING conta_origem:STRING! item_id_viu2:INTEGER item_id_globocorp:INTEGER "
+        "motivo_pool:STRING! talentos_json:STRING entrada_utc:TIMESTAMP! mes_entrada:DATE! situacao_atual:STRING! "
+        "status_atual:STRING quantidade_entregas:INTEGER! quantidade_retrabalhos:INTEGER! "
+        "tempo_orcamento_horas_uteis:FLOAT tempo_ate_primeira_entrega_horas_uteis:FLOAT espera_marca_horas_uteis:FLOAT "
+        "standby_horas_uteis:FLOAT resposta_cliente_horas_uteis:FLOAT completo:BOOLEAN! marca:STRING "
+        "tipo_input:STRING responsavel:STRING corte_utc:TIMESTAMP! versao_regra:STRING!"),
+    "monday_sla_sem_entrada": _fields(
+        "projeto_id:STRING! projeto_nome:STRING conta_origem:STRING! item_id_viu2:INTEGER item_id_globocorp:INTEGER "
+        "primeiro_status:STRING primeiro_status_utc:TIMESTAMP status_atual:STRING passa_por_entrada_depois:BOOLEAN! "
+        "quantidade_passagens:INTEGER! quantidade_entregas:INTEGER! horas_uteis_conhecidas:FLOAT trajeto:STRING! "
+        "trajeto_json:STRING! marca:STRING talento:STRING responsavel:STRING corte_utc:TIMESTAMP! versao_regra:STRING!"),
+    "monday_dim_talento": _fields(
+        "chave_talento:STRING! talento_nome:STRING! variantes_json:STRING! quantidade_variantes:INTEGER! "
+        "eh_exclusivo:BOOLEAN! usos_exclusivo:INTEGER! usos_interveniencia:INTEGER! itens_quadro:INTEGER! "
+        "projetos_no_sla:INTEGER! projetos_pool:INTEGER! possivel_duplicata_de:STRING corte_utc:TIMESTAMP! "
+        "versao_regra:STRING!"),
+    "monday_dim_marca": _fields(
+        "chave_marca:STRING! marca_nome:STRING! variantes_json:STRING! quantidade_variantes:INTEGER! "
+        "itens_quadro:INTEGER! projetos_no_sla:INTEGER! possivel_duplicata_de:STRING corte_utc:TIMESTAMP! "
+        "versao_regra:STRING!"),
+})
+
 KEYS = {
     "monday_sla_projeto": ("projeto_id",), "monday_sla_ciclo": ("ciclo_id",),
     "monday_sla_passagem": ("interval_id",), "monday_sla_tempo_status": ("projeto_id", "status_nome"),
@@ -150,6 +174,8 @@ KEYS = {
     "monday_dim_status": ("status_nome",), "monday_dim_calendario": ("data",),
     "monday_sla_projeto_diario": ("projeto_id", "data"),
     "monday_sla_item_duplicado": ("projeto_id",), "monday_sla_standby": ("projeto_id",),
+    "monday_sla_projeto_pool": ("projeto_id",), "monday_sla_sem_entrada": ("projeto_id",),
+    "monday_dim_talento": ("chave_talento",), "monday_dim_marca": ("chave_marca",),
 }
 CLUSTERING = {
     "monday_sla_projeto": ["situacao_atual", "marca"], "monday_sla_passagem": ["projeto_id", "status_nome"],
@@ -308,7 +334,8 @@ def native_globocorp(new_rows, mapped_items, context_index, calendar, cut):
             reasons += talent_exclusions(context)
         else:
             reasons.append("sem_cadastro_atual")
-        if reasons:
+        pool = sorted(set(reasons) & POOL) if is_pool(reasons) else []
+        if reasons and not pool:
             excluded[pid] = {"item_id_globocorp": item, "projeto_nome": name, "motivos": sorted(set(reasons)),
                              "passagens": len(rows)}
             continue
@@ -341,8 +368,11 @@ def native_globocorp(new_rows, mapped_items, context_index, calendar, cut):
             "nasceu_de_copia": categoria(initial) in ("entrega", "terminal", "trabalho", "espera_marca"),
             "status_copiado": initial,
         }
+        if pool:
+            attrs[pid]["pool"] = pool
         names = json.loads(context.get("talentos_exclusivos_json") or "[]")
         inter = (context.get("interveniencia") or "").strip()
+        attrs[pid]["talentos"] = [n.strip() for n in names if n.strip()] + ([inter] if inter else [])
         attrs[pid]["talento"] = names[0].strip() if names else (inter or None)
         attrs[pid]["eh_interveniencia"] = bool(inter) and not names
     return passages, attrs, excluded
@@ -378,11 +408,16 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
             status = rows[first]["status_nome"] if first is not None else None
             error("inicio_sem_entrada", pid, a, status, rows[first]["inicio"] if first is not None else None)
             out["monday_sla_qualidade"].append(_quality(pid, a, "fora_do_calculo", ["sem_entrada_inicial"], len(rows), stamp))
+            _sem_entrada(pid, a, rows, first, out, stamp)
             continue
         if a.get("nasceu_de_copia"):
             error("nasceu_de_copia", pid, a, rows[first]["status_nome"], rows[first]["inicio"])
             _duplicate(pid, a, rows, first, out, stamp, base_names, attrs, error)
             out["monday_sla_qualidade"].append(_quality(pid, a, "fora_do_calculo", ["item_duplicado"], len(rows), stamp))
+            continue
+        if a.get("pool"):  # R25: medido com as mesmas regras, publicado à parte e fora do SLA oficial
+            _pool(pid, a, rows, first, cut, calendar, out, stamp, base_names)
+            out["monday_sla_qualidade"].append(_quality(pid, a, "fora_do_escopo", a["pool"], len(rows), stamp))
             continue
         _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names)
 
@@ -403,6 +438,7 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
             out["monday_sla_erro_preenchimento"].append(e)
 
     _references(out, cut, stamp)
+    _catalogs(out, context, attrs, stamp)
     _open_alerts(out)
     _monthly(out, stamp)
     _fill_quality(out, stamp)
@@ -669,6 +705,112 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         day += timedelta(days=1)
 
 
+POOL_FIELDS = ("projeto_id", "projeto_nome", "conta_origem", "item_id_viu2", "item_id_globocorp", "entrada_utc",
+               "mes_entrada", "situacao_atual", "status_atual", "quantidade_entregas", "quantidade_retrabalhos",
+               "tempo_orcamento_horas_uteis", "tempo_ate_primeira_entrega_horas_uteis", "espera_marca_horas_uteis",
+               "standby_horas_uteis", "resposta_cliente_horas_uteis", "completo", "marca", "tipo_input", "responsavel")
+
+
+def _pool(pid, a, rows, first, cut, calendar, out, stamp, base_names):
+    """R25: projeto com squad ou vários talentos. Mesmo cálculo de tempo, sem entrar nas tabelas do SLA oficial."""
+    scratch = {name: [] for name in CONTRACTS}
+    _project(pid, a, rows, first, cut, calendar, scratch, lambda *args, **kwargs: None, stamp, base_names)
+    row = scratch["monday_sla_projeto"][0]
+    out["monday_sla_projeto_pool"].append({
+        **{k: row[k] for k in POOL_FIELDS}, "motivo_pool": ",".join(a["pool"]),
+        "talentos_json": json.dumps(a.get("talentos") or [], ensure_ascii=False), **stamp})
+
+
+def _sem_entrada(pid, a, rows, first, out, stamp):
+    """R1: projeto que não começa por Entrada (nem vazio seguido de Entrada) fica fora; a trajetória fica para avaliação."""
+    entrada = normalize("Entrada")
+    trajectory = [{"ordem": i, "status": p["status_nome"], "inicio_utc": iso(p["inicio"]), "fim_utc": iso(p["fim"]),
+                   "horas_uteis": p["horas_uteis"], "conta": p["conta"]} for i, p in enumerate(rows, 1)]
+    known = [p["horas_uteis"] for p in rows if p["horas_uteis"] is not None]
+    out["monday_sla_sem_entrada"].append({
+        "projeto_id": pid, "projeto_nome": a.get("projeto_nome"), "conta_origem": _account(a),
+        "item_id_viu2": a.get("item_id_viu2"), "item_id_globocorp": a.get("item_id_globocorp"),
+        "primeiro_status": rows[first]["status_nome"] if first is not None else None,
+        "primeiro_status_utc": iso(rows[first]["inicio"]) if first is not None else None,
+        "status_atual": rows[-1]["status_nome"],
+        "passa_por_entrada_depois": any(normalize(p["status_nome"]) == entrada for p in rows),
+        "quantidade_passagens": len(rows),
+        "quantidade_entregas": sum(1 for p in rows if categoria(p["status_nome"]) == "entrega"),
+        "horas_uteis_conhecidas": total(known) if known else None,
+        "trajeto": " → ".join(p["status_nome"] or "(vazio)" for p in rows),
+        "trajeto_json": json.dumps(trajectory, ensure_ascii=False),
+        "marca": a.get("marca"), "talento": a.get("talento"), "responsavel": a.get("responsavel"), **stamp})
+
+
+def _similar(key, usage):
+    """Grafia provavelmente igual a outra mais usada: nome curto contido no longo ("jonas" x "jonas sulzbach")
+    ou erro de digitação ("jonas sulbach" x "jonas sulzbach"). Aponta sempre do menos usado para o mais usado."""
+    from difflib import SequenceMatcher
+    best = None
+    for other, uses in usage.items():
+        if other == key or (uses, other) <= (usage[key], key):
+            continue
+        a, b = key.split(), other.split()
+        prefix = len(a) < len(b) and b[:len(a)] == a
+        close = min(len(key), len(other)) >= 5 and SequenceMatcher(None, key, other).ratio() >= 0.9
+        if (prefix or close) and (best is None or uses > usage[best]):
+            best = other
+    return best
+
+
+def _catalog_key(text):
+    import unicodedata
+    text = unicodedata.normalize("NFKD", text or "")
+    text = "".join(c for c in text if not unicodedata.combining(c)).casefold()
+    return " ".join(re.sub(r"[^0-9a-z]+", " ", text).split())  # "Coca-Cola" e "coca cola" viram a mesma chave
+
+
+def _catalogs(out, context, attrs, stamp):
+    """Catálogo de talentos e de marcas do quadro atual: grafias, uso e possíveis duplicatas (base para correção)."""
+    in_sla = {r["item_id_globocorp"] for r in out["monday_sla_projeto"]}
+    in_pool = {r["item_id_globocorp"] for r in out["monday_sla_projeto_pool"]}
+    talents, brands = {}, {}
+    for item in context:
+        item_id = int(item["item_id"])
+        names = [(n.strip(), True) for n in json.loads(item.get("talentos_exclusivos_json") or "[]") if n and n.strip()]
+        inter = (item.get("interveniencia") or "").strip()
+        if inter:
+            names += [(n.strip(), False) for n in re.split(r"[,;\n\r+]|\s[&/]\s", inter) if n.strip()]
+        for name, exclusive in names:
+            k = _catalog_key(name)
+            if not k or re.search(r"\bsquad\b", k):
+                continue
+            t = talents.setdefault(k, {"variantes": Counter(), "excl": 0, "inter": 0, "itens": set()})
+            t["variantes"][name] += 1
+            t["excl" if exclusive else "inter"] += 1
+            t["itens"].add(item_id)
+        brand = (item.get("marca") or "").strip()
+        if brand:
+            b = brands.setdefault(_catalog_key(brand), {"variantes": Counter(), "itens": set()})
+            b["variantes"][brand] += 1
+            b["itens"].add(item_id)
+    keys = sorted(talents)
+    usage = {k: len(talents[k]["itens"]) for k in keys}
+    for k in keys:
+        t = talents[k]
+        out["monday_dim_talento"].append({
+            "chave_talento": k, "talento_nome": t["variantes"].most_common(1)[0][0],
+            "variantes_json": json.dumps(dict(t["variantes"].most_common()), ensure_ascii=False),
+            "quantidade_variantes": len(t["variantes"]), "eh_exclusivo": t["excl"] > 0,
+            "usos_exclusivo": t["excl"], "usos_interveniencia": t["inter"], "itens_quadro": len(t["itens"]),
+            "projetos_no_sla": len(t["itens"] & in_sla), "projetos_pool": len(t["itens"] & in_pool),
+            "possivel_duplicata_de": _similar(k, usage), **stamp})
+    keys = sorted(brands)
+    usage = {k: len(brands[k]["itens"]) for k in keys}
+    for k in keys:
+        b = brands[k]
+        out["monday_dim_marca"].append({
+            "chave_marca": k, "marca_nome": b["variantes"].most_common(1)[0][0],
+            "variantes_json": json.dumps(dict(b["variantes"].most_common()), ensure_ascii=False),
+            "quantidade_variantes": len(b["variantes"]), "itens_quadro": len(b["itens"]),
+            "projetos_no_sla": len(b["itens"] & in_sla), "possivel_duplicata_de": _similar(k, usage), **stamp})
+
+
 def _duplicate(pid, a, rows, first, out, stamp, base_names, attrs, error):
     """D2: item copiado de outro orçamento fica fora do SLA, mas guardado para estudo."""
     # Vínculo só com um único original possível (que não seja outra cópia); nome igual não prova qual é.
@@ -911,6 +1053,9 @@ def validate(out):
             raise ValueError("Modelo v19: entregas menores que ciclos entregues")
     if any(r["projeto_id"] not in projects for r in out["monday_sla_standby"]):
         raise ValueError("Modelo v19: standby com projeto órfão")
+    for name in ("monday_sla_projeto_pool", "monday_sla_sem_entrada"):
+        if projects & {r["projeto_id"] for r in out[name]}:
+            raise ValueError(f"Modelo v19: {name} misturado ao SLA oficial")
     if projects & {r["projeto_id"] for r in out["monday_sla_item_duplicado"]}:
         raise ValueError("Modelo v19: item duplicado dentro do cálculo")
     included = projects & {q["projeto_id"] for q in out["monday_sla_qualidade"] if q["situacao_calculo"] != "incluido_com_ressalva"}
@@ -956,6 +1101,9 @@ def from_pipeline(sla_rows, quality_rows, consolidation_report, new_rows, mappin
                   board_labels=(), old_rows=()):
     """Adapta as saídas da execução diária (v18 + fonte Globocorp) às entradas do modelo v19."""
     passages, attrs = from_v18(sla_rows)
+    for pid, reasons in (consolidation_report.get("pool_projects") or {}).items():
+        if pid in attrs:
+            attrs[pid]["pool"] = sorted(reasons)
     mapped = {int(p["globocorp_item_id"]) for p in mapping["rows"]}
     context_index = {int(c["item_id"]): c for c in context}
     native, native_attrs, excluded = native_globocorp(new_rows, mapped, context_index, calendar, instant(cut))

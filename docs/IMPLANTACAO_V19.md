@@ -219,37 +219,63 @@ partiu das passagens exportadas com horário truncado em segundos. A variação 
 
 Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885`.
 
-## Atualização v19-3 — regras de talento R21–R26 e rastreabilidade total (29/09/2026)
+## Atualização v20 — talento, pool, sem Entrada e catálogos (29/09/2026)
 
-**Por quê.** A análise de cobertura mostrou 35,8% do quadro na análise. A maior perda vinha do filtro da Globocorp
-(`quarentena_projeto` no estado): 1.620 itens retidos só por `talento_identidade_pendente` (talento em Interveniência
-sem revisão de nome no catálogo; nenhum nome tinha sido revisado). Também havia 386 itens do quadro sem registro em
-nenhuma tabela do modelo.
+Substitui o pacote v19-3, que não foi implantado. **Muda o contrato** (4 tabelas novas), por isso tem um passo de
+migração antes da execução diária.
 
-**Regras de negócio (decididas em 29/09/2026):**
-- R21: Talentos Exclusivos e Interveniência viram um só talento (`talento` + `eh_interveniencia`).
-- R22: mesmo talento nas duas colunas vale (comparação sem acento, caixa ou espaços).
-- R23: talentos diferentes nas duas colunas → erro, fora do SLA (`talento_ambas_colunas`, gravidade erro).
-- R24: as duas vazias → erro, fora do SLA (`talento_nao_informado`).
-- R25: squad ou mais de um talento → pool, fora do SLA, para análise própria (`talento_squad`, `talento_multiplo`).
-- R26: revisão de nome no catálogo não retém mais o projeto (a revisão fica para análises por talento).
+**Regras de negócio (decididas em 29/09/2026).**
+- R1 mantida: o primeiro status do projeto tem de ser Entrada, ou vazio seguido de Entrada. Qualquer outro início
+  fica fora da análise e vai para `monday_sla_sem_entrada`, com a trajetória completa para avaliação.
+- R21–R24: Talentos Exclusivos e Interveniência viram um só talento. O mesmo nome nas duas colunas vale; nomes
+  diferentes ou as duas vazias são erro de preenchimento, ficam fora do SLA e aparecem nos erros.
+- R25: squad ou mais de um talento (inclusive vários nomes em Talentos Exclusivos) é pool. É medido com as mesmas
+  regras e publicado em `monday_sla_projeto_pool`, fora do SLA oficial.
+- R26: a revisão de nome num catálogo não retém mais o projeto.
 
-**Código.**
-- Filtro da Globocorp `RULE_VERSION 2.3.0` (`rules/eligibility.py`): sem `talento_identidade_pendente`; `talento_ambas_colunas` só com nomes diferentes; `talent_policy` registrada no snapshot de regras.
-- Consolidação (`talent_context.py`, `talento-canal-unico-v2`): mesmas regras.
-- Modelo `modelo-v19-3`: todo item do quadro que não está em outra tabela entra em `monday_sla_qualidade` com o motivo real (título, input, talento); sem motivo, `sem_historico_de_status`. Descrições e gravidades dos erros de talento atualizadas.
-- Esquema e contrato inalterados (`modelo-v19-1`). 662 testes aprovados.
+**Tabelas novas (contrato `modelo-v20-1`, regra `modelo-v20-1`).**
 
-**Efeito estimado (quarentena de 29/09):** 1.620 itens liberados. ~561 do histórico da ViU2 que começam por Entrada e
-até 250 pedidos novos entram no SLA; ~809 da ViU2 sem Entrada comprovada vão para a qualidade com o motivo certo.
-Cobertura esperada de ~52% do quadro. Continuam retidos 860 itens por regra de escopo real.
+| Tabela | Uma linha por | Para quê |
+| :--- | :--- | :--- |
+| `monday_sla_projeto_pool` | projeto pool | Tempos dos projetos com squad ou vários talentos |
+| `monday_sla_sem_entrada` | projeto sem Entrada | Trajetória completa (texto e JSON) para avaliar o caso |
+| `monday_dim_talento` | talento | Catálogo: grafias, exclusivo ou não, usos e possível duplicata (base para correção) |
+| `monday_dim_marca` | marca | Catálogo de marcas: grafias, usos e possível duplicata |
 
-**Pacote:** `runtime/pipeline-monday-release-20260929-v19-3.zip`, 110 arquivos, SHA256 `ffe9c049695f7cbe712a02cd9b772edc46345364a5dea91f966aeffceac22a49`.
-Passos iguais aos da v19-2, com a tag `pipeline-monday:v19-3`. Para voltar atrás: digest da v19-2 (`sha256:4f5efb23…`).
+**Código.** Filtro da Globocorp 2.3.0 (pool não fica em quarentena; sem `talento_identidade_pendente`; nomes iguais
+nas duas colunas valem). Consolidação: pool segue com `pool_projects` no relatório, e o motivo real de talento
+substitui o genérico `talento_fora_escopo`. Modelo: pool e sem Entrada roteados para as tabelas novas; catálogos;
+todo item do quadro rastreável com o motivo real. Publicação: `ModelStore.initialize()` migra de `modelo-v19-1`
+criando só as 4 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 668 testes.
 
-**Conferência esperada:**
-```sql
-SELECT ANY_VALUE(versao_regra) regra, COUNT(*) projetos FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_projeto`;
-SELECT situacao_calculo, motivos_json, COUNT(*) FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_qualidade` GROUP BY 1, 2 ORDER BY 3 DESC;
+**Conferido antes (29/09, só leitura):** o controle de produção
+(`consolidado/diario/modelo-v19-control.json`) está em `modelo-v19-1`, 17 tabelas, sem pendência, e a identidade
+bate com a origem da migração prevista no código.
+
+**Pacote:** `runtime/pipeline-monday-release-20260929-v20.zip`, 110 arquivos, SHA256
+`b6cf4052a66919d32532edfe8be8ecc0c66866342a27212867558131d038997e`.
+
+**Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
+```bash
+# 1. pacote e hash
+sha256sum pipeline-monday-release-20260929-v20.zip
+# 2. cópia de segurança do controle (permite voltar para a v19-2 se precisar)
+gcloud storage cp gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/consolidado/diario/modelo-v19-control.json   gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/backups/modelo-v19-control-antes-v20.json
+# 3. imagem
+rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20.zip -d release-v20 && cd release-v20
+gcloud builds submit . --project=gglobo-viu-dados-hdg-prd --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20
+# 4. pausar a agenda e migrar o contrato (cria as 4 tabelas novas)
+gcloud scheduler jobs pause pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
+gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1   --image=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday@DIGEST   --args=initialize-v19,--manifest,/app/pipelines.json,--writers-stopped
+gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --wait
+# 5. voltar ao modo diário, publicar e retomar a agenda
+gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --args=daily,--manifest,/app/pipelines.json
+gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --wait
+gcloud scheduler jobs resume pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
 ```
-Esperado: `modelo-v19-3`, cerca de 2.600 projetos e nenhum `sem_item_na_gold_atual` causado por talento pendente.
+Esperado no passo 4: `status: modelo_contrato_migrado` com as 4 tabelas novas. No passo 5: sucesso,
+`versao_regra = modelo-v20-1` e as tabelas novas preenchidas.
+
+**Voltar atrás.** Depois da migração, a imagem v19-2 não publica mais (o controle está em `modelo-v20-1`). Se for
+preciso voltar: restaurar o controle da cópia do passo 2 e a imagem `sha256:4f5efb23…`. As 4 tabelas novas podem
+ficar; a v19-2 não as usa.

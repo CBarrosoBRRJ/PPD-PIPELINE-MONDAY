@@ -6,6 +6,8 @@ from ..services.clean import clean_text
 from ..services.extract import norm, obj
 
 COLLECTIVES = {"bruno e marrone", "manual do mundo", "podpah"}
+# R25 (29/09/2026): pool de talentos segue para o modelo, que mede e separa numa tabela própria.
+POOL_REASONS = frozenset({"talento_squad", "talento_multiplo", "talento_nao_individual"})
 
 EXCLUSION_REASONS = {
     "talento_ambas_colunas": "Talentos diferentes em Talentos Exclusivos e Interveniência",

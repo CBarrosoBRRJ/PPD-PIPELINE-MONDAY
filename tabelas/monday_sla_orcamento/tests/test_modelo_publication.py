@@ -166,9 +166,31 @@ def test_retire_v18_only_after_verified_v19_publication():
 
 
 def test_identity_is_pinned_to_the_published_contract_not_the_rule():
-    # O controle em produção (GCS) foi gravado com "modelo-v19-1" em 28/09/2026. Mudar a regra de cálculo
-    # não pode mudar a identidade, ou a publicação recusa ("identidade divergente") e o job diário falha.
+    # A identidade acompanha o contrato (esquema), não a regra de cálculo.
     from monday_sla_orcamento import modelo_publication as pub
     from monday_sla_orcamento import modelo_v19 as m
-    assert pub.IDENTITY["contract"] == "modelo-v19-1"
-    assert m.RULE != m.CONTRACT or m.RULE == "modelo-v19-1"
+    assert pub.IDENTITY["contract"] == m.CONTRACT == "modelo-v20-1"
+    assert pub.PREVIOUS_IDENTITIES[0]["contract"] == "modelo-v19-1"
+
+
+def test_upgrade_from_v19_creates_only_new_tables_and_keeps_publication():
+    from monday_sla_orcamento import modelo_publication as pub
+    model, objects = store()
+    model.initialize()
+    model.publish(sample(), {"cut": "2026-09-28T03:00:00+00:00"})
+    control = json.loads(objects.get(CONTROL)[0])
+    # Simula o controle de produção na v19: contrato antigo, sem as 4 tabelas novas.
+    control["identity"] = pub.PREVIOUS_IDENTITIES[0]
+    for name in set(CONTRACTS) - set(pub.V19_TABLES):
+        control["active"]["tables"].pop(name)
+        model.client.rows.pop(target(name))
+        model.client.schemas.pop(target(name))
+    kept = {n: copy.deepcopy(model.client.rows[target(n)]) for n in pub.V19_TABLES}
+    objects.put_json(CONTROL, control, objects.get(CONTROL)[1])
+    with pytest.raises(ValueError, match="identidade divergente"):
+        model.publish(sample(), {"cut": "2026-09-29T03:00:00+00:00"})
+    result = model.initialize()
+    assert result["status"] == "modelo_contrato_migrado" and len(result["tabelas_novas"]) == 4
+    assert {n: model.client.rows[target(n)] for n in pub.V19_TABLES} == kept  # nada existente mudou
+    assert model.initialize()["status"] == "modelo_v19_ja_inicializado"
+    assert model.publish(sample(), {"cut": "2026-09-29T03:00:00+00:00"})["publication_verified"]

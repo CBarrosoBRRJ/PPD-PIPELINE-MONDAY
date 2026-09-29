@@ -22,6 +22,10 @@ QUESTIONS = {
     "monday_sla_projeto_diario": "Como cada projeto evoluiu dia a dia (base de previsão/ML)?",
     "monday_sla_item_duplicado": "Quais itens foram duplicados de outro orçamento (fora do SLA, para estudo)?",
     "monday_sla_standby": "Quais projetos estão parados em Standby agora, e há quanto tempo?",
+    "monday_sla_projeto_pool": "Quanto tempo levam os projetos com squad ou vários talentos (pool, fora do SLA oficial)?",
+    "monday_sla_sem_entrada": "Quais projetos não começaram por Entrada, e qual foi a trajetória completa de cada um?",
+    "monday_dim_talento": "Quais talentos aparecem no quadro, com que grafias, se são exclusivos e quantas vezes foram usados?",
+    "monday_dim_marca": "Quais marcas aparecem no quadro, com que grafias e quantas vezes foram usadas?",
 }
 
 NOTES = {
@@ -35,7 +39,7 @@ NOTES = {
 
 def render():
     lines = [f"# Contrato do modelo v19 (`{RULE}`)", "",
-             "Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R20) e",
+             "Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R26) e",
              "`src/monday_sla_orcamento/modelo_v19.py`. Horas úteis: seg–sex, 10–13h e 14–19h, America/Sao_Paulo.", ""]
     for name, fields in CONTRACTS.items():
         extras = []

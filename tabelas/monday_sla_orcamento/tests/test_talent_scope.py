@@ -19,10 +19,6 @@ def context(names, inter):
     (['Ana', 'Bia'], 'Ana', 'talento_ambas_colunas'),
     ([], None, 'talento_nao_informado'),
     (['  '], ' ', 'talento_nao_informado'),
-    (['Squad'], None, 'talento_squad'),
-    ([], 'SQUAD DE TALENTOS', 'talento_squad'),
-    (['Projeto - Squad comercial'], None, 'talento_squad'),
-    (['Ana', 'Bia'], None, 'talento_multiplo'),
 ])
 def test_entire_project_excluded_without_mutating_sources(names, inter, reason):
     old, new, mapping = inputs()
@@ -79,3 +75,18 @@ def test_each_capture_reevaluates_valid_invalid_corrected_without_denylist():
 def test_single_talent_from_either_column_is_in_scope(names, inter):
     # Regra de 29/09/2026: Talentos Exclusivos e Interveniência viram um só talento; o mesmo nome nas duas vale.
     assert exclusion_reasons(context(names, inter)) == []
+
+
+@pytest.mark.parametrize(('names', 'inter', 'reason'), [
+    (['Squad'], None, 'talento_squad'),
+    ([], 'SQUAD DE TALENTOS', 'talento_squad'),
+    (['Projeto - Squad comercial'], None, 'talento_squad'),
+    (['Ana', 'Bia'], None, 'talento_multiplo'),
+])
+def test_pool_projects_are_kept_and_flagged(names, inter, reason):
+    # R25: pool segue na consolidação para ser medido; o modelo separa numa tabela própria.
+    old, new, mapping = inputs()
+    rows, report = build(old, new, mapping, current_context=[context(names, inter)])
+    assert rows
+    assert reason in report['pool_projects'][mapping['rows'][0]['projeto_id']]
+    assert report['talent_excluded_selected_projects'] == 0

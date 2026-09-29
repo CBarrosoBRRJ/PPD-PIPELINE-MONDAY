@@ -81,12 +81,7 @@ def test_return_open_exit_and_original_durations(settings, board, sample):
     "talent,inter,reason",
     [
         ("Pessoa A", "Pessoa B", "talento_ambas_colunas"),
-        ("Pessoa A, Pessoa B", None, "talento_multiplo"),
-        (None, "Pessoa A; Pessoa B", "talento_multiplo"),
-        (None, "Pessoa A\nPessoa B", "talento_multiplo"),
-        (" SQUAD   de Talentos ", None, "talento_squad"),
-        (None, "Manual do Mundo", "talento_nao_individual"),
-        (None, "Bruno e Marrone", "talento_nao_individual"),
+        ("Pessoa A", "Pessoa C", "talento_ambas_colunas"),
     ],
 )
 def test_exclusion_removes_whole_project_but_not_history(
@@ -103,11 +98,32 @@ def test_exclusion_removes_whole_project_but_not_history(
     assert source == sample
 
 
+@pytest.mark.parametrize(
+    "talent,inter,reason",
+    [
+        ("Pessoa A, Pessoa B", None, "talento_multiplo"),
+        (None, "Pessoa A; Pessoa B", "talento_multiplo"),
+        (None, "Pessoa A\nPessoa B", "talento_multiplo"),
+        (" SQUAD   de Talentos ", None, "talento_squad"),
+        (None, "Manual do Mundo", "talento_nao_individual"),
+        (None, "Bruno e Marrone", "talento_nao_individual"),
+    ],
+)
+def test_pool_projects_stay_in_gold_for_measurement(settings, board, sample, talent, inter, reason):
+    # R25: pool (squad, vários talentos, coletivo) não fica em quarentena; o modelo mede e separa.
+    sample[1][0].update(talento=talent, intervenciencia=inter)
+    result = build(settings, board, sample)
+    assert result["gold_projeto_status"] and result["quarentena_projeto"] == []
+    issue = next(q for q in result["data_quality_issue"] if q["code"] == "gold_projeto_pool")
+    assert reason in json.loads(issue["detail"])["motivos"]
+
+
 def test_structured_multiple_selection_and_correction(settings, board, sample):
     snap = sample[1][0]
     snap["talento"] = "Nome sem delimitador"
     snap["raw_data"]["column_values"].append({"id": "talent_x", "value": '{"ids":[1,2]}'})
-    assert not build(settings, board, sample)["gold_projeto_status"]
+    pool = build(settings, board, sample)
+    assert any(q["code"] == "gold_projeto_pool" for q in pool["data_quality_issue"])
     snap["raw_data"]["column_values"][-1]["value"] = '{"ids":[1]}'
     result = build(settings, board, sample)
     assert len(result["gold_projeto_status"]) == 2

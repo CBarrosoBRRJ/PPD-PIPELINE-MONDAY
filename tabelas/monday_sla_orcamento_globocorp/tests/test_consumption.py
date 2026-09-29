@@ -41,15 +41,16 @@ def test_pending_row_distinguishes_warning_from_whole_project_exclusion(settings
     assert "historico_inicial_nao_comprovado" in row["codigos"]
     assert row["item_id"] == 123
     assert "Não inventar datas" in row["como_corrigir"]
-    sample[1][0]["talento"] = "Squad de Talentos"
+    # R23: talentos diferentes nas duas colunas excluem o projeto inteiro (pool não exclui: R25).
+    sample[1][0].update(talento="Pessoa A", intervenciencia="Pessoa B")
     blocked = publication(complete_data(settings, board, sample))
     assert blocked[GOLD] == []
     assert blocked[PENDING][0]["excluido_da_analise"]
-    assert blocked[PENDING][0]["talento_original"] == "Squad de Talentos"
-    sample[1][0]["talento"] = "Pessoa individual"
+    assert blocked[PENDING][0]["talento_original"] == "Pessoa A"
+    sample[1][0].update(talento="Pessoa individual", intervenciencia=None)
     fixed = publication(complete_data(settings, board, sample))
     assert len(fixed[GOLD]) == 2
-    assert "talento_squad" not in fixed[PENDING][0]["codigos"]
+    assert "talento_ambas_colunas" not in fixed[PENDING][0]["codigos"]
 
 
 def test_responsible_warning_disappears_when_monday_assignment_is_resolved(settings, board, sample):

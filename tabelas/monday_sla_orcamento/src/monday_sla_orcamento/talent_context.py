@@ -5,6 +5,12 @@ import re
 import unicodedata
 
 SCOPE_RULE = 'talento-canal-unico-v2'
+# R25: projeto com squad ou mais de um talento é pool: medido à parte, fora do SLA oficial.
+POOL = frozenset({'talento_squad', 'talento_multiplo', 'talento_nao_individual'})
+
+
+def is_pool(reasons):
+    return bool(reasons) and set(reasons) <= POOL
 
 
 def same_talent(a, b):

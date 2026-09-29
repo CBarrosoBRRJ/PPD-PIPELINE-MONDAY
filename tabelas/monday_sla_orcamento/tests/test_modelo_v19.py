@@ -281,3 +281,51 @@ def test_every_board_item_is_traceable(monkeypatch):
     assert json.loads(quality["item:78"]["motivos_json"]) == ["talento_nao_informado"]
     assert json.loads(quality["item:79"]["motivos_json"]) == ["talento_multiplo"]
     assert quality["item:79"]["situacao_calculo"] == "fora_do_escopo"
+
+
+# v20 (29/09/2026): pool, sem Entrada e catálogos
+
+def test_pool_project_is_measured_apart_from_official_sla():
+    rows = {"p": trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)]),
+            "q": trajectory("q", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 4)])}
+    ats = {pid: attrs() for pid in rows}
+    ats["q"].update(projeto_nome="[Marca] Squad", pool=["talento_squad"], talentos=["Squad de talentos"])
+    out = m.build(rows, ats, cut=CUT, calendar=CAL)
+    assert [p["projeto_id"] for p in out["monday_sla_projeto"]] == ["p"]
+    pool = one(out, "monday_sla_projeto_pool", "q")
+    assert pool["motivo_pool"] == "talento_squad" and pool["tempo_orcamento_horas_uteis"] == 24.0
+    assert not [r for r in out["monday_sla_passagem"] if r["projeto_id"] == "q"]
+    assert json.loads(one(out, "monday_sla_qualidade", "q")["motivos_json"]) == ["talento_squad"]
+
+
+def test_project_without_entry_keeps_full_trajectory_for_review():
+    out = run(p=trajectory("p", [("Em Elaboração", 1), ("Aguardando Feedback", 2), ("Entrada", 3)]))
+    row = one(out, "monday_sla_sem_entrada", "p")
+    assert row["primeiro_status"] == "Em Elaboração" and row["passa_por_entrada_depois"] is True
+    assert row["trajeto"] == "Em Elaboração → Aguardando Feedback → Entrada" and row["quantidade_entregas"] == 1
+    assert [t["status"] for t in json.loads(row["trajeto_json"])] == ["Em Elaboração", "Aguardando Feedback", "Entrada"]
+    assert out["monday_sla_projeto"] == []
+
+
+def test_blank_then_entry_is_a_valid_start():
+    out = run(p=trajectory("p", [(None, 1), ("Entrada", 2), ("Em Elaboração", 3), ("Aguardando Feedback", 4)]))
+    assert out["monday_sla_sem_entrada"] == [] and len(out["monday_sla_projeto"]) == 1
+
+
+def test_talent_and_brand_catalogs_group_spellings_and_flag_duplicates():
+    rows = {"p": trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)])}
+    context = [
+        {"item_id": 1, "talentos_exclusivos_json": '["Jonas Sulzbach"]', "interveniencia": None, "marca": "Coca-Cola"},
+        {"item_id": 2, "talentos_exclusivos_json": "[]", "interveniencia": "jonas  sulzbach", "marca": "coca-cola"},
+        {"item_id": 3, "talentos_exclusivos_json": "[]", "interveniencia": "Jonas", "marca": "Coca Cola"},
+        {"item_id": 4, "talentos_exclusivos_json": "[]", "interveniencia": "Ana, Bia", "marca": None},
+    ]
+    out = m.build(rows, {"p": attrs()}, cut=CUT, calendar=CAL, context=context)
+    talents = {t["chave_talento"]: t for t in out["monday_dim_talento"]}
+    assert set(talents) == {"jonas sulzbach", "jonas", "ana", "bia"}
+    jonas = talents["jonas sulzbach"]
+    assert jonas["quantidade_variantes"] == 2 and jonas["eh_exclusivo"] and jonas["usos_interveniencia"] == 1
+    assert talents["jonas"]["possivel_duplicata_de"] == "jonas sulzbach"
+    brands = {b["chave_marca"]: b for b in out["monday_dim_marca"]}
+    assert set(brands) == {"coca cola"}  # grafias com hífen, caixa e espaço viram uma marca só
+    assert brands["coca cola"]["itens_quadro"] == 3 and brands["coca cola"]["quantidade_variantes"] == 3

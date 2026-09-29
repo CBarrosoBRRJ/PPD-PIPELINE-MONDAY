@@ -30,6 +30,10 @@ from monday_sla_orcamento.publication import DATASET, PROJECT
 
 CONTROL = "modelo-v19-control.json"
 IDENTITY = {"contract": CONTRACT, "tables": sorted(CONTRACTS), "location": "US"}
+# Contratos anteriores que podem ser migrados sem apagar nada: só se criam as tabelas novas (vazias).
+V19_TABLES = sorted(set(CONTRACTS) - {"monday_sla_projeto_pool", "monday_sla_sem_entrada",
+                                      "monday_dim_talento", "monday_dim_marca"})
+PREVIOUS_IDENTITIES = ({"contract": "modelo-v19-1", "tables": V19_TABLES, "location": "US"},)
 PREFIX = "modelo_v19"
 
 
@@ -88,12 +92,21 @@ class ModelStore:
     def initialize(self):
         """Cria as tabelas v19 vazias. Idempotente e retomável: se uma tentativa anterior caiu no meio,
         reaproveita as tabelas que ela criou (vazias e com o esquema do contrato); recusa qualquer outra."""
-        raw, _ = self.objects.get(CONTROL)
+        raw, generation = self.objects.get(CONTROL)
         if raw is not None:
-            self.control()
-            return {"status": "modelo_v19_ja_inicializado"}
+            value = json.loads(raw)
+            if value["identity"] == IDENTITY:
+                return {"status": "modelo_v19_ja_inicializado"}
+            if value["identity"] in PREVIOUS_IDENTITIES:
+                return self._upgrade(value, generation)
+            raise ValueError("Modelo v19: identidade divergente")
+        self._create_tables(CONTRACTS)
+        self.objects.put_json(CONTROL, {"identity": IDENTITY, "active": None, "pending": None}, 0)
+        return {"status": "modelo_v19_inicializado", "tabelas": len(CONTRACTS)}
+
+    def _create_tables(self, names):
         existing = set()
-        for name in CONTRACTS:
+        for name in names:
             try:
                 table = self.client.get_table(target(name))
             except NotFound:
@@ -101,7 +114,7 @@ class ModelStore:
             if table.num_rows or schema_signature(table.schema) != schema_signature(schema(name)):
                 raise ValueError(f"Modelo v19: tabela {name} já existe sem journal")
             existing.add(name)
-        for name in CONTRACTS:
+        for name in names:
             if name in existing:
                 continue
             table = bigquery.Table(target(name), schema=schema(name))
@@ -111,8 +124,21 @@ class ModelStore:
                 table.time_partitioning = bigquery.TimePartitioning(
                     type_=bigquery.TimePartitioningType.MONTH, field=PARTITION_MONTH[name])
             self.client.create_table(table, exists_ok=False)
-        self.objects.put_json(CONTROL, {"identity": IDENTITY, "active": None, "pending": None}, 0)
-        return {"status": "modelo_v19_inicializado", "tabelas": len(CONTRACTS)}
+
+    def _upgrade(self, control, generation):
+        """Migra o contrato: cria só as tabelas novas (vazias) e registra no controle. Nada existente é apagado."""
+        if control["pending"]:
+            raise ValueError("Modelo v19: publicação pendente; recupere antes de migrar o contrato")
+        new = [name for name in CONTRACTS if name not in control["identity"]["tables"]]
+        self._create_tables(new)
+        if control["active"]:
+            for name in new:
+                control["active"]["tables"][name] = {"artifact": None, "sha256": None, "rows": 0,
+                                                     "fingerprint": content_fingerprint(name, [])}
+        previous = control["identity"]["contract"]
+        control["identity"] = IDENTITY
+        self.objects.put_json(CONTROL, control, generation)
+        return {"status": "modelo_contrato_migrado", "de": previous, "para": CONTRACT, "tabelas_novas": new}
 
     def v18_retired(self):
         raw, _ = self.objects.get(CONTROL)

@@ -18,7 +18,7 @@ from ..models.contracts import validate_table
 from ..models.keys import with_surrogates
 from ..rules import RULE_VERSION
 from ..rules.cutoff import close_gold_day
-from ..rules.eligibility import talent_decision
+from ..rules.eligibility import POOL_REASONS, talent_decision
 from ..rules.identities import Catalog
 from ..rules.people import people_fields
 from .clean import clean_text
@@ -102,6 +102,9 @@ def build_gold(
         brand = catalog.resolve("marca", snap.get("marca"))
         if brand[2] == "quarentena":
             reasons = sorted(set(reasons) | {"marca_revisao_manual"})
+        if reasons and set(reasons) <= POOL_REASONS:
+            issue(item_id, "gold_projeto_pool", {"motivos": reasons})
+            reasons = []
         if reasons:
             issue(item_id, "gold_projeto_excluido", {"motivos": reasons})
             quarantine.append(

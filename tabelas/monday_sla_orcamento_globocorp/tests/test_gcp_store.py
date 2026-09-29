@@ -300,22 +300,24 @@ def test_empty_gold_exclusion_and_reinclusion_preserve_bronze(cloud, board):
 
     class MutableMonday(FakeMonday):
         talent = None
+        name = "Projeto teste"
 
         def item_pages(self):
             self.pages_items += 1
             item = raw_item()
+            item["name"] = self.name
             item["column_values"].append({"id": "talent_x", "text": self.talent, "value": None})
             yield [item]
 
     client = MutableMonday(board)
     run(cfg, "backfill", client=client, store=new(), at=at())
     ids = {r["interval_id"] for r in bq.tables[new().table_id].rows}
-    client.talent = "Squad de Talentos"
+    client.name = "PACOTE Projeto teste"  # título fora do escopo exclui o projeto inteiro
     run(cfg, client=client, store=new(), at=at() + timedelta(hours=1))
     assert bq.tables[new().table_id].rows == []
     assert new().read("pendencias_projeto")[0]["excluido_da_analise"]
     assert new().read("bronze_monday_activity_log_raw")
-    client.talent = "Pessoa individual"
+    client.talent, client.name = "Pessoa individual", "Projeto teste"
     run(cfg, client=client, store=new(), at=at() + timedelta(hours=2))
     assert {r["interval_id"] for r in bq.tables[new().table_id].rows} == ids
 

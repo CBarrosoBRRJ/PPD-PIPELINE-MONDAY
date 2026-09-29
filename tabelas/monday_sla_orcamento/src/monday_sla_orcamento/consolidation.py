@@ -30,7 +30,7 @@ from monday_sla_orcamento.pricing import FIELDS as PRICING_FIELDS
 from monday_sla_orcamento.pricing import project as pricing_project
 from monday_sla_orcamento.talent_context import FIELDS as TALENT_FIELDS
 from monday_sla_orcamento.talent_context import SCOPE_RULE as TALENT_SCOPE_RULE
-from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
+from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions, is_pool
 from monday_sla_orcamento.talent_context import project as talent_project
 from monday_sla_orcamento.trajectory import FIELDS as TRAJECTORY_FIELDS
 from monday_sla_orcamento.trajectory import audit as audit_trajectory
@@ -197,7 +197,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
     timestamp(cutoff)
     current = {int(r["item_id"]) for r in new_rows}
     active = {p["projeto_id"] for p in mapping["rows"] if int(p["globocorp_item_id"]) in current}
-    context_index, talent_excluded = {}, {}
+    context_index, talent_excluded, pool_projects = {}, {}, {}
     for item in current_context or []:
         if item['item_id'] in context_index:
             raise ValueError('Consolidacao: cadastro atual duplicado')
@@ -212,7 +212,9 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
             context_project({'item_id_globocorp': int(pair['globocorp_item_id']),
                              'cadastro_atual_origem_json': json.dumps(context)})
             reasons = talent_exclusions(context)
-            if reasons:
+            if is_pool(reasons):  # R25: pool segue para ser medido e separado no modelo
+                pool_projects[pair['projeto_id']] = reasons
+            elif reasons:
                 talent_excluded[pair['projeto_id']] = reasons
     title_excluded = set()
     for env, source in (("viu2", old_rows), ("globocorp", new_rows)):
@@ -241,7 +243,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
                 continue
             if pair['projeto_id'] in talent_excluded:
                 excluded[env + ':talento_fora_escopo'] += 1
-                excluded_projects[pair['projeto_id']].add('talento_fora_escopo')
+                excluded_projects[pair['projeto_id']].update(talent_excluded[pair['projeto_id']])
                 continue
             if pair["projeto_id"] in title_excluded:
                 excluded[env + ":titulo_fora_escopo"] += 1
@@ -369,6 +371,7 @@ def build(old_rows, new_rows, mapping, *, terminal_labels=TERMINAL_LABELS, old_i
                     "talent_scope_rule": TALENT_SCOPE_RULE,
                     "talent_excluded_selected_projects": len(talent_excluded),
                     "talent_excluded_projects": talent_excluded,
+                    "pool_projects": pool_projects,
                     "terminal_rows": sum(r["status_terminal"] is True for r in result),
                     "closed_source_cycles_with_hours": sum(r["tempo_ciclo_observado_horas"] is not None for r in result),
                     "proven_source_reopenings": sum(r["reabertura_comprovada_origem"] for r in result),
@@ -460,8 +463,9 @@ def validate(rows):
                 raise ValueError("Consolidacao: precificacao divergente")
     if rows and rows[0]['versao_contrato'] == VERSION:
         for row in rows:
-            if row.get('cadastro_atual_origem_json') is not None and talent_exclusions(
-                    json.loads(row['cadastro_atual_origem_json'])):
-                raise ValueError('Consolidacao: talento fora do escopo')
+            if row.get('cadastro_atual_origem_json') is not None:
+                reasons = talent_exclusions(json.loads(row['cadastro_atual_origem_json']))
+                if reasons and not is_pool(reasons):  # pool (R25) segue para ser medido à parte
+                    raise ValueError('Consolidacao: talento fora do escopo')
             if any(row[k] != value for k, value in talent_project(row).items()):
                 raise ValueError('Consolidacao: talentos atuais divergentes')

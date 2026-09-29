@@ -1,6 +1,6 @@
-# Contrato do modelo v19 (`modelo-v19-3`)
+# Contrato do modelo v19 (`modelo-v20-1`)
 
-Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R20) e
+Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R26) e
 `src/monday_sla_orcamento/modelo_v19.py`. Horas úteis: seg–sex, 10–13h e 14–19h, America/Sao_Paulo.
 
 ## `monday_sla_projeto`
@@ -403,4 +403,105 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `tempo_orcamento_acumulado_horas_uteis` | FLOAT |  |
 | `horas_uteis_desde_entrada` | FLOAT | sim |
 | `eh_dia_util` | BOOLEAN | sim |
+| `versao_regra` | STRING | sim |
+
+## `monday_sla_projeto_pool`
+
+**Pergunta:** Quanto tempo levam os projetos com squad ou vários talentos (pool, fora do SLA oficial)?
+
+**Chave:** `projeto_id`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `projeto_id` | STRING | sim |
+| `projeto_nome` | STRING |  |
+| `conta_origem` | STRING | sim |
+| `item_id_viu2` | INTEGER |  |
+| `item_id_globocorp` | INTEGER |  |
+| `motivo_pool` | STRING | sim |
+| `talentos_json` | STRING |  |
+| `entrada_utc` | TIMESTAMP | sim |
+| `mes_entrada` | DATE | sim |
+| `situacao_atual` | STRING | sim |
+| `status_atual` | STRING |  |
+| `quantidade_entregas` | INTEGER | sim |
+| `quantidade_retrabalhos` | INTEGER | sim |
+| `tempo_orcamento_horas_uteis` | FLOAT |  |
+| `tempo_ate_primeira_entrega_horas_uteis` | FLOAT |  |
+| `espera_marca_horas_uteis` | FLOAT |  |
+| `standby_horas_uteis` | FLOAT |  |
+| `resposta_cliente_horas_uteis` | FLOAT |  |
+| `completo` | BOOLEAN | sim |
+| `marca` | STRING |  |
+| `tipo_input` | STRING |  |
+| `responsavel` | STRING |  |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
+## `monday_sla_sem_entrada`
+
+**Pergunta:** Quais projetos não começaram por Entrada, e qual foi a trajetória completa de cada um?
+
+**Chave:** `projeto_id`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `projeto_id` | STRING | sim |
+| `projeto_nome` | STRING |  |
+| `conta_origem` | STRING | sim |
+| `item_id_viu2` | INTEGER |  |
+| `item_id_globocorp` | INTEGER |  |
+| `primeiro_status` | STRING |  |
+| `primeiro_status_utc` | TIMESTAMP |  |
+| `status_atual` | STRING |  |
+| `passa_por_entrada_depois` | BOOLEAN | sim |
+| `quantidade_passagens` | INTEGER | sim |
+| `quantidade_entregas` | INTEGER | sim |
+| `horas_uteis_conhecidas` | FLOAT |  |
+| `trajeto` | STRING | sim |
+| `trajeto_json` | STRING | sim |
+| `marca` | STRING |  |
+| `talento` | STRING |  |
+| `responsavel` | STRING |  |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
+## `monday_dim_talento`
+
+**Pergunta:** Quais talentos aparecem no quadro, com que grafias, se são exclusivos e quantas vezes foram usados?
+
+**Chave:** `chave_talento`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `chave_talento` | STRING | sim |
+| `talento_nome` | STRING | sim |
+| `variantes_json` | STRING | sim |
+| `quantidade_variantes` | INTEGER | sim |
+| `eh_exclusivo` | BOOLEAN | sim |
+| `usos_exclusivo` | INTEGER | sim |
+| `usos_interveniencia` | INTEGER | sim |
+| `itens_quadro` | INTEGER | sim |
+| `projetos_no_sla` | INTEGER | sim |
+| `projetos_pool` | INTEGER | sim |
+| `possivel_duplicata_de` | STRING |  |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
+## `monday_dim_marca`
+
+**Pergunta:** Quais marcas aparecem no quadro, com que grafias e quantas vezes foram usadas?
+
+**Chave:** `chave_marca`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `chave_marca` | STRING | sim |
+| `marca_nome` | STRING | sim |
+| `variantes_json` | STRING | sim |
+| `quantidade_variantes` | INTEGER | sim |
+| `itens_quadro` | INTEGER | sim |
+| `projetos_no_sla` | INTEGER | sim |
+| `possivel_duplicata_de` | STRING |  |
+| `corte_utc` | TIMESTAMP | sim |
 | `versao_regra` | STRING | sim |
