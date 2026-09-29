@@ -57,7 +57,8 @@ class Client:
             raise NotFound('missing')
         return self.jobs[job_id]
 
-    def query(self, sql, *, job_config, job_id, location):
+    def query(self, sql, *, job_config, job_id, location, job_retry):
+        assert job_retry is None  # job_id fixo exige job_retry=None (google-cloud-bigquery)
         assert location == 'US'
         assert sql.count('BEGIN TRANSACTION') == 1 and sql.count('INSERT INTO') == 4
         job = SimpleNamespace(query=sql, state='RUNNING', error_result=None,

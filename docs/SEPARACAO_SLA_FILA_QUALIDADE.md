@@ -1,5 +1,8 @@
 # Separação de consumo — candidato, não implantado
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 ## Implementação posterior v17 (local)
 
 Classificação integrada ao worker, contratos gerados nas pastas dos dois novos

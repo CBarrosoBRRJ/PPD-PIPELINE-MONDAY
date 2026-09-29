@@ -1,5 +1,8 @@
 # Plano de execução: previsão, qualidade e otimização do orçamento — v18
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Complemento do [guia de consultas e KPIs](CONSULTAS_GESTAO_SLA_E_ML_V18.md).
 Referência dos contratos: 25/09/2026. Este é um plano de desenvolvimento e
 avaliação; nenhum modelo foi treinado e nenhuma tabela foi criada nesta revisão.

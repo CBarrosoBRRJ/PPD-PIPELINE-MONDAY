@@ -1,5 +1,8 @@
 # Atualização diária da consolidação — implementação local
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Não implica imagem implantada nem execução GCP comprovada.
 
 Atualização v5: escopo-sla-v3 e pastas por tabela implementados. A evidência v4

@@ -30,7 +30,7 @@ e **81%** dessas fotos eram cópias idênticas. Com isso:
    nunca trave a produção.
 5. **Avisar antes de quebrar:**
    - evento `state_size` a cada gravação, com aviso acima de 15 MB (hoje ~5 MB);
-   - alerta de "26 h sem sucesso";
+   - alerta de "25 h sem sucesso";
    - prazo mínimo por produto;
    - encerramento gracioso que libera as travas.
 6. **Nada fica ligado sem uso.** Um Cloud Run Job por dia, por alguns minutos, sem

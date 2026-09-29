@@ -1,5 +1,8 @@
 # Entrega v5 — código local, implantação pendente
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 ## Pacote
 
 runtime/pipeline-monday-release-20260923-v5-escopo.zip, 74 arquivos de código e

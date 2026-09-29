@@ -25,7 +25,11 @@ from monday_comum.escopo_sla import motivos_exclusao, motivos_input
 from monday_sla_orcamento.pricing import PAUSES, TERMINALS, WORK, normalize
 from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
 
-RULE = "modelo-v19-1"
+RULE = "modelo-v19-2"  # v19-2: revisão técnica de 28/09/2026 (retrabalho, série diária, duplicados)
+# Contrato publicado (esquema das 17 tabelas). Só muda com mudança de esquema: é a identidade
+# gravada no controle do GCS; mudar sem migração faz a publicação recusar ("identidade divergente").
+CONTRACT = "modelo-v19-1"
+ID_SEED = CONTRACT  # semente dos IDs de ciclo: mantém os IDs estáveis entre versões da regra
 ZONE = ZoneInfo("America/Sao_Paulo")
 NAMESPACE = UUID("07530d27-26df-4c5f-a2a1-092eb8ef04cf")  # igual à consolidação
 FEEDBACK = normalize("Aguardando Feedback")
@@ -163,6 +167,7 @@ ERRORS = {
     "resposta_nao_registrada": ("processo", "Aguardando Feedback encerrado pela automação (~29 dias), sem registro da resposta do cliente"),
     "parado_em_standby": ("atencao", f"Parado em Standby há mais de {STANDBY_STALE_DAYS} dias"),
     "nasceu_de_copia": ("atencao", "Item duplicado de outro orçamento (nasce em Aguardando Feedback ou Encerrado e vai para Entrada)"),
+    "duplicado_original_ambiguo": ("atencao", "Item duplicado com mais de um orçamento original possível; vínculo deixado em branco"),
     "talento_nao_informado": ("erro", "Cadastro sem talento nem interveniência"),
     "talento_multiplo": ("atencao", "Mais de um talento no mesmo item"),
     "talento_ambas_colunas": ("atencao", "Talento exclusivo e interveniência preenchidos ao mesmo tempo"),
@@ -376,7 +381,7 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
             continue
         if a.get("nasceu_de_copia"):
             error("nasceu_de_copia", pid, a, rows[first]["status_nome"], rows[first]["inicio"])
-            _duplicate(pid, a, rows, first, out, stamp, base_names, attrs)
+            _duplicate(pid, a, rows, first, out, stamp, base_names, attrs, error)
             out["monday_sla_qualidade"].append(_quality(pid, a, "fora_do_calculo", ["item_duplicado"], len(rows), stamp))
             continue
         _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names)
@@ -442,7 +447,8 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
     for pos, i in enumerate(active):
         p, cat = rows[i], categoria(rows[i]["status_nome"])
         nxt = rows[active[pos + 1]] if pos + 1 < len(active) else None
-        if cat in ("trabalho", "espera_marca", "standby", "desconhecido") and current is None:
+        # R4: só a volta ao trabalho abre ciclo; pausa, marca ou status vazio após a entrega não é retrabalho.
+        if cat == "trabalho" and current is None:
             current = {"numero": len(cycles) + 1, "tipo": "orcamento" if not cycles else "retrabalho",
                        "inicio": p["inicio"], "fim": None, "situacao": "em_andamento", "itens": [], "entrega": None}
             cycles.append(current)
@@ -457,12 +463,15 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
                 current.update(fim=p["inicio"], situacao="entregue", entrega=p["interval_id"])
                 current = None
             deliveries.append(p)
-            answers.append((p, nxt))
+            # A resposta do cliente é a próxima ação decisiva; pausa/marca/vazio no caminho não é decisão.
+            later = [rows[j] for j in active[pos + 1:]]
+            decisive = next((q for q in later if categoria(q["status_nome"]) in ("trabalho", "entrega", "terminal")), None)
+            answers.append((p, decisive, nxt))
         elif cat == "terminal":
             if current is not None:
                 current.update(fim=p["inicio"], situacao="interrompido")
                 current = None
-        else:
+        elif current is not None:
             current["itens"].append(p)
             passage_cycle[p["interval_id"]] = current
 
@@ -474,7 +483,7 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         unknown = any(categoria(q["status_nome"]) == "desconhecido" for q in items)
         end = c["fim"] or cut
         complete = not unknown and all(q["horas_uteis"] is not None for q in work)
-        cid = str(uuid5(NAMESPACE, f"{RULE}/{pid}/{c['numero']}"))
+        cid = str(uuid5(NAMESPACE, f"{ID_SEED}/{pid}/{c['numero']}"))
         c["ciclo_id"] = cid
         row = {
             "ciclo_id": cid, "projeto_id": pid, "numero_ciclo": c["numero"], "tipo_ciclo": c["tipo"],
@@ -492,10 +501,14 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
 
     # Resposta do cliente
     response_hours = []
-    for n, (p, nxt) in enumerate(answers, 1):
+    for n, (p, nxt, pause) in enumerate(answers, 1):
         outcome, counts, following = "aguardando", True, None
         days = None
-        if nxt is not None:
+        if nxt is None and pause is not None:
+            nxt, outcome, counts = pause, "pausado", False
+            following = pause["status_nome"]
+            days = (local_date(pause["inicio"]) - local_date(p["inicio"])).days
+        elif nxt is not None:
             following = nxt["status_nome"]
             days = (local_date(nxt["inicio"]) - local_date(p["inicio"])).days
             ncat = categoria(following)
@@ -575,10 +588,6 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
     else:
         state = "indeterminado"
     first_delivery = deliveries[0]["inicio"] if deliveries else None
-    related = None
-    if a.get("nasceu_de_copia"):
-        others = [o for o in base_names.get(_base_name(a["projeto_nome"]), []) if o != pid]
-        related = others[0] if others else None
     entry = rows[first]["inicio"]
     project = {
         "projeto_id": pid, "projeto_nome": a["projeto_nome"], "conta_origem": _account(a),
@@ -592,12 +601,14 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         "tempo_orcamento_horas_corridas": total(c["trabalho_horas_corridas"] for c in delivered) if delivered and complete else None,
         "tempo_ate_primeira_entrega_horas_uteis": delivered[0]["trabalho_horas_uteis"] if delivered else None,
         "bruto_ate_primeira_entrega_horas_uteis": round(calendar.hours(entry, first_delivery), 3) if first_delivery else None,
-        "espera_marca_horas_uteis": total(c["espera_marca_horas_uteis"] for c in project_cycles),
-        "standby_horas_uteis": total(c["standby_horas_uteis"] for c in project_cycles),
+        "espera_marca_horas_uteis": total(rows[i]["horas_uteis"] for i in active
+                                          if categoria(rows[i]["status_nome"]) == "espera_marca"),
+        "standby_horas_uteis": total(rows[i]["horas_uteis"] for i in active
+                                     if categoria(rows[i]["status_nome"]) == "standby"),
         "resposta_cliente_horas_uteis": total(response_hours) if response_hours else None,
         "completo": complete and all(c["completo"] for c in project_cycles),
         "contem_estimativa": any(p["origem"] == "estimada_migracao" for p in rows),
-        "nasceu_de_copia": bool(a.get("nasceu_de_copia")), "projeto_relacionado": related,
+        "nasceu_de_copia": bool(a.get("nasceu_de_copia")), "projeto_relacionado": None,
         "marca": a.get("marca"), "talento": a.get("talento"), "eh_interveniencia": a.get("eh_interveniencia"),
         "tipo_input": a.get("tipo_input"), "tipo_projeto": a.get("tipo_projeto"), "responsavel": a.get("responsavel"),
         **stamp}
@@ -624,14 +635,18 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
             "responsavel": a.get("responsavel"), "marca": a.get("marca"), "talento": a.get("talento"), **stamp})
 
     # Série diária para ML: até a última entrega/terminal, ou até o corte se aberto.
-    stop = cut if state in OPEN_STATES or state == "indeterminado" else rows[active[-1]]["inicio"]
+    # Standby continua na série até o corte (parado não é encerrado), sem somar trabalho.
+    still_open = state in OPEN_STATES or state in ("indeterminado", "parado_standby")
+    stop = cut if still_open else rows[active[-1]]["inicio"]
     work = [p for p in rows if passage_cycle.get(p["interval_id"]) and categoria(p["status_nome"]) == "trabalho"]
     # O corte é meia-noite local: o último dia da série é o anterior a ele, não um dia vazio.
-    day, last_day = local_date(entry), local_date(max(entry, stop - timedelta(microseconds=1)))
+    day, last_day = local_date(entry), local_date(max(entry, stop - timedelta(microseconds=1) if still_open else stop))
     timeline = [rows[i] for i in active]
     while day <= last_day:
-        end_of_day = min(datetime.combine(day + timedelta(days=1), time.min, ZONE).astimezone(UTC), stop)
-        current = next((p for p in reversed(timeline) if p["inicio"] <= end_of_day), timeline[0])
+        # Início inclusivo e fim exclusivo: um evento às 00:00 pertence ao dia seguinte.
+        next_midnight = datetime.combine(day + timedelta(days=1), time.min, ZONE).astimezone(UTC)
+        end_of_day = min(next_midnight, stop)
+        current = next((p for p in reversed(timeline) if p["inicio"] < next_midnight), timeline[0])
         accumulated = []
         for p in work:
             if p["inicio"] >= end_of_day:
@@ -644,7 +659,7 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
             "projeto_id": pid, "data": day.isoformat(), "status_fim_do_dia": current["status_nome"],
             "categoria": categoria(current["status_nome"]),
             "situacao_no_dia": "aberto" if day < last_day or state in OPEN_STATES else state,
-            "entregas_ate_o_dia": sum(1 for p in deliveries if p["inicio"] <= end_of_day),
+            "entregas_ate_o_dia": sum(1 for p in deliveries if p["inicio"] < next_midnight),
             "tempo_orcamento_acumulado_horas_uteis": total(accumulated) if accumulated else 0.0,
             "horas_uteis_desde_entrada": round(calendar.hours(entry, end_of_day), 3) if end_of_day >= entry else 0.0,
             "eh_dia_util": calendar.hours(datetime.combine(day, time.min, ZONE), datetime.combine(day + timedelta(days=1), time.min, ZONE)) > 0,
@@ -652,10 +667,14 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         day += timedelta(days=1)
 
 
-def _duplicate(pid, a, rows, first, out, stamp, base_names, attrs):
+def _duplicate(pid, a, rows, first, out, stamp, base_names, attrs, error):
     """D2: item copiado de outro orçamento fica fora do SLA, mas guardado para estudo."""
-    others = [o for o in base_names.get(_base_name(a["projeto_nome"]), []) if o != pid]
-    related = others[0] if others else None
+    # Vínculo só com um único original possível (que não seja outra cópia); nome igual não prova qual é.
+    others = [o for o in base_names.get(_base_name(a["projeto_nome"]), [])
+              if o != pid and not attrs[o].get("nasceu_de_copia")]
+    related = others[0] if len(others) == 1 else None
+    if len(others) > 1:
+        error("duplicado_original_ambiguo", pid, a, rows[first]["status_nome"], rows[first]["inicio"])
     valid = rows[first:]
     deliveries = [p for p in valid if categoria(p["status_nome"]) == "entrega"]
     work = [p["horas_uteis"] for p in valid if categoria(p["status_nome"]) == "trabalho"]
@@ -895,7 +914,32 @@ def validate(out):
     included = projects & {q["projeto_id"] for q in out["monday_sla_qualidade"] if q["situacao_calculo"] != "incluido_com_ressalva"}
     if included:
         raise ValueError("Modelo v19: projeto ao mesmo tempo no cálculo e fora dele")
+    _validate_consistency(out, by_project)
     return out
+
+
+def _validate_consistency(out, by_project):
+    """Regras de coerência além do esquema: um corte só, durações não negativas e ciclos batendo com o projeto."""
+    cuts = {r["corte_utc"] for rows in out.values() for r in rows if "corte_utc" in r}
+    if len(cuts) > 1:
+        raise ValueError("Modelo v19: mais de um corte na mesma publicação")
+    for name, rows in out.items():
+        measures = [f for f, (kind, _) in CONTRACTS[name].items()
+                    if kind in (INT, FLT) and ("horas" in f or f.startswith("dias_"))]
+        for r in rows:
+            for f in measures:
+                if r[f] is not None and r[f] < -0.001:
+                    raise ValueError(f"Modelo v19: {name}.{f} negativo")
+    for c in out["monday_sla_ciclo"]:
+        if c["fim_utc"] is not None and instant(c["fim_utc"]) < instant(c["inicio_utc"]):
+            raise ValueError("Modelo v19: ciclo termina antes de começar")
+    for p in out["monday_sla_passagem"]:
+        if p["fim_referencia_utc"] is not None and instant(p["fim_referencia_utc"]) < instant(p["inicio_utc"]):
+            raise ValueError("Modelo v19: passagem termina antes de começar")
+    for p in out["monday_sla_projeto"]:
+        rework = sum(c["tipo_ciclo"] == "retrabalho" for c in by_project[p["projeto_id"]])
+        if p["quantidade_retrabalhos"] != rework:
+            raise ValueError("Modelo v19: retrabalhos do projeto divergem dos ciclos")
 
 
 def board_status_labels(board_raw):

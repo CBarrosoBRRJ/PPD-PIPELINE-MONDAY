@@ -227,7 +227,7 @@ class CycleStore:
             job = self.client.get_job(pending['job_id'], location='US')
         except NotFound:
             try:
-                job = self.client.query(sql, job_config=config, job_id=pending['job_id'], location='US')
+                job = self.client.query(sql, job_config=config, job_id=pending['job_id'], location='US', job_retry=None)
             except Conflict:
                 job = self.client.get_job(pending['job_id'], location='US')
         actual = job.to_api_repr()['configuration']['query']

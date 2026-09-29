@@ -1,5 +1,8 @@
 # monday_ciclos_orcamento — contrato de consumo v18
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](../../docs/README.md).
+
+
 Publicado pela primeira vez em 25/09/2026: 1.685 ciclos para 1.583 projetos,
 com recibo de publicacao verificada. Agenda diaria retomada; primeira execucao
 automatica ainda aguarda verificacao. Nao executar schema.sql isoladamente nem substituir

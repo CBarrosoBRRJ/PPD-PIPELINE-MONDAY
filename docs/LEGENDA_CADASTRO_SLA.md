@@ -1,5 +1,8 @@
 # Legenda de consumo — cadastro e SLA
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 ## Onde consultar
 
 A tabela final e `viu_agenciamento.monday_sla_orcamento`. Cada linha representa

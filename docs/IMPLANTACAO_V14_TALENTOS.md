@@ -1,5 +1,8 @@
 # Release v14 / contrato v9 — candidato, nao implantado
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 **SUBSTITUIDO pelo pacote v15 antes de implantacao. Nao usar este ZIP.**
 Ver IMPLANTACAO_V15_ESCOPO_TALENTOS.md para exclusao/reinclusao por cadastro atual.
 

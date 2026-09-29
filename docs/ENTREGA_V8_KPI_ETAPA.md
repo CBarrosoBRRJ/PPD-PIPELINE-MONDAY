@@ -1,5 +1,8 @@
 # V8 KPI por etapa — local, implantação pendente
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Release: runtime/pipeline-monday-release-20260923-v8-kpi-etapa.zip (76 arquivos).
 SHA256: 49c2a13931fc038a4a6ab5ac842f1d7580ec485de7e622d31f3c26477e7239ca.
 Inclui migrate_kpi_contract.py na raiz, além de release-manifest.json com hashes

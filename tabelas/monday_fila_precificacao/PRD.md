@@ -1,5 +1,8 @@
 # Fila de precificação — candidato v17
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](../../docs/README.md).
+
+
 Uma linha por projeto selecionado no consolidado que tenha somente Entrada como
 status conhecido, sem saída observada, e cadastro atual também Entrada. Não é a
 fila completa do board: itens sem mapa e fora do escopo anterior não participam.

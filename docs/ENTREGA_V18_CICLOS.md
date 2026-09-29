@@ -1,5 +1,8 @@
 # Entrega v18 — ciclos continuos
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Estado em 25/09/2026: v18 implantada e primeira publicacao manual confirmada;
 validacao agregada de integridade e amostras interambiente aprovadas. Agenda
 diaria reativada e verificada; primeira execucao automatica ainda pendente.

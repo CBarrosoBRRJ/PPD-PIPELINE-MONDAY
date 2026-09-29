@@ -1,5 +1,8 @@
 # V16 — validações contínuas
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Pacote preparado localmente; NÃO implantado. Código-base Git: `2cc432a`.
 Produção informada pelo operador: v15, contrato sla-consolidado-talentos-v9.
 Não executar novamente migrate_talent_contract.py: não há mudança de contrato,

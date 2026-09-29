@@ -18,6 +18,7 @@ from sls_orcamento_ppd.db.bq import schema_signature
 from monday_sla_orcamento.destination_publication import transaction
 from monday_sla_orcamento.modelo_v19 import (
     CLUSTERING,
+    CONTRACT,
     CONTRACTS,
     KEYS,
     PARTITION_MONTH,
@@ -28,7 +29,7 @@ from monday_sla_orcamento.modelo_v19 import (
 from monday_sla_orcamento.publication import DATASET, PROJECT
 
 CONTROL = "modelo-v19-control.json"
-IDENTITY = {"contract": RULE, "tables": sorted(CONTRACTS), "location": "US"}
+IDENTITY = {"contract": CONTRACT, "tables": sorted(CONTRACTS), "location": "US"}
 PREFIX = "modelo_v19"
 
 
@@ -85,18 +86,24 @@ class ModelStore:
         return value, generation
 
     def initialize(self):
-        """Cria as tabelas v19 vazias. Idempotente; recusa tabela preexistente fora do journal."""
+        """Cria as tabelas v19 vazias. Idempotente e retomável: se uma tentativa anterior caiu no meio,
+        reaproveita as tabelas que ela criou (vazias e com o esquema do contrato); recusa qualquer outra."""
         raw, _ = self.objects.get(CONTROL)
         if raw is not None:
             self.control()
             return {"status": "modelo_v19_ja_inicializado"}
+        existing = set()
         for name in CONTRACTS:
             try:
-                self.client.get_table(target(name))
+                table = self.client.get_table(target(name))
             except NotFound:
                 continue
-            raise ValueError(f"Modelo v19: tabela {name} já existe sem journal")
+            if table.num_rows or schema_signature(table.schema) != schema_signature(schema(name)):
+                raise ValueError(f"Modelo v19: tabela {name} já existe sem journal")
+            existing.add(name)
         for name in CONTRACTS:
+            if name in existing:
+                continue
             table = bigquery.Table(target(name), schema=schema(name))
             if name in CLUSTERING:
                 table.clustering_fields = CLUSTERING[name]
@@ -148,7 +155,7 @@ class ModelStore:
             job = self.client.get_job(pending["job_id"], location="US")
         except NotFound:
             try:
-                job = self.client.query(sql, job_config=config, job_id=pending["job_id"], location="US")
+                job = self.client.query(sql, job_config=config, job_id=pending["job_id"], location="US", job_retry=None)
             except Conflict:
                 job = self.client.get_job(pending["job_id"], location="US")
         if job.query != sql:
@@ -186,5 +193,5 @@ class ModelStore:
         control["pending"] = {"tables": descriptors, "cut": evidence["cut"], "job_id": "monday_modelo_v19_" + version}
         self.objects.put_json(CONTROL, control, generation)
         self.recover()
-        return {"status": "success", "publication_verified": True, "contract": RULE,
+        return {"status": "success", "publication_verified": True, "contract": CONTRACT, "regra": RULE,
                 "tables": {name: d["rows"] for name, d in descriptors.items()}}

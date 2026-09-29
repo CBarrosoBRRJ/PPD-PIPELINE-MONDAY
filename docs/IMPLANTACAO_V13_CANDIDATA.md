@@ -1,5 +1,8 @@
 # Implantação candidata v13 — não executada automaticamente
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Referência funcional: [PROJETO_EXPLICADO.md](PROJETO_EXPLICADO.md).
 Código local/CI não é homologação de produção. Última versão GCP confirmada: v12/v7.
 Não alterar recursos LIA, Terraform legado ou credenciais compartilhadas.

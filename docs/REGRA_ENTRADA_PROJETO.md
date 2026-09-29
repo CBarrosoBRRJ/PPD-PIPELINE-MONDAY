@@ -1,5 +1,8 @@
 # Entrada inicial — decisão posterior à v16
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Entrada deve ser o primeiro status conhecido. Não exigir o mesmo dia da criação:
 registro posterior pode representar correção. Não alterar datas observadas.
 Status nulos anteriores podem preceder a Entrada, se a ordem temporal estiver

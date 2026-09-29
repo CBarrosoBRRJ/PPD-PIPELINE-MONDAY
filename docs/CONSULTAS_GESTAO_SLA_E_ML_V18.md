@@ -1,5 +1,8 @@
 # Consultas de gestão do orçamento, indicadores e roteiro de ML — v18
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Estado de referência: primeira publicação v18 verificada em 25/09/2026. Estas
 consultas são **somente leitura**, em GoogleSQL, localização BigQuery `US`.
 Copie **um bloco SQL por vez no editor SQL do BigQuery/DBeaver**; não cole

@@ -24,10 +24,18 @@ QUESTIONS = {
     "monday_sla_standby": "Quais projetos estão parados em Standby agora, e há quanto tempo?",
 }
 
+NOTES = {
+    "monday_sla_kpi_mensal": (
+        "**Leitura das medidas de tempo:** `tempo_orcamento_p50_horas_uteis` e `tempo_orcamento_p80_horas_uteis` "
+        "medem o trabalho **até a 1ª entrega** dos projetos que tiveram a 1ª entrega naquele mês, sem os ajustes "
+        "posteriores. O tempo total com retrabalho está em `monday_sla_projeto.tempo_orcamento_horas_uteis`. "
+        "Decisão de 29/09/2026: manter a medida mensal como tempo até a 1ª entrega."),
+}
+
 
 def render():
     lines = [f"# Contrato do modelo v19 (`{RULE}`)", "",
-             "Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R15) e",
+             "Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R20) e",
              "`src/monday_sla_orcamento/modelo_v19.py`. Horas úteis: seg–sex, 10–13h e 14–19h, America/Sao_Paulo.", ""]
     for name, fields in CONTRACTS.items():
         extras = []
@@ -40,6 +48,8 @@ def render():
                   "", "| Coluna | Tipo | Obrigatória |", "| :--- | :--- | :-: |"]
         lines += [f"| `{k}` | {t} | {'sim' if required else ''} |" for k, (t, required) in fields.items()]
         lines.append("")
+        if name in NOTES:
+            lines += [NOTES[name], ""]
     return "\n".join(lines)
 
 

@@ -1,5 +1,21 @@
 # SLA consolidado — contrato de consumo
 
+## Estado atual — v19
+
+- **Em produção desde 28/09/2026**; primeira execução automática validada em 29/09/2026 (06h, sucesso, estado compactado com 5,7 MB).
+- **Consumo:** 17 tabelas `monday_sla_*` e `monday_dim_*` em `gglobo-viu-dados-hdg-prd.viu_agenciamento`, uma para cada pergunta de negócio. Contrato gerado pelo código: [CONTRATO_MODELO_V19.md](docs/CONTRATO_MODELO_V19.md).
+- **Publicação:** tudo-ou-nada, numa transação, conferida por conteúdo; controle `modelo-v19-control.json` no GCS com identidade presa ao contrato `modelo-v19-1`.
+- **Regra de cálculo:** `modelo-v19-2` (pausa depois da entrega não é retrabalho; série diária em Standby até o corte; dia com fim exclusivo; duplicado só ligado a um original único). A versão da regra aparece em `versao_regra`.
+- **Fontes mantidas:** `monday_sla_orcamento_globocorp` (diária), `monday_sla_orcamento_viu2` e `monday_log_viu2` (congeladas), backlog e talentos.
+- **Tabelas v18 apagadas** em 28/09/2026, com backup Avro conferido em `backups/v18_20260928`.
+- Implantação e recibos: [IMPLANTACAO_V19.md](../../docs/IMPLANTACAO_V19.md). Regras de negócio R1–R20: nota do projeto no Obsidian.
+
+---
+
+## Histórico do contrato (v9–v18)
+
+> Conteúdo abaixo mantido como registro; não é o procedimento atual.
+
 ## V18 — ciclos continuos (primeira publicacao confirmada)
 
 Ver docs/ENTREGA_V18_CICLOS.md e docs/VALIDACAO_E_ANALISE_CICLOS_V18.md na raiz.

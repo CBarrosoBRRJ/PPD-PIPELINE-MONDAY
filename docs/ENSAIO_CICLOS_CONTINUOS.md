@@ -1,5 +1,8 @@
 # Ensaio de ciclos continuos — 25/09
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Estado: motor e contrato local implementados, sem publicacao nova. Nao e release
 de producao; nenhuma tabela/agenda/job deve ser alterada com este pacote.
 O ensaio reconstroi a populacao completa selecionada pelas regras atuais antes

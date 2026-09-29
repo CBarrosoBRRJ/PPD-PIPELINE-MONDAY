@@ -116,7 +116,7 @@ Esperado: `orchestration_end` com `status: success`.
 
 **11. Segurança e alerta.** Os comandos estão em [IMPLANTACAO_V18_1_ESTABILIDADE.md](IMPLANTACAO_V18_1_ESTABILIDADE.md):
 - remover o `run.developer` da conta de deploy;
-- criar o alerta "26 h sem sucesso".
+- criar o alerta "25 h sem sucesso".
 
 ## Se algo falhar
 
@@ -149,6 +149,57 @@ Nunca apague travas, journals ou o bucket para "destravar".
 | Segurança | `roles/run.developer` removido da conta `deploy-sla-orcamento`; ficou só `serviceUsageConsumer` |
 | Alerta | métrica `pipeline_monday_sucesso` e política `alertPolicies/15463508235751031085` ("nenhuma execução com sucesso em 25h"), com aviso por e-mail para caio.barroso@viu.com.br |
 
-**Pendências:**
-- Conferir a primeira execução automática, em 29/09 depois das 06h.
-- Depois de 7 dias estáveis, avaliar baixar a memória do job para 4 GB.
+**Primeira execução automática (29/09/2026):** `pipeline-monday-w5gsw`, 06:00–06:11 BRT, sucesso e sem
+erros no log; 17 tabelas com o corte de 29/09; 1.791 projetos, 1.512 entregas, 8.632 passagens; estado
+compactado com 5,7 MB. Pendência: depois de 7 dias estáveis, avaliar baixar a memória do job para 4 GB.
+
+## Atualização v19-2 — regra `modelo-v19-2` (29/09/2026)
+
+Troca só a imagem. Agenda, argumentos (`daily`), bucket, permissões, alerta e esquema das 17 tabelas
+ficam iguais; o próprio job regrava as tabelas na execução seguinte. O controle no GCS continua com
+a identidade `modelo-v19-1` (contrato), por isso a imagem nova publica sem migração, e a anterior
+continua compatível para voltar atrás.
+
+**O que muda** (revisão técnica em [REVISAO_TECNICA_V19_2026_09_28.md](REVISAO_TECNICA_V19_2026_09_28.md)):
+- pausa, Retorno Marca ou status vazio depois da entrega não abre retrabalho; sem ação posterior, o desfecho é `pausado`;
+- série diária de projetos em Standby vai até o corte; o dia tem fim exclusivo (evento às 00:00 conta no dia seguinte);
+- duplicado só é ligado a um original único; senão fica em branco com o erro `duplicado_original_ambiguo`;
+- validação mais rígida antes de publicar (um corte só, sem durações negativas, retrabalhos batendo com os ciclos);
+- inicialização retomável; `job_retry=None` nas consultas com `job_id` fixo (aviso do cliente BigQuery).
+
+**Comparação com os dados de 29/09** (mesmas 8.632 passagens, núcleo v19-1 × v19-2):
+- pediu ajuste 101 → 98 (2 `pausado`, 1 nova entrega sem ajuste);
+- ciclos de retrabalho 101 → 98 (IDs de ciclo preservados: 1.889 de 1.889);
+- série diária 51.990 → 60.434 linhas (os 90 projetos em Standby vão até o corte);
+- mediana do tempo de orçamento igual (10,02 h);
+- referência de Aguardando Feedback: atenção 54,6 → 48,5 h e crítico 119 → 107 h, com 24 projetos subindo de nível de alerta.
+
+**Pacote:** `runtime/pipeline-monday-release-20260929-v19-2.zip`, 110 arquivos, SHA256
+`b59fb1f3dffb4220113d1453c4e406d9f1fc10e4ef775ba4de8a41e25eceac0b` (657 testes aprovados).
+**Voltar atrás:** passo 3 com o digest anterior `sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885`.
+
+Passos no Cloud Shell, fora da janela das 05:30 às 07:00:
+
+**1. Enviar o pacote** (menu ⋮ → Upload) e conferir o hash:
+```bash
+sha256sum pipeline-monday-release-20260929-v19-2.zip
+```
+
+**2. Gerar a imagem e anotar o digest:**
+```bash
+rm -rf release-v19-2 && mkdir release-v19-2 && unzip -q pipeline-monday-release-20260929-v19-2.zip -d release-v19-2 && cd release-v19-2
+gcloud builds submit . --project=gglobo-viu-dados-hdg-prd   --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v19-2
+gcloud artifacts docker images describe   us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v19-2 --format='value(image_summary.digest)'
+```
+
+**3. Trocar só a imagem** (sem mudar argumentos):
+```bash
+gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1   --image=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday@DIGEST
+```
+
+**4. Rodar uma vez e conferir:**
+```bash
+gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --wait
+bq query --use_legacy_sql=false 'SELECT versao_regra, COUNT(*) n FROM `gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_projeto` GROUP BY 1'
+```
+Esperado: execução com sucesso e `versao_regra = modelo-v19-2`.

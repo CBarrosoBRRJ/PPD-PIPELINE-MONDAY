@@ -184,3 +184,79 @@ def test_status_usage_counts_every_source_passage():
     dims = {d["status_nome"]: d for d in out["monday_dim_status"]}
     assert (dims["Entrada"]["passagens_total"], dims["Entrada"]["passagens_ano_atual"], dims["Entrada"]["itens_total"]) == (2, 1, 2)
     assert dims["Em revisão (Planejamento)"]["passagens_total"] == 0 and dims["Em revisão (Planejamento)"]["no_quadro_atual"]
+
+
+# Revisão técnica de 28/09/2026 (docs/REVISAO_TECNICA_V19_2026_09_28.md)
+
+def test_pause_after_delivery_is_not_rework_nor_adjustment():
+    out = run(p=trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3), ("Standby", 4)]))
+    project = one(out, "monday_sla_projeto", "p")
+    answer = one(out, "monday_sla_resposta_cliente", "p")
+    assert project["quantidade_retrabalhos"] == 0 and len(out["monday_sla_ciclo"]) == 1
+    assert answer["desfecho"] == "pausado" and answer["conta_como_resposta"] is False
+    assert out["monday_sla_standby"][0]["projeto_id"] == "p"  # a pausa segue na tabela de Standby
+
+
+def test_brand_wait_after_delivery_then_work_is_one_rework():
+    out = run(p=trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3),
+                                 ("Em elaboração - Retorno Marca/Executivo", 4), ("Em Revisão", 7),
+                                 ("Aguardando Feedback", 8)]))
+    project = one(out, "monday_sla_projeto", "p")
+    first = next(r for r in out["monday_sla_resposta_cliente"] if r["numero_entrega"] == 1)
+    assert project["quantidade_retrabalhos"] == 1 and project["espera_marca_horas_uteis"] == 8.0  # sex 04/09; 07/09 é feriado
+    assert first["desfecho"] == "pediu_ajuste" and first["status_seguinte"] == "Em Revisão"
+    rework = next(c for c in out["monday_sla_ciclo"] if c["tipo_ciclo"] == "retrabalho")
+    assert rework["inicio_utc"] == m.iso(at(7)) and not rework["espera_marca_horas_uteis"]
+
+
+def test_midnight_event_belongs_to_next_day():
+    rows = trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)])
+    rows[2]["inicio"] = datetime(2026, 9, 3, 3, tzinfo=UTC)  # 00:00 em São Paulo
+    rows[1].update(saida=rows[2]["inicio"], fim=rows[2]["inicio"],
+                   horas_uteis=CAL.hours(rows[1]["inicio"], rows[2]["inicio"]))
+    out = run(p=rows)
+    day = next(r for r in out["monday_sla_projeto_diario"] if r["data"] == "2026-09-02")
+    assert (day["status_fim_do_dia"], day["entregas_ate_o_dia"]) == ("Em Elaboração", 0)
+
+
+def test_daily_series_keeps_standby_days_until_cut():
+    out = run(p=trajectory("p", [("Entrada", 1), ("Standby", 2)]))
+    days = out["monday_sla_projeto_diario"]
+    assert days[-1]["data"] == "2026-09-27" and days[-1]["situacao_no_dia"] == "parado_standby"
+    assert days[-1]["tempo_orcamento_acumulado_horas_uteis"] == days[1]["tempo_orcamento_acumulado_horas_uteis"]
+
+
+def test_closed_project_series_ends_on_closing_day():
+    out = run(p=trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Declinado pelo Mercado", 4)]))
+    days = out["monday_sla_projeto_diario"]
+    assert days[-1]["data"] == "2026-09-04" and days[-1]["status_fim_do_dia"] == "Declinado pelo Mercado"
+
+
+def test_duplicate_links_only_a_single_eligible_original():
+    def case(originals):
+        pids = originals + ["copia"]
+        rows = {pid: trajectory(pid, [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)]) for pid in pids}
+        ats = {pid: {**attrs("[Marca] Talento"), "item_id_globocorp": i} for i, pid in enumerate(pids, 1)}
+        ats["copia"].update(projeto_nome="[Marca] Talento [novo escopo]", nasceu_de_copia=True)
+        return m.build(rows, ats, cut=CUT, calendar=CAL)
+    single = case(["original"])
+    assert one(single, "monday_sla_item_duplicado", "copia")["projeto_relacionado"] == "original"
+    ambiguous = case(["original-a", "original-b"])
+    assert one(ambiguous, "monday_sla_item_duplicado", "copia")["projeto_relacionado"] is None
+    assert "duplicado_original_ambiguo" in {e["tipo_erro"] for e in ambiguous["monday_sla_erro_preenchimento"]}
+
+
+def test_validation_rejects_negative_duration_and_mixed_cuts():
+    out = run(p=trajectory("p", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)]))
+    bad = json.loads(json.dumps(out))
+    bad["monday_sla_passagem"][0]["horas_uteis"] = -1.0
+    with pytest.raises(ValueError, match="negativo"):
+        m.validate(bad)
+    bad = json.loads(json.dumps(out))
+    bad["monday_sla_ciclo"][0]["corte_utc"] = "2026-09-27T03:00:00.000000+00:00"
+    with pytest.raises(ValueError, match="mais de um corte"):
+        m.validate(bad)
+    bad = json.loads(json.dumps(out))
+    bad["monday_sla_projeto"][0]["quantidade_retrabalhos"] = 1
+    with pytest.raises(ValueError, match="retrabalhos"):
+        m.validate(bad)

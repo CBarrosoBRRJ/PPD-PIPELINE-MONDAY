@@ -1,5 +1,8 @@
 # Consultas de ciclos v18
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Executar somente DEPOIS da publicacao v18. Os blocos SQL sao para o editor do
 BigQuery, nao diretamente no Bash. Para Cloud Shell: bq --project_id=gglobo-viu-dados-hdg-prd
 query --location=US --use_legacy_sql=false --use_cache=false

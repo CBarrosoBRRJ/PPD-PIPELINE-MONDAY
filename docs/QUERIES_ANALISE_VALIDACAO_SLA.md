@@ -1,5 +1,8 @@
 # Queries copiaveis — analise e validacao de SLA
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 > Consultas do contrato anterior ao v18: algumas colunas e filtros abaixo
 > mudaram. Para análise das tabelas publicadas em 25/09/2026, use
 > [Consultas de gestão e ML v18](CONSULTAS_GESTAO_SLA_E_ML_V18.md) e

@@ -1,5 +1,8 @@
 # Recorte de precificação com os status atuais
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Decisão de negócio confirmada em 24/09/2026. Não aguardar a futura reunião de
 redesenho dos status. Este documento define a próxima implementação; não é
 recibo de alteração do contrato publicado `sla-consolidado-analise-v7`.

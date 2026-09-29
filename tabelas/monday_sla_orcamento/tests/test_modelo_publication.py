@@ -22,7 +22,7 @@ class Client:
         name = str(getattr(name, "reference", name))
         if name not in self.rows:
             raise NotFound("missing")
-        return SimpleNamespace(table_id=name, schema=self.schemas[name], etag=self.etag)
+        return SimpleNamespace(table_id=name, schema=self.schemas[name], etag=self.etag, num_rows=len(self.rows[name]))
 
     def create_table(self, table, exists_ok=False):
         name = str(table.reference)
@@ -36,7 +36,8 @@ class Client:
             raise NotFound("missing")
         return self.jobs[job_id]
 
-    def query(self, sql, *, job_config, job_id, location):
+    def query(self, sql, *, job_config, job_id, location, job_retry):
+        assert job_retry is None  # job_id fixo exige job_retry=None (google-cloud-bigquery)
         assert sql.count("BEGIN TRANSACTION") == 1 and sql.count("INSERT INTO") == len(CONTRACTS)
         job = SimpleNamespace(query=sql, state="RUNNING", error_result=None)
 
@@ -76,10 +77,34 @@ def test_initialize_creates_all_tables_once():
 
 def test_refuses_existing_table_without_journal():
     model, _ = store()
-    model.client.rows[target("monday_sla_projeto")] = []
+    model.client.rows[target("monday_sla_projeto")] = [{"projeto_id": "x"}]  # tabela com dados
     model.client.schemas[target("monday_sla_projeto")] = schema("monday_sla_projeto")
     with pytest.raises(ValueError, match="já existe"):
         model.initialize()
+    model, _ = store()
+    model.client.rows[target("monday_sla_projeto")] = []
+    model.client.schemas[target("monday_sla_projeto")] = schema("monday_sla_ciclo")  # esquema de outra tabela
+    with pytest.raises(ValueError, match="já existe"):
+        model.initialize()
+
+
+def test_initialize_resumes_after_partial_failure():
+    model, objects = store()
+    created = []
+    real_create = model.client.create_table
+
+    def flaky(table, exists_ok=False):
+        if len(created) == 5:
+            raise RuntimeError("queda no meio da inicialização")
+        created.append(table)
+        real_create(table, exists_ok)
+    model.client.create_table = flaky
+    with pytest.raises(RuntimeError):
+        model.initialize()
+    assert objects.get(CONTROL)[0] is None and len(created) == 5
+    model.client.create_table = real_create
+    assert model.initialize()["tabelas"] == len(CONTRACTS)
+    assert all(target(n) in model.client.rows for n in CONTRACTS)
 
 
 def test_publish_is_atomic_and_verified():
@@ -138,3 +163,12 @@ def test_retire_v18_only_after_verified_v19_publication():
     assert model.v18_retired() is True
     model.publish(sample(), {"cut": "2026-09-29T03:00:00+00:00"})  # segue publicando normalmente
     assert json.loads(objects.get(CONTROL)[0])["v18_aposentada"] is True
+
+
+def test_identity_is_pinned_to_the_published_contract_not_the_rule():
+    # O controle em produção (GCS) foi gravado com "modelo-v19-1" em 28/09/2026. Mudar a regra de cálculo
+    # não pode mudar a identidade, ou a publicação recusa ("identidade divergente") e o job diário falha.
+    from monday_sla_orcamento import modelo_publication as pub
+    from monday_sla_orcamento import modelo_v19 as m
+    assert pub.IDENTITY["contract"] == "modelo-v19-1"
+    assert m.RULE != m.CONTRACT or m.RULE == "modelo-v19-1"

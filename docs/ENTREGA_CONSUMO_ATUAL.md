@@ -1,5 +1,8 @@
 # Entrega de consumo — Monday SLA
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 ## Liberado
 
 Tabela: gglobo-viu-dados-hdg-prd.viu_agenciamento.monday_sla_orcamento.

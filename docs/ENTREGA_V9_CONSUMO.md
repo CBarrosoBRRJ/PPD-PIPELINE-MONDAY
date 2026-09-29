@@ -1,5 +1,8 @@
 # V9 consumo direto — local, não implantado
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Pacote runtime/pipeline-monday-release-20260923-v9-consumo.zip, 78 arquivos.
 SHA256 7cf12064079f50d245e9485b709a734f02334b09a6032917569382c44963fd3a.
 414 testes aprovados, 3 ignorados; Ruff aprovado, manifesto do ZIP conferido.

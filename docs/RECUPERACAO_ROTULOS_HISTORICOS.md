@@ -1,5 +1,8 @@
 # Recuperação preventiva de rótulos históricos
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 ## Pré-conferência remota (pacote preparado, execução pendente)
 
 Pacote privado runtime/viu2-rotulos-preflight-20260923-v1.zip, SHA256

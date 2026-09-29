@@ -1,5 +1,8 @@
 # V17 — SLA, fila e baixa qualidade
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Estado: implantada e publicacao verificada pelo operador. Execucao daily
 pipeline-monday-dtm7d, 1.363 projetos SLA / 4 fila / 816 baixa qualidade;
 2.183 distintos sem duplicidade. Agenda retomada as 06h America/Sao_Paulo.

@@ -1,5 +1,8 @@
 # Candidatos de identidade viu2 / globocorp
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 Consulta globocorp somente leitura, conta 21453629/quadro 18429499488; token lido
 privadamente, identidade confirmada antes da leitura. Paginação concluída e contagem
 conferida antes/depois: 4.789 itens visíveis atuais. Contexto viu2 preservado e

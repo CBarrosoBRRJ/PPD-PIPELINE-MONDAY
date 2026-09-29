@@ -1,5 +1,8 @@
 # Gestão do fluxo: entregar mais rápido, com qualidade
 
+> **Documento histórico.** Descreve uma versão anterior à v19, que está em produção desde 28/09/2026. Não use como procedimento atual; as tabelas v18 citadas foram apagadas (backup Avro em `backups/v18_20260928`). Documentos vigentes: [índice](README.md).
+
+
 > Documento de planejamento anterior ao contrato v18. Para nomes de campos,
 > regras de ciclo, consultas copiáveis e propostas de ML no estado atual, use
 > [Consultas de gestão v18](CONSULTAS_GESTAO_SLA_E_ML_V18.md) e

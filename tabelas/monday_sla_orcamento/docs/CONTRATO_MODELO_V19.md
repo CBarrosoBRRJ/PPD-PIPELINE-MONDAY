@@ -1,6 +1,6 @@
-# Contrato do modelo v19 (`modelo-v19-1`)
+# Contrato do modelo v19 (`modelo-v19-2`)
 
-Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R15) e
+Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (R1–R20) e
 `src/monday_sla_orcamento/modelo_v19.py`. Horas úteis: seg–sex, 10–13h e 14–19h, America/Sao_Paulo.
 
 ## `monday_sla_projeto`
@@ -230,6 +230,8 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `erros_preenchimento` | INTEGER | sim |
 | `corte_utc` | TIMESTAMP | sim |
 | `versao_regra` | STRING | sim |
+
+**Leitura das medidas de tempo:** `tempo_orcamento_p50_horas_uteis` e `tempo_orcamento_p80_horas_uteis` medem o trabalho **até a 1ª entrega** dos projetos que tiveram a 1ª entrega naquele mês, sem os ajustes posteriores. O tempo total com retrabalho está em `monday_sla_projeto.tempo_orcamento_horas_uteis`. Decisão de 29/09/2026: manter a medida mensal como tempo até a 1ª entrega.
 
 ## `monday_sla_qualidade`
 

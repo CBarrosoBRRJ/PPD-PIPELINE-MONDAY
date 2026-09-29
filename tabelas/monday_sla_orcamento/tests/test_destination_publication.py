@@ -41,7 +41,8 @@ class Client:
             raise NotFound('missing')
         return self.jobs[job_id]
 
-    def query(self, sql, *, job_config, job_id, location):
+    def query(self, sql, *, job_config, job_id, location, job_retry):
+        assert job_retry is None  # job_id fixo exige job_retry=None (google-cloud-bigquery)
         assert location == 'US'
         job = SimpleNamespace(query=sql, state='RUNNING', error_result=None,
                               to_api_repr=lambda: {'configuration': job_config.to_api_repr()})
