@@ -132,3 +132,22 @@ Nunca apague travas, journals ou o bucket para "destravar".
 
 `pipeline-monday-release-20260928-v19-final.zip`: 110 arquivos, SHA256
 `27ddb1a30163c375271b9bd43aad61fd415029f4149983ca1ef9081fa5b1e28b` (648 testes aprovados).
+
+## Recibo de produção — 28/09/2026 (conferido por consulta de leitura)
+
+| Passo | Evidência |
+| :--- | :--- |
+| Pacote | SHA256 `27ddb1a3…` conferido no Cloud Shell |
+| Build | `95ad73dd-df67-45ce-8ccc-c0ccd1ca63e7` SUCCESS · imagem `pipeline-monday@sha256:34a629d406d9826b91a756143d615bd0112f6cfae2991c7be5bcf2b535794885` |
+| `initialize-v19` | execução `pipeline-monday-wc77v`: 17 tabelas criadas às 21:45 UTC |
+| Primeira publicação v19 | execução `pipeline-monday-7kmxw`: `success`; 1.785 projetos, 1.887 ciclos, 8.606 passagens (iguais ao ensaio); controle sem pendência |
+| `retire-v18` | execução `pipeline-monday-pnzp8`: `v18_aposentada: true`; job de volta em `daily` |
+| Backup v18 | `gs://…-ppd-pipeline-monday/backups/v18_20260928/`, 8 arquivos Avro; contagem conferida registro a registro: 7.693 · 1.685 · 4 · 1.636 |
+| Exclusão v18 | `monday_sla_orcamento`, `monday_ciclos_orcamento`, `monday_fila_precificacao`, `monday_sla_baixa_qualidade_de_dado` |
+| Execução só v19 | `pipeline-monday-wcvjr`: `success`, v19 publicada e verificada (1.785 projetos) |
+| Agenda | `pipeline-monday-diario` ENABLED, `0 6 * * *`, America/Sao_Paulo |
+
+**Pendências:**
+- Conferir a primeira execução automática, em 29/09 depois das 06h.
+- Executar o passo 11: remover o IAM amplo e criar o alerta "26 h sem sucesso".
+- Depois de 7 dias estáveis, avaliar baixar a memória do job para 4 GB.

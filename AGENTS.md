@@ -1,5 +1,11 @@
 # Manutenção do PIPELINE-MONDAY
 
+**Produção em 28/09/2026: v19 no ar e v18 apagada** (backup Avro conferido em
+backups/v18_20260928). O job publica só a v19 (modelo-v19-control.json com v18_aposentada=true),
+com a imagem sha256:34a629d4… e a agenda ativa. Recibo em docs/IMPLANTACAO_V19.md. Não recriar
+as tabelas v18, não voltar a imagem anterior (ela espera a v18), não reexecutar initialize-v19
+nem retire-v18. Regras de negócio R1–R20: nota do Obsidian.
+Texto anterior, histórico:
 Estado operacional mais recente: v18 de ciclos (25/09/2026), conforme README.md e
 docs/ENTREGA_V18_CICLOS.md; prevalece sobre ESTADO_GCP_2026_09_24.md e sobre as
 anotações cronológicas abaixo (inclusive "V12/contrato v7", mantido como histórico).
