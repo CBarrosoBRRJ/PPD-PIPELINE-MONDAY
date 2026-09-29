@@ -333,3 +333,19 @@ def test_talent_and_brand_catalogs_group_spellings_and_flag_duplicates():
     ponte = {(r["item_id_globocorp"], r["chave_talento"]) for r in out["monday_ponte_talento"]}
     assert (2, "jonas sulzbach") in ponte and (4, "ana") in ponte and (4, "bia") in ponte
     assert {r["chave_marca"] for r in out["monday_ponte_marca"]} == {"coca cola"}
+
+
+def test_coverage_counts_every_project_once_by_origin_and_situation():
+    rows = {"ok": trajectory("ok", [("Entrada", 1), ("Em Elaboração", 2), ("Aguardando Feedback", 3)]),
+            "se": trajectory("se", [("Em Elaboração", 1), ("Aguardando Feedback", 2)]),
+            "pool": trajectory("pool", [("Entrada", 1), ("Aguardando Feedback", 2)])}
+    ats = {pid: attrs() for pid in rows}
+    ats["pool"].update(pool=["talento_multiplo"])
+    ats["se"]["contas"] = {"viu2"}
+    excluded = {"x": {"projeto_nome": "[Marca] Curadoria", "motivos": ["titulo_curadoria"], "contas": ["globocorp"]},
+                "item:9": {"projeto_nome": "Sem talento", "item_id_globocorp": 9, "motivos": ["talento_nao_informado"]}}
+    out = m.build(rows, ats, cut=CUT, calendar=CAL, excluded=excluded)
+    cov = {(r["origem"], r["situacao"]): r["itens"] for r in out["monday_sla_cobertura"]}
+    assert cov == {("100% Globocorp", "analisado"): 1, ("100% ViU2", "sem_entrada"): 1,
+                   ("100% Globocorp", "pool"): 1, ("100% Globocorp", "fora_do_escopo"): 1,
+                   ("sem histórico", "erro_cadastro_talento"): 1}

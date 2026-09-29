@@ -190,7 +190,7 @@ def test_upgrade_from_v19_creates_only_new_tables_and_keeps_publication():
     with pytest.raises(ValueError, match="identidade divergente"):
         model.publish(sample(), {"cut": "2026-09-29T03:00:00+00:00"})
     result = model.initialize()
-    assert result["status"] == "modelo_contrato_migrado" and len(result["tabelas_novas"]) == 6
+    assert result["status"] == "modelo_contrato_migrado" and len(result["tabelas_novas"]) == 7
     assert {n: model.client.rows[target(n)] for n in pub.V19_TABLES} == kept  # nada existente mudou
     assert model.initialize()["status"] == "modelo_v19_ja_inicializado"
     assert model.publish(sample(), {"cut": "2026-09-29T03:00:00+00:00"})["publication_verified"]

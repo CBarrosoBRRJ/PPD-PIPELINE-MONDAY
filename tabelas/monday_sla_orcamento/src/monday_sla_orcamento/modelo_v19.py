@@ -162,6 +162,8 @@ CONTRACTS.update({
         "chave_marca:STRING! marca_nome:STRING! variantes_json:STRING! quantidade_variantes:INTEGER! "
         "itens_quadro:INTEGER! projetos_no_sla:INTEGER! possivel_duplicata_de:STRING corte_utc:TIMESTAMP! "
         "versao_regra:STRING!"),
+    "monday_sla_cobertura": _fields(
+        "origem:STRING! situacao:STRING! motivo:STRING! itens:INTEGER! corte_utc:TIMESTAMP! versao_regra:STRING!"),
     # Pontes para o Power BI: o nome digitado no item ligado à chave do catálogo.
     "monday_ponte_talento": _fields(
         "item_id_globocorp:INTEGER! chave_talento:STRING! nome_original:STRING! eh_exclusivo:BOOLEAN! "
@@ -183,6 +185,7 @@ KEYS = {
     "monday_sla_projeto_pool": ("projeto_id",), "monday_sla_sem_entrada": ("projeto_id",),
     "monday_dim_talento": ("chave_talento",), "monday_dim_marca": ("chave_marca",),
     "monday_ponte_talento": ("item_id_globocorp", "chave_talento"), "monday_ponte_marca": ("item_id_globocorp",),
+    "monday_sla_cobertura": ("origem", "situacao", "motivo"),
 }
 CLUSTERING = {
     "monday_sla_projeto": ["situacao_atual", "marca"], "monday_sla_passagem": ["projeto_id", "status_nome"],
@@ -446,6 +449,7 @@ def build(passages, attrs, *, cut, calendar, excluded=(), board_labels=(), conte
 
     _references(out, cut, stamp)
     _catalogs(out, context, attrs, stamp)
+    _coverage(out, stamp)
     _open_alerts(out)
     _monthly(out, stamp)
     _fill_quality(out, stamp)
@@ -710,6 +714,40 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
             "eh_dia_util": calendar.hours(datetime.combine(day, time.min, ZONE), datetime.combine(day + timedelta(days=1), time.min, ZONE)) > 0,
             "versao_regra": RULE})
         day += timedelta(days=1)
+
+
+ORIGENS = {"viu2": "100% ViU2", "viu2+globocorp": "ViU2 → Globocorp", "globocorp": "100% Globocorp"}
+TALENT_ERRORS = {"talento_ambas_colunas", "talento_nao_informado"}
+NO_HISTORY = {"sem_evento_datado", "sem_historico_de_status"}
+
+
+def _coverage(out, stamp):
+    """Abertura do quadro: cada projeto ou item em exatamente uma situação, por origem e motivo."""
+    counts, seen = Counter(), set()
+
+    def add(pid, origem, situacao, motivo):
+        if pid is not None and pid in seen:
+            return
+        seen.add(pid)
+        counts[(ORIGENS.get(origem, "sem histórico"), situacao, motivo)] += 1
+
+    for r in out["monday_sla_projeto"]:
+        add(r["projeto_id"], r["conta_origem"], "analisado", "ciclo_completo_desde_entrada")
+    for r in out["monday_sla_projeto_pool"]:
+        add(r["projeto_id"], r["conta_origem"], "pool", r["motivo_pool"])
+    for r in out["monday_sla_sem_entrada"]:
+        add(r["projeto_id"], r["conta_origem"], "sem_entrada", "primeiro_status_" + (r["primeiro_status"] or "vazio"))
+    for r in out["monday_sla_item_duplicado"]:
+        add(r["projeto_id"], "globocorp", "duplicado", "item_copiado")
+    for r in out["monday_sla_qualidade"]:
+        motivos = set(json.loads(r["motivos_json"]))
+        situacao = ("erro_cadastro_talento" if motivos & TALENT_ERRORS else
+                    "sem_historico" if motivos & NO_HISTORY else "fora_do_escopo")
+        add(r["projeto_id"] if r["projeto_id"] is not None else r["chave"], r["conta_origem"], situacao,
+            ",".join(sorted(motivos)))
+    for (origem, situacao, motivo), itens in sorted(counts.items()):
+        out["monday_sla_cobertura"].append({"origem": origem, "situacao": situacao, "motivo": motivo,
+                                            "itens": itens, **stamp})
 
 
 POOL_FIELDS = ("projeto_id", "projeto_nome", "conta_origem", "item_id_viu2", "item_id_globocorp", "entrada_utc",

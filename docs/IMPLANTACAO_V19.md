@@ -221,7 +221,7 @@ Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615
 
 ## Atualização v20 — talento, pool, sem Entrada e catálogos (29/09/2026)
 
-Substitui o pacote v19-3, que não foi implantado. **Muda o contrato** (6 tabelas novas), por isso tem um passo de
+Substitui o pacote v19-3, que não foi implantado. **Muda o contrato** (7 tabelas novas), por isso tem um passo de
 migração antes da execução diária.
 
 **Regras de negócio (decididas em 29/09/2026).**
@@ -243,19 +243,20 @@ migração antes da execução diária.
 | `monday_dim_marca` | marca | Catálogo de marcas: grafias, usos e possível duplicata |
 | `monday_ponte_talento` | item × talento | Liga o nome digitado no item à chave do catálogo (relação no Power BI) |
 | `monday_ponte_marca` | item | Liga a marca digitada no item à chave do catálogo |
+| `monday_sla_cobertura` | origem × situação × motivo | Abertura do quadro: analisados, sem Entrada, pool, erro de talento, fora do escopo, duplicados, sem histórico, por origem (100% ViU2, ViU2 → Globocorp, 100% Globocorp) |
 
 **Código.** Filtro da Globocorp 2.3.0 (pool não fica em quarentena; sem `talento_identidade_pendente`; nomes iguais
 nas duas colunas valem). Consolidação: pool segue com `pool_projects` no relatório, e o motivo real de talento
 substitui o genérico `talento_fora_escopo`. Modelo: pool e sem Entrada roteados para as tabelas novas; catálogos;
 todo item do quadro rastreável com o motivo real. Publicação: `ModelStore.initialize()` migra de `modelo-v19-1`
-criando só as 6 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 668 testes.
+criando só as 7 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 668 testes.
 
 **Conferido antes (29/09, só leitura):** o controle de produção
 (`consolidado/diario/modelo-v19-control.json`) está em `modelo-v19-1`, 17 tabelas, sem pendência, e a identidade
 bate com a origem da migração prevista no código.
 
 **Pacote:** `runtime/pipeline-monday-release-20260929-v20.zip`, 110 arquivos, SHA256
-`36a5fd7e8c6e9609ea1099d63ad6be589c13eb985e511c5751ee4899c84436e1`.
+`4cb5457f565db0e1f82b04a7c4d189105f2852dffd7df1e80425bda34598787c`.
 
 **Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
 ```bash
@@ -266,7 +267,7 @@ gcloud storage cp gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/consolidado/
 # 3. imagem
 rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20.zip -d release-v20 && cd release-v20
 gcloud builds submit . --project=gglobo-viu-dados-hdg-prd --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20
-# 4. pausar a agenda e migrar o contrato (cria as 6 tabelas novas)
+# 4. pausar a agenda e migrar o contrato (cria as 7 tabelas novas)
 gcloud scheduler jobs pause pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
 gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1   --image=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday@DIGEST   --args=initialize-v19,--manifest,/app/pipelines.json,--writers-stopped
 gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --wait
@@ -275,9 +276,9 @@ gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --regi
 gcloud run jobs execute pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1 --wait
 gcloud scheduler jobs resume pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
 ```
-Esperado no passo 4: `status: modelo_contrato_migrado` com as 6 tabelas novas. No passo 5: sucesso,
+Esperado no passo 4: `status: modelo_contrato_migrado` com as 7 tabelas novas. No passo 5: sucesso,
 `versao_regra = modelo-v20-1` e as tabelas novas preenchidas.
 
 **Voltar atrás.** Depois da migração, a imagem v19-2 não publica mais (o controle está em `modelo-v20-1`). Se for
-preciso voltar: restaurar o controle da cópia do passo 2 e a imagem `sha256:4f5efb23…`. As 6 tabelas novas podem
+preciso voltar: restaurar o controle da cópia do passo 2 e a imagem `sha256:4f5efb23…`. As 7 tabelas novas podem
 ficar; a v19-2 não as usa.

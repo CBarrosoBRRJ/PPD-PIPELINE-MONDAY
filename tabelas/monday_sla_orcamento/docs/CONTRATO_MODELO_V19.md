@@ -506,6 +506,21 @@ Gerado por `scripts/generate_v19_docs.py`. Regras de negócio: nota do projeto (
 | `corte_utc` | TIMESTAMP | sim |
 | `versao_regra` | STRING | sim |
 
+## `monday_sla_cobertura`
+
+**Pergunta:** Quanto do quadro é analisável, por origem (ViU2, ViU2 → Globocorp, Globocorp) e motivo?
+
+**Chave:** `origem`, `situacao`, `motivo`
+
+| Coluna | Tipo | Obrigatória |
+| :--- | :--- | :-: |
+| `origem` | STRING | sim |
+| `situacao` | STRING | sim |
+| `motivo` | STRING | sim |
+| `itens` | INTEGER | sim |
+| `corte_utc` | TIMESTAMP | sim |
+| `versao_regra` | STRING | sim |
+
 ## `monday_ponte_talento`
 
 **Pergunta:** Qual talento (chave do catálogo) foi digitado em cada item? Ponte para o Power BI.
