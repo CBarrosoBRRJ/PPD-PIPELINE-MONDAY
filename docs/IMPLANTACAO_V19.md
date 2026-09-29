@@ -221,6 +221,13 @@ Voltar atrás, se necessário: passo 3 com `sha256:34a629d406d9826b91a756143d615
 
 ## Atualização v19-3 — todo item do quadro rastreável (29/09/2026)
 
+> **EM ESPERA — não implantar.** A investigação posterior mostrou que 382 dos 386 itens estão na quarentena da
+> Globocorp (`quarentena_projeto` no estado): 250 só por `talento_identidade_pendente`, 132 por regra de escopo. O
+> motivo genérico `sem_historico_de_status` esconderia essa causa. A v19-3 deve ser refeita para levar os motivos
+> reais da quarentena à `monday_sla_qualidade`, depois da decisão de negócio sobre o talento pendente de revisão
+> (1.620 itens, 852 nomes; nenhum nome do catálogo foi revisado até 29/09). Os 1.413 `sem_item_na_gold_atual`
+> também são quarentena: 1.370 só por talento pendente.
+
 **Por quê.** A análise de cobertura cruzou os 5.000 itens do quadro (`monday_backlog_agenciamento_2026`) com as
 tabelas do modelo: 1.791 no cálculo, 19 duplicados, 657 fora do cálculo e 2.147 fora do escopo, todos com motivo, mas
 **386 itens sem nenhum rastro**. São cópias da migração, criadas em setembro/2026, sem troca de status na Globocorp e
