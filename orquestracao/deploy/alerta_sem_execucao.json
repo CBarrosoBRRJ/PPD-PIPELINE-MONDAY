@@ -19,7 +19,7 @@
         ],
         "comparison": "COMPARISON_LT",
         "thresholdValue": 1,
-        "duration": "0s",
+        "duration": "300s",
         "evaluationMissingData": "EVALUATION_MISSING_DATA_ACTIVE",
         "trigger": {"count": 1}
       }
