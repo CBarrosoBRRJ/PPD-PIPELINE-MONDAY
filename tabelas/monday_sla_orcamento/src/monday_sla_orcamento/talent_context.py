@@ -4,6 +4,8 @@ import json
 import re
 import unicodedata
 
+from sls_orcamento_ppd.rules.eligibility import COLLECTIVES
+
 SCOPE_RULE = 'talento-canal-unico-v2'
 # R25: projeto com squad ou mais de um talento é pool: medido à parte, fora do SLA oficial.
 POOL = frozenset({'talento_squad', 'talento_multiplo', 'talento_nao_individual'})
@@ -40,8 +42,11 @@ def exclusion_reasons(source):
         reasons.append('talento_ambas_colunas')
     if not names and not inter:
         reasons.append('talento_nao_informado')
-    if len(names) > 1:
+    # Mesmos critérios do filtro da Globocorp (rules/eligibility.py): lista, separadores e coletivos são pool.
+    if len(names) > 1 or any(re.search(r'[,;\n\r+]|\s[&/]\s', text) for text in [*names, inter]):
         reasons.append('talento_multiplo')
+    if any(' '.join(unicodedata.normalize('NFKC', text).casefold().split()) in COLLECTIVES for text in [*names, inter] if text):
+        reasons.append('talento_nao_individual')
     if any(re.search(r'\bsquad\b', unicodedata.normalize('NFKC', text).casefold())
            for text in [*names, inter]):
         reasons.append('talento_squad')

@@ -371,6 +371,14 @@ def test_delivery_time_answers_how_long_until_first_delivery():
     assert [n for _, n in m.DAY_BANDS] == ["ate_1_dia", "1_a_2_dias", "2_a_3_dias", "3_a_5_dias", "mais_de_5_dias"]
 
 
+def test_blank_status_inside_cycle_does_not_break_cycle_steps():
+    rows = trajectory("a", [("Entrada", 1), ("Em Elaboração", 2), ("X", 3), ("Em Elaboração", 4), ("Aguardando Feedback", 5)])
+    rows[2]["status_nome"] = None
+    out = run(a=rows)
+    assert all(r["status_nome"] for r in out["monday_sla_etapa_ciclo"])
+    assert {r["status_nome"] for r in out["monday_sla_etapa_ciclo"]} == {"Entrada", "Em Elaboração"}
+
+
 def test_cycle_steps_flatten_each_status_inside_each_cycle():
     out = run(a=trajectory("a", [("Entrada", 1), ("Em Elaboração", 2), ("Standby", 3), ("Em Elaboração", 7),
                                  ("Aguardando Feedback", 9), ("Em revisão", 10), ("Aguardando Feedback", 11)]))

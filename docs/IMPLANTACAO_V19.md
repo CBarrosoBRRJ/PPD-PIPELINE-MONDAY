@@ -251,24 +251,26 @@ migração antes da execução diária.
 nas duas colunas valem). Consolidação: pool segue com `pool_projects` no relatório, e o motivo real de talento
 substitui o genérico `talento_fora_escopo`. Modelo: pool e sem Entrada roteados para as tabelas novas; catálogos;
 todo item do quadro rastreável com o motivo real. Publicação: `ModelStore.initialize()` migra de `modelo-v19-1`
-criando só as 9 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 671 testes.
+criando só as 9 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 673 testes.
 
 **Conferido antes (29/09, só leitura):** o controle de produção
 (`consolidado/diario/modelo-v19-control.json`) está em `modelo-v19-1`, 17 tabelas, sem pendência, e a identidade
 bate com a origem da migração prevista no código.
 
-**Pacote:** `runtime/pipeline-monday-release-20260929-v20d.zip`, 110 arquivos, SHA256
-`6b612ab93c86ed367620672964010755bdec2605b87854413981eb736bdae09f`. Substitui os pacotes `-v20.zip`, `-v20b.zip` e `-v20c.zip`, que não foram implantados.
+**Pacote:** `runtime/pipeline-monday-release-20260929-v20e.zip`, 110 arquivos, SHA256
+`c56577e021ad87eb5392c520070eb4aa6850671ce98938a9310a7afa07196c45`. Substitui os pacotes `-v20` a `-v20d`, que não foram implantados.
 
 **Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
 ```bash
 # 1. pacote e hash
-sha256sum pipeline-monday-release-20260929-v20d.zip
+sha256sum pipeline-monday-release-20260929-v20e.zip
 # 2. cópia de segurança do controle (permite voltar para a v19-2 se precisar)
 gcloud storage cp gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/consolidado/diario/modelo-v19-control.json   gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/backups/modelo-v19-control-antes-v20.json
 # 3. imagem
-rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20d.zip -d release-v20 && cd release-v20
+rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20e.zip -d release-v20 && cd release-v20
 gcloud builds submit . --project=gglobo-viu-dados-hdg-prd --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20
+# o DIGEST dos passos 4 e 5 é o sha256 desta imagem:
+gcloud artifacts docker images describe us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20 --format='value(image_summary.digest)'
 # 4. pausar a agenda e migrar o contrato (cria as 9 tabelas novas)
 gcloud scheduler jobs pause pipeline-monday-diario --project=gglobo-viu-dados-hdg-prd --location=us-central1
 gcloud run jobs update pipeline-monday --project=gglobo-viu-dados-hdg-prd --region=us-central1   --image=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday@DIGEST   --args=initialize-v19,--manifest,/app/pipelines.json,--writers-stopped
@@ -283,4 +285,6 @@ Esperado no passo 4: `status: modelo_contrato_migrado` com as 9 tabelas novas. N
 
 **Voltar atrás.** Depois da migração, a imagem v19-2 não publica mais (o controle está em `modelo-v20-1`). Se for
 preciso voltar: restaurar o controle da cópia do passo 2 e a imagem `sha256:4f5efb23…`. As 9 tabelas novas podem
-ficar; a v19-2 não as usa.
+ficar; a v19-2 não as usa. **Atenção:** isso só funciona **antes do passo 5**. Depois que a v20 publica, as 17 tabelas antigas têm conteúdo
+novo e a v19-2 recusaria o controle antigo ("conteúdo remoto divergente"). Depois do passo 5, voltar exige gerar um
+controle `modelo-v19-1` a partir do `active` atual; não improvisar, abrir revisão antes.

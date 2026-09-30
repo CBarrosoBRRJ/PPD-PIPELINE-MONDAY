@@ -28,7 +28,7 @@ from monday_sla_orcamento.talent_context import POOL, exclusion_reasons as talen
 
 RULE = "modelo-v20-1"  # v19-2: revisão técnica; v20: talento R21–R26, pool, sem Entrada e catálogos (29/09/2026)
 # Contrato publicado (esquema das tabelas). Só muda com mudança de esquema: é a identidade gravada no controle
-# do GCS. A v20 acrescenta 4 tabelas; a migração a partir de modelo-v19-1 é feita por ModelStore.initialize().
+# do GCS. A v20 acrescenta 9 tabelas; a migração a partir de modelo-v19-1 é feita por ModelStore.initialize().
 CONTRACT = "modelo-v20-1"
 ID_SEED = "modelo-v19-1"  # semente dos IDs de ciclo: mantém os IDs estáveis entre versões da regra e do contrato
 ZONE = ZoneInfo("America/Sao_Paulo")
@@ -818,7 +818,7 @@ def _cycle_steps(out, stamp):
     cycles = {c["ciclo_id"]: c for c in out["monday_sla_ciclo"]}
     groups = defaultdict(list)
     for r in out["monday_sla_passagem"]:
-        if r["ciclo_id"] is not None and not r["ignorada"]:
+        if r["ciclo_id"] is not None and not r["ignorada"] and r["status_nome"]:
             groups[(r["ciclo_id"], r["status_nome"])].append(r)
     for (cid, status), items in sorted(groups.items()):
         c, p = cycles[cid], projects[items[0]["projeto_id"]]
