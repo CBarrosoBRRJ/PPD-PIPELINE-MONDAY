@@ -85,6 +85,12 @@ class MondayClient:
             self.sleep(delay)
         raise MondayError("Tentativas esgotadas")
 
+    @staticmethod
+    def _one_board(data):
+        if len(data.get("boards") or []) != 1:
+            raise MondayError("Board inexistente ou token sem permissão")
+        return data["boards"][0]
+
     def board(self):
         data = self.query(
             """query ($ids: [ID!]!) {
@@ -125,7 +131,7 @@ class MondayClient:
                         "limit": self.settings.monday_page_size,
                     },
                 )
-                page = data["boards"][0]["items_page"]
+                page = self._one_board(data)["items_page"]
             self.pages_items += 1
             yield page["items"]
             cursor = page.get("cursor")
@@ -152,7 +158,7 @@ class MondayClient:
             },
         )
         self.pages_logs += 1
-        return data["boards"][0]["activity_logs"]
+        return self._one_board(data)["activity_logs"]
 
     def users(self, ids):
         result = []

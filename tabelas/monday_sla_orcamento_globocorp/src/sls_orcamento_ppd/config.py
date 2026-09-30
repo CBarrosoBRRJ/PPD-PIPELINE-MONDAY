@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     business_holidays: list[date] = Field(default_factory=list)
     runtime_dir: Path = Path("runtime")
 
+    @field_validator("monday_api_url")
+    @classmethod
+    def official_endpoint(cls, value):
+        # O token vai no cabeçalho de toda chamada: só o endpoint oficial, por HTTPS.
+        if value.rstrip("/") != "https://api.monday.com/v2":
+            raise ValueError("MONDAY_API_URL deve ser https://api.monday.com/v2")
+        return value
+
     @field_validator("final_status_labels")
     @classmethod
     def configured_finals(cls, value):

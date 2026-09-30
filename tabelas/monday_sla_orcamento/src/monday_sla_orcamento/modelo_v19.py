@@ -24,7 +24,8 @@ from zoneinfo import ZoneInfo
 from monday_comum.escopo_sla import motivos_exclusao, motivos_input
 
 from monday_sla_orcamento.pricing import PAUSES, TERMINALS, WORK, normalize
-from monday_sla_orcamento.talent_context import POOL, exclusion_reasons as talent_exclusions, is_pool, same_talent
+from monday_sla_orcamento.talent_context import POOL, is_pool
+from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
 
 RULE = "modelo-v20-1"  # v19-2: revisão técnica; v20: talento R21–R26, pool, sem Entrada e catálogos (29/09/2026)
 # Contrato publicado (esquema das tabelas). Só muda com mudança de esquema: é a identidade gravada no controle
@@ -366,6 +367,11 @@ def native_globocorp(new_rows, mapped_items, context_index, calendar, cut):
             excluded[pid] = {"item_id_globocorp": item, "projeto_nome": name, "motivos": sorted(set(reasons)),
                              "passagens": len(rows)}
             continue
+        if (initial and normalize(initial) != normalize("Entrada")
+                and categoria(initial) not in ("entrega", "terminal", "trabalho", "espera_marca")):
+            excluded[pid] = {"item_id_globocorp": item, "projeto_nome": name, "motivos": ["sem_entrada_inicial"],
+                             "passagens": len(rows), "primeiro_status": initial}
+            continue
         items = []
         dated = [r for r in rows if r["entrada_status_utc"] is not None]
         for i, r in enumerate(dated):
@@ -373,7 +379,9 @@ def native_globocorp(new_rows, mapped_items, context_index, calendar, cut):
             origin, reference = "indisponivel", None
             if end is not None and r["qualidade_historico"] == "observed":
                 origin, reference = "observada", end
-            elif end is None and i == len(dated) - 1 and r.get("intervalo_aberto") and r["qualidade_historico"] == "observed":
+            elif (end is None and i == len(dated) - 1 and r.get("intervalo_aberto") and r["qualidade_historico"] == "observed"
+                  and r.get("status_atual_divergente") is False and r.get("eh_ultimo_registro") is not False
+                  and (r.get("corte_utc") is None or instant(r["corte_utc"]) == cut)):
                 origin, reference = "idade_aberta_no_corte", cut
             hours = calendar.hours(start, reference) if reference else None
             items.append({
@@ -523,6 +531,21 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         if cat == "trabalho" and normalize(p["status_nome"]) == normalize("Entrada") and current and any(
                 categoria(q["status_nome"]) == "trabalho" for q in current["itens"]):
             error("entrada_repetida", pid, a, p["status_nome"], p["inicio"])
+        prev = rows[active[pos - 1]] if pos else None
+        if (cat == "entrega" and prev is not None and answers and categoria(prev["status_nome"]) == "entrega"
+                and normalize(prev["status_nome"]) == normalize(p["status_nome"]) and prev["conta"] != p["conta"]):
+            # R10: mesmo status na fronteira entre contas é continuação: soma o tempo à entrega anterior.
+            first_p = answers[-1][0]
+            origins = {first_p["origem"], p["origem"]}
+            merged = {**first_p, "saida": p["saida"], "fim": p["fim"],
+                      "horas_uteis": total([first_p["horas_uteis"], p["horas_uteis"]]),
+                      "horas_corridas": total([first_p["horas_corridas"], p["horas_corridas"]]),
+                      "origem": first_p["origem"] if len(origins) == 1
+                      else "estimada_migracao" if "estimada_migracao" in origins else p["origem"]}
+            later = [rows[j] for j in active[pos + 1:]]
+            decisive = next((q for q in later if categoria(q["status_nome"]) in ("trabalho", "entrega", "terminal")), None)
+            answers[-1] = (merged, decisive, nxt)
+            continue
         if cat == "entrega":
             if current is not None:
                 if not any(categoria(q["status_nome"]) == "trabalho" and normalize(q["status_nome"]) != normalize("Entrada")
@@ -706,7 +729,7 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
     # Standby continua na série até o corte (parado não é encerrado), sem somar trabalho.
     still_open = state in OPEN_STATES or state in ("indeterminado", "parado_standby")
     stop = cut if still_open else rows[active[-1]]["inicio"]
-    work = [p for p in rows if passage_cycle.get(p["interval_id"]) and categoria(p["status_nome"]) == "trabalho"]
+    work = [p for p in rows if passage_cycle.get(p["interval_id"]) and categoria(p["status_nome"]) in ("trabalho", "desconhecido")]
     # O corte é meia-noite local: o último dia da série é o anterior a ele, não um dia vazio.
     day, last_day = local_date(entry), local_date(max(entry, stop - timedelta(microseconds=1) if still_open else stop))
     timeline = [rows[i] for i in active]
@@ -719,7 +742,7 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
         for p in work:
             if p["inicio"] >= end_of_day:
                 continue
-            if p["fim"] is None:
+            if p["fim"] is None or categoria(p["status_nome"]) == "desconhecido":
                 accumulated.append(None)
             else:
                 accumulated.append(calendar.hours(p["inicio"], min(p["fim"], end_of_day)))
@@ -730,9 +753,21 @@ def _project(pid, a, rows, first, cut, calendar, out, error, stamp, base_names):
             "entregas_ate_o_dia": sum(1 for p in deliveries if p["inicio"] < next_midnight),
             "tempo_orcamento_acumulado_horas_uteis": total(accumulated) if accumulated else 0.0,
             "horas_uteis_desde_entrada": round(calendar.hours(entry, end_of_day), 3) if end_of_day >= entry else 0.0,
-            "eh_dia_util": calendar.hours(datetime.combine(day, time.min, ZONE), datetime.combine(day + timedelta(days=1), time.min, ZONE)) > 0,
+            "eh_dia_util": _business_day(calendar, day),
             "versao_regra": RULE})
         day += timedelta(days=1)
+
+
+_BUSINESS_DAYS = {}
+
+
+def _business_day(calendar, day):
+    """Dia útil pelo próprio calendário (feriados incluídos), calculado uma vez por dia e calendário."""
+    k = (calendar.version, day)
+    if k not in _BUSINESS_DAYS:
+        _BUSINESS_DAYS[k] = calendar.hours(datetime.combine(day, time.min, ZONE),
+                                           datetime.combine(day + timedelta(days=1), time.min, ZONE)) > 0
+    return _BUSINESS_DAYS[k]
 
 
 ORIGENS = {"viu2": "100% ViU2", "viu2+globocorp": "ViU2 → Globocorp", "globocorp": "100% Globocorp",
@@ -762,6 +797,7 @@ def _coverage(out, stamp):
     for r in out["monday_sla_qualidade"]:
         motivos = set(json.loads(r["motivos_json"]))
         situacao = ("erro_cadastro_talento" if motivos & TALENT_ERRORS else
+                    "sem_entrada" if "sem_entrada_inicial" in motivos else
                     "sem_historico" if motivos & NO_HISTORY else "fora_do_escopo")
         # Excluído antes de montar o ciclo não tem conta registrada: a origem sai dos códigos de item.
         origem = r["conta_origem"] or ("viu2_historico" if r["item_id_viu2"] is not None
@@ -1181,6 +1217,10 @@ def validate(out):
             raise ValueError(f"Modelo v19: {name} com projeto órfão")
     if any(p["ciclo_id"] is not None and p["ciclo_id"] not in cycles for p in out["monday_sla_passagem"]):
         raise ValueError("Modelo v19: passagem com ciclo órfão")
+    owner = {c["ciclo_id"]: c["projeto_id"] for c in out["monday_sla_ciclo"]}
+    for name in ("monday_sla_passagem", "monday_sla_etapa_ciclo"):
+        if any(r["ciclo_id"] is not None and owner.get(r["ciclo_id"]) != r["projeto_id"] for r in out[name]):
+            raise ValueError(f"Modelo v19: {name} ligada a ciclo de outro projeto")
     by_project = defaultdict(list)
     for c in out["monday_sla_ciclo"]:
         by_project[c["projeto_id"]].append(c)
@@ -1242,7 +1282,7 @@ def board_status_labels(board_raw):
 
 
 def from_pipeline(sla_rows, quality_rows, consolidation_report, new_rows, mapping, context, *, cut, calendar,
-                  board_labels=(), old_rows=()):
+                  board_labels=(), old_rows=(), held=()):
     """Adapta as saídas da execução diária (v18 + fonte Globocorp) às entradas do modelo v19."""
     passages, attrs = from_v18(sla_rows)
     for pid, reasons in (consolidation_report.get("pool_projects") or {}).items():
@@ -1266,6 +1306,16 @@ def from_pipeline(sla_rows, quality_rows, consolidation_report, new_rows, mappin
             excluded[pid] = {"projeto_nome": None, "item_id_viu2": _int(pair.get("viu2_item_id")),
                              "item_id_globocorp": _int(pair.get("globocorp_item_id")), "passagens": 0,
                              "motivos": sorted(reasons)}
+    # Itens retidos no filtro da Globocorp saem com o motivo registrado lá, não como "sem histórico".
+    for h in held:
+        item_id = _int(h.get("item_id"))
+        if item_id is not None and item_id not in {_int(a.get("item_id_globocorp")) for a in attrs.values()}:
+            key_ = next((k for k, e in excluded.items() if _int(e.get("item_id_globocorp")) == item_id), f"item:{item_id}")
+            prev = excluded.get(key_, {})
+            excluded[key_] = {"projeto_nome": prev.get("projeto_nome") or h.get("projeto_nome"),
+                              "item_id_viu2": prev.get("item_id_viu2"), "item_id_globocorp": item_id,
+                              "passagens": prev.get("passagens", 0),
+                              "motivos": sorted(set(prev.get("motivos", [])) | set(h.get("motivos") or []))}
     # R15: todo item do quadro atual aparece em algum lugar. Itens sem nenhuma mudança de status na
     # Globocorp e sem vínculo com a ViU2 (cópias da migração) vão para a qualidade com o motivo.
     seen = ({_int(a.get("item_id_globocorp")) for a in attrs.values()}

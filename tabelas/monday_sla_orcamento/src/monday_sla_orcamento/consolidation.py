@@ -30,7 +30,8 @@ from monday_sla_orcamento.pricing import FIELDS as PRICING_FIELDS
 from monday_sla_orcamento.pricing import project as pricing_project
 from monday_sla_orcamento.talent_context import FIELDS as TALENT_FIELDS
 from monday_sla_orcamento.talent_context import SCOPE_RULE as TALENT_SCOPE_RULE
-from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions, is_pool
+from monday_sla_orcamento.talent_context import exclusion_reasons as talent_exclusions
+from monday_sla_orcamento.talent_context import is_pool
 from monday_sla_orcamento.talent_context import project as talent_project
 from monday_sla_orcamento.trajectory import FIELDS as TRAJECTORY_FIELDS
 from monday_sla_orcamento.trajectory import audit as audit_trajectory

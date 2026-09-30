@@ -13,15 +13,15 @@ Este documento é normativo junto de [PRD](../PRD.md), [arquitetura](ARQUITETURA
 
 ## Contratos e publicação
 
-Toda mudança declara origem, grão, tipos, chaves, nulabilidade, tratamento, consumidores e ação em falha. Os 20 contratos internos são coleções GCS, não tabelas BQ. Só sla_orcamento é publicada, com 39 campos e chave interval_id.
+Toda mudança declara origem, grão, tipos, chaves, nulabilidade, tratamento, consumidores e ação em falha. Os 20 contratos internos são coleções GCS, não tabelas BQ. Este produto publica `monday_sla_orcamento_globocorp` (39 campos, chave interval_id; nome histórico: sla_orcamento, apagado em 22/09/2026). As tabelas de consumo vigentes são as do modelo `monday_sla_*`/`monday_dim_*`, publicadas pela consolidada; o contrato delas está em `tabelas/monday_sla_orcamento/docs/CONTRATO_MODELO_V19.md`.
 
 Tipos, unicidade, escopo, relações, coerência temporal e elegibilidade são validados em Python. BigQuery não substitui PK/FK/CHECK do PostgreSQL; schema REQUIRED e carga atômica complementam as verificações. Rejeitar lote inconsistente e conservar a publicação anterior. Mensagens nunca incluem valores rejeitados.
 
-A reserva diária antecede a extração; watermark só avança com publicação reconciliada. Checkpoint imutável, journal e job ID permitem recuperar falhas entre GCS e BQ. Lock não expira automaticamente.
+A reserva diária antecede a extração; watermark só avança com publicação reconciliada. Checkpoint imutável, journal e job ID permitem recuperar falhas entre GCS e BQ. Lock não expira automaticamente, de propósito (impede dois escritores). Se o job for morto e a trava ficar, liberar com `inspect-lock` e `unlock --lock-generation N --execution-stopped` (procedimento em docs/ESTADO_GCP_2026_09_21.md); nunca apagar o objeto à mão.
 
 ## Qualidade, calendário e operação
 
-Horas úteis: seg-sex, 10h–13h e 14h–19h, São Paulo, BR PUBLIC e extras configurados. Sem meta de SLA definida. Comparar somente passagens elegíveis. Calendário e regras versionados; mudança de regra requer testes e replay.
+Horas úteis: seg-sex, 10h–13h e 14h–19h, São Paulo, BR PUBLIC e extras configurados. A consolidada usa só BR PUBLIC e recusa rodar se `BUSINESS_HOLIDAYS` tiver valores (evita duas contas de horas diferentes); em produção a lista está vazia. Sem meta de SLA definida. Comparar somente passagens elegíveis. Calendário e regras versionados; mudança de regra requer testes e replay.
 
 `quality-profile` grava relatório privado GCS; `validate` verifica derivados; `validate-gold` reconcilia publicação; `health` verifica sucesso e atualidade. Ausência de alertas não prova saúde: canais externos ainda precisam de implantação.
 

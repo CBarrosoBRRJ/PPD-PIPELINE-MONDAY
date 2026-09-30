@@ -100,8 +100,8 @@ def build_gold(
         else:
             reasons = sorted(set(reasons) | {"input_contexto_nao_verificado"})
         brand = catalog.resolve("marca", snap.get("marca"))
-        if brand[2] == "quarentena":
-            reasons = sorted(set(reasons) | {"marca_revisao_manual"})
+        if brand[2] == "quarentena":  # R26: marca em revisão fica registrada, mas não retém o projeto
+            issue(item_id, "gold_nome_em_revisao", {"coluna": "marca"})
         if reasons and set(reasons) <= POOL_REASONS:
             issue(item_id, "gold_projeto_pool", {"motivos": reasons})
             reasons = []

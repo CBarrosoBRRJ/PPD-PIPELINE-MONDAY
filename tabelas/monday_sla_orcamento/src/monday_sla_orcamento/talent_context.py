@@ -29,7 +29,7 @@ def exclusion_reasons(source):
     Mesmo talento nas duas colunas vale; talentos diferentes, nenhum talento, squad ou mais de um talento
     (pool de talentos) ficam fora do SLA, com o motivo."""
     raw = source.get('talentos_exclusivos_json')
-    names = json.loads(raw) if raw is not None else []
+    names = json.loads(raw) if raw and raw.strip() else []
     if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
         raise ValueError('Talentos: lista de exclusivos invalida')
     names = [name.strip() for name in names if name.strip()]
@@ -66,7 +66,7 @@ def project(row):
     if row.get('cadastro_atual_origem_json') is None:
         return result
     raw = row.get('cadastro_atual_talentos_exclusivos_json')
-    names = json.loads(raw) if raw is not None else []
+    names = json.loads(raw) if raw and raw.strip() else []
     if not isinstance(names, list) or any(not isinstance(name, str) for name in names):
         raise ValueError('Talentos: lista de exclusivos invalida')
     entries = [{'nome': name.strip(), 'eh_interveniencia': False,

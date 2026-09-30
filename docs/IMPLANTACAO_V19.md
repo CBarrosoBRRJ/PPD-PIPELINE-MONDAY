@@ -251,23 +251,31 @@ migração antes da execução diária.
 nas duas colunas valem). Consolidação: pool segue com `pool_projects` no relatório, e o motivo real de talento
 substitui o genérico `talento_fora_escopo`. Modelo: pool e sem Entrada roteados para as tabelas novas; catálogos;
 todo item do quadro rastreável com o motivo real. Publicação: `ModelStore.initialize()` migra de `modelo-v19-1`
-criando só as 9 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 673 testes.
+criando só as 9 tabelas novas (vazias) e registrando-as no controle; nada existente é apagado. 682 testes.
+
+**Revisão de 30/09 (incluída no pacote v20f).** Filtro da Globocorp 2.4.0: grafia de talento ou marca em revisão no
+catálogo não retém mais o projeto (R26 estendida). Modelo: feedback que continua na outra conta é uma entrega só (R10);
+série diária fica desconhecida quando há trecho desconhecido no ciclo; idade aberta dos nativos exige a mesma evidência
+do caminho consolidado; status inicial sem data diferente de vazio/Entrada vai para sem Entrada (R1); itens retidos no
+filtro da Globocorp aparecem na cobertura com o motivo real; validação cruza ciclo × projeto. Segurança: o token só vai
+para `https://api.monday.com/v2`. A consolidada recusa `BUSINESS_HOLIDAYS` não vazio (produção: vazio). O manifesto
+não muda: os snapshots de backlog e talentos já rodam em produção desde 24/09.
 
 **Conferido antes (29/09, só leitura):** o controle de produção
 (`consolidado/diario/modelo-v19-control.json`) está em `modelo-v19-1`, 17 tabelas, sem pendência, e a identidade
 bate com a origem da migração prevista no código.
 
-**Pacote:** `runtime/pipeline-monday-release-20260929-v20e.zip`, 110 arquivos, SHA256
-`c56577e021ad87eb5392c520070eb4aa6850671ce98938a9310a7afa07196c45`. Substitui os pacotes `-v20` a `-v20d`, que não foram implantados.
+**Pacote:** `runtime/pipeline-monday-release-20260930-v20f.zip`, 110 arquivos, SHA256
+`4e8733c451a5cbe833dddca84414510c43338b9c541b51c70b09db1531c8d8ad`. Substitui os pacotes `-v20` a `-v20e`, que não foram implantados.
 
 **Passos no Cloud Shell**, fora da janela das 05:30 às 07:00:
 ```bash
 # 1. pacote e hash
-sha256sum pipeline-monday-release-20260929-v20e.zip
+sha256sum pipeline-monday-release-20260930-v20f.zip
 # 2. cópia de segurança do controle (permite voltar para a v19-2 se precisar)
 gcloud storage cp gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/consolidado/diario/modelo-v19-control.json   gs://gglobo-viu-dados-hdg-prd-ppd-pipeline-monday/backups/modelo-v19-control-antes-v20.json
 # 3. imagem
-rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260929-v20e.zip -d release-v20 && cd release-v20
+rm -rf release-v20 && mkdir release-v20 && unzip -q pipeline-monday-release-20260930-v20f.zip -d release-v20 && cd release-v20
 gcloud builds submit . --project=gglobo-viu-dados-hdg-prd --tag=us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20
 # o DIGEST dos passos 4 e 5 é o sha256 desta imagem:
 gcloud artifacts docker images describe us-central1-docker.pkg.dev/gglobo-viu-dados-hdg-prd/viu-pipelines/pipeline-monday:v20 --format='value(image_summary.digest)'

@@ -41,8 +41,7 @@ def talent_decision(snapshot, mapping, catalog):
             continue
         normalized = norm(value)
         row = catalog.get("talento", value)
-        if row["review_status"] == "quarantined":
-            reasons.add("talento_revisao_manual")
+        # R26: grafia em revisão no catálogo não retém o projeto; a revisão segue no catálogo.
         if re.search(r"\bsquad\s+(?:de\s+)?talentos\b", normalized):
             reasons.add("talento_squad")
         if normalized in COLLECTIVES or (

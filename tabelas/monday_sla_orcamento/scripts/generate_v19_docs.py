@@ -34,6 +34,12 @@ QUESTIONS = {
 }
 
 NOTES = {
+    "monday_sla_resposta_cliente": (
+        "**Leitura das medidas:** `horas_uteis` é o tempo **com o cliente**, em Aguardando Feedback (quando o feedback "
+        "continua na outra conta, as duas passagens somam, R10). `proxima_acao_utc` é a próxima ação decisiva "
+        "(trabalho, nova entrega ou encerramento). Se entre o feedback e a ação houver Standby ou espera pela marca, "
+        "essa pausa **não** conta como tempo do cliente, por isso `horas_uteis` pode ser menor que o intervalo entre "
+        "`inicio_utc` e `proxima_acao_utc`; `dias_corridos` usa o intervalo até a ação decisiva."),
     "monday_sla_etapa_ciclo": (
         "**Uma linha por etapa dentro de cada ciclo** (visitas repetidas ao mesmo status no ciclo somam). "
         "Liga-se a `monday_sla_tempo_entrega`/`monday_sla_projeto` por `projeto_id` e a `monday_sla_ciclo` por `ciclo_id`, "

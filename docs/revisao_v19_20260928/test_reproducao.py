@@ -1,10 +1,12 @@
 """Local reproductions for review only. No cloud clients or mutations."""
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, UTC
+
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'tabelas/monday_sla_orcamento/tests'))
-from test_modelo_v19 import trajectory, run, one, attrs, CAL, CUT
 import monday_sla_orcamento.modelo_v19 as m
+from test_modelo_v19 import CAL, CUT, attrs, one, run, trajectory
+
 
 def test_pausa_nao_e_retrabalho_nem_resposta_do_cliente():
     out=run(p=trajectory('p',[('Entrada',1),('Em Elaboração',2),('Aguardando Feedback',3),('Standby',4)]))
@@ -30,7 +32,8 @@ def test_serie_diaria_preserva_dias_em_standby_ate_o_corte():
 def test_relacao_de_duplicado_ambiguo_nao_escolhe_primeiro():
     rows={pid:trajectory(pid,[('Entrada',1),('Em Elaboração',2),('Aguardando Feedback',3)]) for pid in ['original-a','original-b','copia']}
     ats={pid:attrs('[Marca] Talento') for pid in rows}
-    for i,pid in enumerate(ats,1):ats[pid]['item_id_globocorp']=i
+    for i, pid in enumerate(ats, 1):
+        ats[pid]['item_id_globocorp'] = i
     ats['copia'].update(projeto_nome='[Marca] Talento [novo escopo]',nasceu_de_copia=True,status_copiado='Em Elaboração')
     out=m.build(rows,ats,cut=CUT,calendar=CAL)
     duplicate=one(out,'monday_sla_item_duplicado','copia')

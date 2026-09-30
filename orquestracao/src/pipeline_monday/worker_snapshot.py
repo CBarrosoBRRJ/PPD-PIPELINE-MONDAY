@@ -39,6 +39,7 @@ def main(spec):
             raise ValueError('Snapshot: seletor invalido')
         if datetime.fromisoformat(args.scheduled_for).utcoffset() is None:
             raise ValueError('Snapshot: referencia sem fuso')
+        # O seletor identifica o produto; a identidade (token, projeto) é a mesma do job, não há isolamento por produto.
         settings = load_settings('.env')
         if settings.bq_project != PROJECT or settings.gcs_bucket != BUCKET or settings.bq_location.upper() != 'US':
             raise ValueError('Snapshot: ambiente fora do escopo')

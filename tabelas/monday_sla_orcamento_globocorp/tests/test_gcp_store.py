@@ -495,7 +495,8 @@ def test_cloud_review_exports_private_artifact_and_replay_preserves_bronze(
     assert import_review(store, cfg, path)["reviewed_rows"] == 1
     monkeypatch.setattr(runner, "get_store", lambda settings: new())
     runner.replay(cfg)
-    assert bq.tables[store.table_id].rows == []
+    # R26 (2.4.0): marca em revisão no catálogo não retém o projeto; a revisão fica no catálogo.
+    assert bq.tables[store.table_id].rows != []
     assert store.read("bronze_monday_activity_log_raw") == before
 
 

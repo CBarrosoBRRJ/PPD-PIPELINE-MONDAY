@@ -190,7 +190,8 @@ def test_bad_catalog_blocks_publication(settings, board, sample):
         Catalog([row, conflicting], 42, at())
 
 
-def test_manual_brand_quarantine_and_source_correction_reinclude_history(settings, board, sample):
+def test_name_under_review_does_not_hold_the_project(settings, board, sample):
+    """R26 (2.4.0): grafia de marca em revisão no catálogo não retém o projeto; a revisão segue no catálogo."""
     initial = build(settings, board, sample)
     ids = {r["interval_id"] for r in initial["gold_projeto_status"]}
     catalog = initial["meta_entity_mapping"]
@@ -198,14 +199,9 @@ def test_manual_brand_quarantine_and_source_correction_reinclude_history(setting
     brand.update(
         review_status="quarantined", reviewed_by="reviewer", review_reason="Grafia ambígua"
     )
-    blocked = build(settings, board, sample, catalog)
-    assert blocked["gold_projeto_status"] == []
-    assert blocked["quarentena_projeto"][0]["motivos"] == ["marca_revisao_manual"]
-    assert blocked["quarentena_projeto"][0]["marca_original"] == "Marca A"
-    sample[1][0]["marca"] = "Marca Corrigida"
-    fixed = build(settings, board, sample, catalog)
-    assert {r["interval_id"] for r in fixed["gold_projeto_status"]} == ids
-    assert fixed["quarentena_projeto"] == []
+    kept = build(settings, board, sample, catalog)
+    assert {r["interval_id"] for r in kept["gold_projeto_status"]} == ids
+    assert kept["quarentena_projeto"] == []
     assert brand["review_status"] == "quarantined"
 
 

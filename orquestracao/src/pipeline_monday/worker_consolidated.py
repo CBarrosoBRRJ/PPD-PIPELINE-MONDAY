@@ -60,7 +60,9 @@ def execute(settings, scheduled, *, recover_only=False, initialize_destinations=
             or settings.bq_location.upper() != "US"
             or settings.monday_board_id != 18429499488
             or settings.monday_status_column_id != "status_19"
-            or settings.preferred_timezone != "America/Sao_Paulo"):
+            or settings.preferred_timezone != "America/Sao_Paulo"
+            # A consolidada usa só feriados nacionais; feriado extra aqui divergiria da origem em silêncio.
+            or getattr(settings, "business_holidays", None)):
         raise ValueError("Consolidado: configuracao fora do escopo autorizado")
     source = get_store(settings)
     objects = ObjectStore(SimpleNamespace(bq_project=PROJECT, gcs_bucket=BUCKET,
@@ -275,9 +277,10 @@ def publish_model(source, objects, settings, outputs, report, new, mapping, cont
         return {"status": "nao_inicializado"}
     schemas = source.read("bronze_monday_board_schema_raw", settings.monday_board_id)
     labels = board_status_labels(max(schemas, key=lambda r: r["snapshot_at"])["raw_data"]) if schemas else []
+    held = source.read("quarentena_projeto", settings.monday_board_id)
     model_outputs = from_pipeline(outputs[SLA], outputs[QUALITY], report, new, mapping, context,
                                   cut=evidence["cut"], calendar=BusinessCalendar(settings.preferred_timezone),
-                                  board_labels=labels, old_rows=old)
+                                  board_labels=labels, old_rows=old, held=held)
     return ModelStore(source.client, objects, settings.bq_job_timeout_seconds).publish(model_outputs, evidence)
 
 

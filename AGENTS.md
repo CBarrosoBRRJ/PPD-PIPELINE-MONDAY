@@ -7,7 +7,7 @@ as tabelas v18, não voltar a imagem anterior (ela espera a v18), não reexecuta
 nem retire-v18. Regras de negócio R1–R20: nota do Obsidian.
 1ª execução automática validada em 29/09/2026. Regra `modelo-v19-2` (revisão técnica) EM PRODUÇÃO desde 29/09
 (imagem sha256:4f5efb23…, execução pipeline-monday-trh49; recibo em docs/IMPLANTACAO_V19.md); a identidade do controle fica presa ao contrato `modelo-v19-1`:
-mudar a regra não exige migração, mudar o esquema exige. Pacote v20 (contrato e regra `modelo-v20-1`, filtro Globocorp 2.3.0: talento R21–R26, pool, sem Entrada,
+mudar a regra não exige migração, mudar o esquema exige. Pacote v20 (contrato e regra `modelo-v20-1`, filtro Globocorp 2.4.0, pacote final v20f de 30/09: talento R21–R26, pool, sem Entrada,
 catálogos de talento e marca) pronto em 29/09, implantação pendente. A migração do contrato é o comando
 initialize-v19 (só cria as 9 tabelas novas); ver docs/IMPLANTACAO_V19.md, seção v20.
 Texto anterior, histórico:
